@@ -1,33 +1,34 @@
-# @isogeny/client
+# Isogeny Client SDK (`@isogeny/client`)
 
-The official browser SDK for Isogeny, a Post-Quantum Cryptography middleware.
+The official browser/frontend SDK for the Isogeny Post-Quantum Cryptography middleware.
 
-## Installation
+## 🧠 Internal Architecture
+
+This package provides a TypeScript class `IsogenyClient`. It has three primary responsibilities:
+1. **Handshake Management**: Executing the ML-KEM Kyber key generation in WebAssembly, transmitting the public key to the server, and decapsulating the returned ciphertext into a shared 32-byte symmetric key.
+2. **Payload Interception (`pqcfetch`)**: Acting as a drop-in replacement for the native `fetch` API. It automatically intercepts JSON bodies, encrypts them using ChaCha20-Poly1305, injects the `X-Isogeny-Session` header, and decrypts the response.
+3. **Auto-Recovery**: If a session is lost on the server (e.g., Node.js restarts and drops its in-memory map), `pqcfetch` catches the HTTP 401 response, automatically forces a background `.rotate()`, and seamlessly retries the encrypted request.
+
+## 🛠 Compilation Guide
+
+This package is compiled using `tsup`.
 
 ```bash
-npm install @isogeny/client
+# Run this from inside packages/isogeny-client/
+npm install
+npm run build
 ```
 
-## Usage
+The build process outputs to `dist/index.js` (CJS) and `dist/index.mjs` (ESM), along with TypeScript definition files.
 
-```typescript
-import { IsogenyClient } from '@isogeny/client';
+## 🧑‍💻 Contribution Guide
 
-const client = new IsogenyClient('http://localhost:3000');
+To modify the client behavior:
+1. Edit `src/index.ts`.
+2. Re-run `npm run build`.
 
-// 1. Establish the Post-Quantum Shared Secret via ML-KEM
-await client.handshake();
+### Extending `pqcfetch`
+If you need to support streaming responses (e.g., Server-Sent Events or WebSockets) instead of just static JSON payloads, you must modify the response handling inside `pqcfetch()`. Currently, it only attempts decryption if `response.headers.get('content-type')` includes `application/json`.
 
-// 2. Transmit data securely
-const response = await client.pqcfetch('/api/secure-data', {
-  method: 'POST',
-  body: JSON.stringify({ password: 'super_secret' })
-});
-
-console.log("Server responded securely:", response);
-```
-
-## Features
-- **WebAssembly Powered:** Runs ML-KEM (Kyber-768) natively in the browser.
-- **Auto-Rotation:** Automatically intercepts expired sessions (401), rotates the symmetric key, and retries the request seamlessly.
-- **Perfect Forward Secrecy:** Exposes `client.terminate()` to instantly destroy keys when users log out.
+### Managing Session State
+The `sessionId` and `sharedSecret` are currently stored in the volatile memory of the `IsogenyClient` instance. If you want to persist the `sessionId` across browser reloads (though the key itself should never touch `localStorage`!), you can modify the class to accept a storage adapter.

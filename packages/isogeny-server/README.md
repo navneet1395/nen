@@ -1,38 +1,37 @@
-# @isogeny/server
+# Isogeny Server SDK (`@isogeny/server`)
 
-The official Next.js server middleware and DX wrapper for Isogeny.
+The official Next.js server middleware and DX wrapper for the Isogeny Post-Quantum Cryptography framework.
 
-## Installation
+## 🧠 Internal Architecture
+
+This package is responsible for managing symmetric keys on the backend and intercepting encrypted requests.
+
+1. **`src/store.ts` (Session Management)**: Maps `sessionId` strings to `Uint8Array` symmetric keys. 
+   - **Crucial Detail:** In Next.js development mode, Hot Module Replacement (HMR) wipes local variables on every save. To prevent the server from instantly forgetting cryptographic keys during development, we bind the Map to `globalThis.__ISOGENY_SESSIONS`. In production, this falls back to a standard singleton.
+2. **`src/middleware.ts` (Lifecycle Endpoints)**: Exposes `handleHandshake`, `handleStatus`, and `handleTerminate`. These functions process incoming ML-KEM public keys, run the `core-crypto` WebAssembly decapsulation, and generate standard `Response` objects.
+3. **`src/wrapper.ts` (The `withIsogeny` DX Wrapper)**: A Higher-Order Function that intercepts incoming HTTP requests. It looks for the `X-Isogeny-Session` header, decrypts the `ciphertext` using ChaCha20-Poly1305, parses the underlying JSON, and feeds it into the developer's normal Route Handler. It then encrypts the return value before transmitting the HTTP response.
+
+## 🛠 Compilation Guide
+
+This package is compiled using `tsup`.
 
 ```bash
-npm install @isogeny/server
+# Run this from inside packages/isogeny-server/
+npm install
+npm run build
 ```
 
-## Usage
+The build outputs CJS and ESM to `dist/`, along with the TypeScript definition files.
 
-Wrap your standard App Router API routes in `withIsogeny`. The wrapper will automatically decrypt the incoming Post-Quantum ChaCha20 payload, pass it to your handler as a JSON object, and re-encrypt your returned JSON object before sending it to the client.
+## 🧑‍💻 Contribution Guide
 
-```typescript
-import { withIsogeny } from '@isogeny/server';
+### Adding an External Database
+Currently, `store.ts` uses an in-memory `Map`. This means session keys are isolated to a single server instance. If you deploy Isogeny behind a Load Balancer (or in Vercel Edge functions where instances spin up and die instantly), **sessions will be lost.**
 
-export const POST = withIsogeny(async (request: Request, decryptedBody: any) => {
-  console.log('Received:', decryptedBody);
+To make Isogeny truly stateless and scalable, you should replace the `Map` in `src/store.ts` with an external fast-cache like Redis (Upstash) or Memcached. 
+1. Modify `storeSession(id, key)` to `await redis.set(id, key, { ex: 3600 })`.
+2. Modify `getSession(id)` to `await redis.get(id)`.
+3. Rebuild the package.
 
-  // Return a normal JSON object. The wrapper automatically encrypts it!
-  return { success: true, message: "Hello from Isogeny Serverless Middleware!" };
-});
-```
-
-You must also expose the handshake, status, and terminate endpoints. We recommend placing them in `/api/isogeny/[action]/route.ts`.
-
-```typescript
-// Example: src/app/api/isogeny/handshake/route.ts
-import { handleHandshake } from '@isogeny/server';
-export async function POST(request: Request) {
-  return handleHandshake(request);
-}
-```
-
-## Features
-- **Zero-Boilerplate DX:** Focus on business logic, not cryptography.
-- **Edge Compatible:** Compiles perfectly for Vercel Edge functions via WebAssembly.
+### Modifying the DX Wrapper
+If you want to change how errors are reported to the frontend (e.g., returning JSON API spec errors instead of standard `{ error: '...' }` objects), modify the `catch` block inside `src/wrapper.ts`.
