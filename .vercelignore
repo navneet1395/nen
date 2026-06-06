@@ -1,0 +1,10 @@
+# Exclude heavyweight build artifacts and dev dependencies
+node_modules
+**/node_modules
+packages/core-crypto/target
+.next
+**/.next
+*.log
+.env*
+!.env.example
+Ideation Notes
