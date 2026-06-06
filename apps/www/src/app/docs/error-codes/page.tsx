@@ -34,7 +34,7 @@ const CATEGORIES: ErrorCategory[] = [
     range: "2xxx",
     title: "Session lifecycle",
     codes: [
-      { code: "ISO-2001", http: 409, name: "SESSION_NOT_INITIALIZED", detail: "nenfetch/nenstream called before a successful handshake()." },
+      { code: "ISO-2001", http: 409, name: "SESSION_NOT_INITIALIZED", detail: "nenFetch/nenStream called before a successful handshake()." },
       { code: "ISO-2002", http: 401, name: "SESSION_INVALID_OR_EXPIRED", detail: "Server has no entry for X-Nen-Session. Expired by TTL, evicted, or this node never saw the handshake (use a shared/stateless store)." },
       { code: "ISO-2003", http: 401, name: "SESSION_HEADER_MISSING", detail: "No X-Nen-Session header. Not an Nen client, or a proxy stripped it." },
     ],

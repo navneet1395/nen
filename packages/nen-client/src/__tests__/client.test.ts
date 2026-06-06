@@ -9,14 +9,14 @@ describe('NenClient coded errors', () => {
     global.fetch = jest.fn();
   });
 
-  test('nenfetch before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
-    await expect(client.nenfetch('/api/data')).rejects.toMatchObject({
+  test('nenFetch before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
+    await expect(client.nenFetch('/api/data')).rejects.toMatchObject({
       code: 'ISO-2001',
     });
   });
 
-  test('nenstream before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
-    const gen = client.nenstream('/api/data');
+  test('nenStream before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
+    const gen = client.nenStream('/api/data');
     await expect(gen.next()).rejects.toMatchObject({ code: 'ISO-2001' });
   });
 
@@ -36,8 +36,8 @@ describe('NenClient coded errors', () => {
 
   test('thrown errors are NenError instances carrying code + status', async () => {
     try {
-      await client.nenfetch('/api/data');
-      throw new Error('expected nenfetch to throw');
+      await client.nenFetch('/api/data');
+      throw new Error('expected nenFetch to throw');
     } catch (e) {
       expect(e).toBeInstanceOf(NenError);
       const err = e as NenError;

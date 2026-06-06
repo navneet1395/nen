@@ -55,9 +55,9 @@ export const POST = withNen(async (req, body) => {
 ```typescript
 import { createNenFetch } from '@nen/client';
 
-const nenfetch = createNenFetch(''); // same-origin
+const nenFetch = createNenFetch(''); // same-origin
 
-const data = await nenfetch('/api/secure-data', {
+const data = await nenFetch('/api/secure-data', {
   method: 'POST',
   body: JSON.stringify({ ssn: '412-55-9087' }),
 });

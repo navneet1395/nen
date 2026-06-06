@@ -71,7 +71,7 @@ them. See `@nen/server`.
 
 ## How it works
 
-- Transport is `@nen/client`'s `nenstream` / `nenfetch` and `@nen/server`'s
+- Transport is `@nen/client`'s `nenStream` / `nenFetch` and `@nen/server`'s
   `withNenStream` — the same handshake (ML-KEM-768), HMAC-authenticated hot
   path, and chunked AEAD streaming used by the rest of Nen.
 - See the repo `PROTOCOL.md`, `THREAT_MODEL.md`, and `ERROR_CODES.md`.

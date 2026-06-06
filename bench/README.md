@@ -1,7 +1,7 @@
 # Nen benchmark & regression harness
 
 Drives the encrypted CRUD demo app (`apps/www/src/app/api/notes/*`) through the
-**public SDK** the same way the docs do (`handshake()` → `nenfetch()`), so the
+**public SDK** the same way the docs do (`handshake()` → `nenFetch()`), so the
 numbers reflect what a real integrator experiences.
 
 ## Run

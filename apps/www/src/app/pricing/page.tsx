@@ -31,7 +31,7 @@ const TIERS: Tier[] = [
       "@nen/client + @nen/server",
       "ML-KEM-768 + ChaCha20-Poly1305",
       "Mandatory per-request HMAC",
-      "Encrypted SSE streaming (nenstream)",
+      "Encrypted SSE streaming (nenStream)",
       "In-memory & Redis session stores",
       "Public protocol spec & threat model",
     ],

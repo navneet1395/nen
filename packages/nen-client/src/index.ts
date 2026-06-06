@@ -91,7 +91,7 @@ export class NenClient {
    * Post-Quantum Encrypted Fetch.
    * Encrypts the request body and decrypts the response.
    */
-  async nenfetch(endpoint: string, options: RequestInit = {}): Promise<any> {
+  async nenFetch(endpoint: string, options: RequestInit = {}): Promise<any> {
     if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
@@ -141,7 +141,7 @@ export class NenClient {
       this._rotationInProgress = true;
       try {
         await this.rotate();
-        return this.nenfetch(endpoint, options);
+        return this.nenFetch(endpoint, options);
       } finally {
         this._rotationInProgress = false;
       }
@@ -178,7 +178,7 @@ export class NenClient {
    * Post-Quantum Encrypted Stream.
    * Encrypts the request body and returns an AsyncGenerator that yields decrypted chunks.
    */
-  async *nenstream(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
+  async *nenStream(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
     if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
@@ -226,7 +226,7 @@ export class NenClient {
       this._rotationInProgress = true;
       try {
         await this.rotate();
-        yield* this.nenstream(endpoint, options);
+        yield* this.nenStream(endpoint, options);
         return;
       } finally {
         this._rotationInProgress = false;
@@ -334,10 +334,10 @@ function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
 }
 
 /**
- * Factory: Creates a pre-configured nenfetch function bound to a server URL.
+ * Factory: Creates a pre-configured nenFetch function bound to a server URL.
  * Usage:
- *   const nenfetch = createNenFetch('http://localhost:3000');
- *   await nenfetch('/api/secure-data', { method: 'POST', body: JSON.stringify({...}) });
+ *   const nenFetch = createNenFetch('http://localhost:3000');
+ *   await nenFetch('/api/secure-data', { method: 'POST', body: JSON.stringify({...}) });
  */
 export function createNenFetch(serverUrl: string) {
   const client = new NenClient(serverUrl);
@@ -351,12 +351,12 @@ export function createNenFetch(serverUrl: string) {
       await handshakePromise;
       handshakePromise = null;
     }
-    return client.nenfetch(endpoint, options);
+    return client.nenFetch(endpoint, options);
   };
 }
 
 /**
- * Factory: Creates a pre-configured nenstream function bound to a server URL.
+ * Factory: Creates a pre-configured nenStream function bound to a server URL.
  */
 export function createNenStream(serverUrl: string) {
   const client = new NenClient(serverUrl);
@@ -370,6 +370,6 @@ export function createNenStream(serverUrl: string) {
       await handshakePromise;
       handshakePromise = null;
     }
-    yield* client.nenstream(endpoint, options);
+    yield* client.nenStream(endpoint, options);
   };
 }

@@ -32,7 +32,7 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Architecture at a Glance", href: "/docs#architecture-at-a-glance", type: "heading", page: "Introduction", content: "Overview of client, server, and WebAssembly components." },
 
   // Page: Quickstart
-  { title: "Quickstart", href: "/docs/quickstart", type: "page", content: "Zero to an encrypted API call in ten lines. npx create-nen-app, mount session routes, protect an endpoint, call nenfetch. TLS plus Nen." },
+  { title: "Quickstart", href: "/docs/quickstart", type: "page", content: "Zero to an encrypted API call in ten lines. npx create-nen-app, mount session routes, protect an endpoint, call nenFetch. TLS plus Nen." },
 
   // Page: Installation
   { title: "Installation", href: "/docs/installation", type: "page", content: "Get started with installing Nen packages." },

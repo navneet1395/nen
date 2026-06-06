@@ -14,7 +14,7 @@ Nen gives you payload E2EE in about ten lines:
 - **WebAssembly Powered**: Core cryptography is written in Rust and compiled to WebAssembly for near-native execution across environments.
 - **Hybrid Security Model**: Combines ML-KEM with ChaCha20-Poly1305 and a **mandatory per-request HMAC-SHA256** for defense in depth — the auth-downgrade bypass is closed by default.
 - **Compact Wire Format**: All binary travels as **base64** (`{ ct, n }`), under ~1.4× of raw — never JSON number arrays.
-- **Encrypted Streaming**: `nenstream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
+- **Encrypted Streaming**: `nenStream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
 - **Edge-Ready Sessions**: A pluggable session store — in-memory, **Redis**, or **Upstash** (REST, no TCP) — for stateless horizontal scaling, including Edge runtimes.
 - **Diagnosable by Design**: Every failure carries a stable [`ISO-xxxx` code](/docs/error-codes) — paste the code, get the exact cause and fix.
 

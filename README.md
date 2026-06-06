@@ -19,7 +19,7 @@ scaffold, and the marketing + docs site.
   required by default (the auth-downgrade bypass is closed).
 - **Compact base64 wire format** — `{ ct, n }`, under ~1.4× of raw (v0.2.0 dropped
   the legacy number-array format).
-- **Encrypted SSE streaming** — `nenstream` / `withNenStream` encrypt each chunk
+- **Encrypted SSE streaming** — `nenStream` / `withNenStream` encrypt each chunk
   with an XOR-counter nonce — ideal for LLM tokens.
 - **Edge-ready sessions** — pluggable `SessionStore`: in-memory, Redis, or Upstash
   (REST, no TCP) for Edge runtimes.
@@ -32,7 +32,7 @@ scaffold, and the marketing + docs site.
 ```
 packages/
   core-crypto/        Rust → Wasm core (ML-KEM, ChaCha20-Poly1305, HMAC, ML-DSA, base64)
-  nen-client/     @nen/client — nenfetch, nenstream, NenClient
+  nen-client/     @nen/client — nenFetch, nenStream, NenClient
   nen-server/     @nen/server — withNen, withNenStream, session stores
   ai/                 @nen/ai — createSecureOpenAI / createSecureAnthropic (the wedge)
   create-nen-app/ npx scaffold for a pre-wired Next.js app
@@ -93,9 +93,9 @@ npx create-nen-app
 
 ```javascript
 import { createNenFetch } from '@nen/client';
-const nenfetch = createNenFetch('https://api.yourdomain.com');
+const nenFetch = createNenFetch('https://api.yourdomain.com');
 
-const data = await nenfetch('/api/secure-data', {
+const data = await nenFetch('/api/secure-data', {
   method: 'POST',
   body: JSON.stringify({ secret: 'Quantum-safe data' }),
 });
@@ -106,9 +106,9 @@ const data = await nenfetch('/api/secure-data', {
 
 ```javascript
 import { createNenStream } from '@nen/client';
-const nenstream = createNenStream('https://api.yourdomain.com');
+const nenStream = createNenStream('https://api.yourdomain.com');
 
-for await (const chunk of nenstream('/api/stream', {
+for await (const chunk of nenStream('/api/stream', {
   method: 'POST',
   body: JSON.stringify({ prompt: 'Generate secure content' }),
 })) {

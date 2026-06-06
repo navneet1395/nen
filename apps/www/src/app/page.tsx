@@ -180,7 +180,7 @@ export default function Home() {
                 You already wrote 90% of this
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Swap <code>fetch</code> for <code>nenfetch</code> on the client.
+                Swap <code>fetch</code> for <code>nenFetch</code> on the client.
                 Wrap your route with <code>withNen</code> on the server. The
                 handshake, key rotation, HMAC, and replay protection happen
                 underneath. About ten lines, start to finish.
@@ -192,9 +192,9 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
                   Client
                 </div>
-                <CodeBlock>{`import { nenfetch } from "@nen/client";
+                <CodeBlock>{`import { nenFetch } from "@nen/client";
 
-const res = await nenfetch("/api/claims", {
+const res = await nenFetch("/api/claims", {
   method: "POST",
   body: JSON.stringify(claim),
 });
@@ -333,7 +333,7 @@ export const POST = withNen(async (req, body) => {
                 What that one line actually does
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Behind <code>nenfetch</code> is a full post-quantum handshake:
+                Behind <code>nenFetch</code> is a full post-quantum handshake:
                 an ML-KEM key encapsulation, an optional ML-DSA identity
                 signature, and a derived ChaCha20-Poly1305 session. Run it step
                 by step — change the payload, change the security level, and
@@ -479,12 +479,12 @@ const stream = ai.chat.completions.stream({
               <Feature
                 icon={<Code2 className="w-6 h-6 text-primary" />}
                 title="Encrypted SSE streaming"
-                body="nenstream encrypts each chunk with ChaCha20-Poly1305 and an XOR-counter nonce, decrypting tokens as they arrive."
+                body="nenStream encrypts each chunk with ChaCha20-Poly1305 and an XOR-counter nonce, decrypting tokens as they arrive."
               />
               <Feature
                 icon={<ArrowRight className="w-6 h-6 text-primary" />}
                 title="Drop-in integration"
-                body="withNen middleware and nenfetch client for Next.js App Router — about ten lines from npx create-nen-app to a working handshake."
+                body="withNen middleware and nenFetch client for Next.js App Router — about ten lines from npx create-nen-app to a working handshake."
               />
             </div>
           </div>

@@ -59,8 +59,8 @@ const stream = ai.chat.completions.stream({
             Drop-in shapes mirroring the official SDKs —{" "}
             <code>createSecureOpenAI</code> and{" "}
             <code>createSecureAnthropic</code> — built on the same
-            transport-agnostic core as <code>nenfetch</code> and{" "}
-            <code>nenstream</code>.
+            transport-agnostic core as <code>nenFetch</code> and{" "}
+            <code>nenStream</code>.
           </p>
 
           {/* The honest framing — this is the critical section */}
@@ -170,7 +170,7 @@ const stream = ai.chat.completions.stream({
             {[
               "AI apps already stream sensitive data — prompts, PHI, legal context, financial records — through many hops of your own infrastructure.",
               "Health, legal, and fintech AI companies feel this pain today and carry budget and compliance urgency.",
-              "Secure streaming is a rare, defensible niche — most PQC projects stop at request/response. nenstream already does chunked, authenticated SSE.",
+              "Secure streaming is a rare, defensible niche — most PQC projects stop at request/response. nenStream already does chunked, authenticated SSE.",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />

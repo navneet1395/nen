@@ -54,7 +54,7 @@ ISO - 3   001
 
 | Code | HTTP | Name | What it means / what to check |
 | :--- | :--- | :--- | :--- |
-| ISO-2001 | 409 | `SESSION_NOT_INITIALIZED` | `nenfetch`/`nenstream` called before a successful `handshake()`. |
+| ISO-2001 | 409 | `SESSION_NOT_INITIALIZED` | `nenFetch`/`nenStream` called before a successful `handshake()`. |
 | ISO-2002 | 401 | `SESSION_INVALID_OR_EXPIRED` | Server has no entry for `X-Nen-Session`. Expired by TTL, evicted, or this node never saw the handshake (use a shared/stateless store). |
 | ISO-2003 | 401 | `SESSION_HEADER_MISSING` | No `X-Nen-Session` header. Not an Nen client, or a proxy stripped it. |
 

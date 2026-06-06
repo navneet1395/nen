@@ -18,7 +18,7 @@ It will:
 - generate a protected example route and a client snippet,
 - print next steps.
 
-After it finishes, swap `fetch` for `nenfetch` on the client and wrap your routes
+After it finishes, swap `fetch` for `nenFetch` on the client and wrap your routes
 with `withNen` on the server — see the
 [client](../nen-client) and [server](../nen-server) READMEs.
 

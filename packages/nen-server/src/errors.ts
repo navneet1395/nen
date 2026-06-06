@@ -77,7 +77,7 @@ export const NEN_ERRORS = {
     code: 'ISO-2001',
     status: 409,
     message: 'Secure session is not established yet.',
-    hint: 'nenfetch/nenstream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey on the client).',
+    hint: 'nenFetch/nenStream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey on the client).',
   },
   SESSION_INVALID_OR_EXPIRED: {
     code: 'ISO-2002',

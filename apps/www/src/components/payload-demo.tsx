@@ -6,7 +6,7 @@ import { Eye, EyeOff, ShieldCheck, AlertTriangle } from "lucide-react";
 /**
  * The hero gut-punch: the SAME request, before and after Nen.
  * Standard fetch() leaves the body as readable plaintext that every CDN, log,
- * and proxy can read. nenfetch() turns it into ciphertext + signed headers.
+ * and proxy can read. nenFetch() turns it into ciphertext + signed headers.
  *
  * The ciphertext here is illustrative (a visual transform of the plaintext) —
  * the real thing is ChaCha20-Poly1305 over an ML-KEM shared secret.
@@ -78,7 +78,7 @@ export function PayloadDemo() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
             </span>
           )}
-          <ShieldCheck className="w-4 h-4" /> Nen <code className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${secure ? 'bg-primary-foreground/20' : 'bg-muted'}`}>nenfetch()</code>
+          <ShieldCheck className="w-4 h-4" /> Nen <code className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${secure ? 'bg-primary-foreground/20' : 'bg-muted'}`}>nenFetch()</code>
         </button>
       </div>
 
@@ -97,7 +97,7 @@ export function PayloadDemo() {
               Live Editable
             </div>
           </div>
-          <pre className="text-[11px] font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "nenfetch" : "fetch"}("/api/claims", {
+          <pre className="text-[11px] font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "nenFetch" : "fetch"}("/api/claims", {
   method: "POST",
   body:`}</pre>
           <div className="relative group">

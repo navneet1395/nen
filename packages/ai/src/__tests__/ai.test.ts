@@ -19,11 +19,11 @@ function makeFakeClient(opts: {
       calls.handshakes++;
       this.sessionId = 'sid-123';
     },
-    async *nenstream(endpoint: string, options: any) {
+    async *nenStream(endpoint: string, options: any) {
       calls.stream.push({ endpoint, options });
       for (const c of opts.streamChunks ?? []) yield c;
     },
-    async nenfetch(endpoint: string, options: any) {
+    async nenFetch(endpoint: string, options: any) {
       calls.fetch.push({ endpoint, options });
       return opts.fetchResult;
     },
@@ -72,7 +72,7 @@ describe('createSecureOpenAI', () => {
     });
   });
 
-  test('create() returns the decrypted JSON from nenfetch', async () => {
+  test('create() returns the decrypted JSON from nenFetch', async () => {
     const fake = makeFakeClient({ alreadyConnected: true, fetchResult: { content: 'hi' } });
     const ai = createSecureOpenAI({ baseUrl: 'https://app.example.com', client: fake as any });
 

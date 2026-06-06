@@ -14,8 +14,8 @@ npm install @nen/client
 ```ts
 import { createNenFetch, createNenStream } from '@nen/client';
 
-const nenfetch = createNenFetch('');            // '' = same-origin
-const data = await nenfetch('/api/secure', {    // returns the decrypted JSON
+const nenFetch = createNenFetch('');            // '' = same-origin
+const data = await nenFetch('/api/secure', {    // returns the decrypted JSON
   method: 'POST',
   body: JSON.stringify({ ssn: '412-55-9087' }),
 });
@@ -29,7 +29,7 @@ for await (const chunk of createNenStream('')('/api/chat', {
 ```
 
 Prefer an explicit instance? `new NenClient(serverUrl, { identityMode: 'pqc' })`
-then `await client.handshake()`, `client.nenfetch()`, `client.nenstream()`,
+then `await client.handshake()`, `client.nenFetch()`, `client.nenStream()`,
 `client.rotate()`, `client.terminate()`, `client.status()`.
 
 ## What it does
@@ -38,10 +38,10 @@ then `await client.handshake()`, `client.nenfetch()`, `client.nenstream()`,
    decapsulates the returned ciphertext into the shared secret, and stores the
    server-issued HMAC key. With `identityMode: 'pqc'` it also signs the ephemeral
    key with ML-DSA. The ML-KEM secret key is zeroized immediately after.
-2. **`nenfetch`** — encrypts the JSON body (ChaCha20-Poly1305), sends
+2. **`nenFetch`** — encrypts the JSON body (ChaCha20-Poly1305), sends
    `{ ct, n }` base64 with the `X-Nen-Session`, `X-Nen-Timestamp`, and
    `X-Nen-Signature` (HMAC) headers, and decrypts the JSON response.
-3. **`nenstream`** — same request leg; yields decrypted SSE chunks as an async
+3. **`nenStream`** — same request leg; yields decrypted SSE chunks as an async
    generator.
 4. **Auto-recovery** — on a `401` it transparently `rotate()`s (fresh handshake)
    and retries once.

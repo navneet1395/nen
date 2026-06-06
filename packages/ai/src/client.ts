@@ -51,7 +51,7 @@ export function createSecureOpenAI(options: SecureAIClientOptions) {
         /** Streamed encrypted completion. Yields response text deltas. */
         async *stream(params: SecureChatParams): AsyncGenerator<string> {
           await ensureConnected(client);
-          yield* client.nenstream(endpoint, {
+          yield* client.nenStream(endpoint, {
             method: 'POST',
             body: JSON.stringify(params),
           });
@@ -60,7 +60,7 @@ export function createSecureOpenAI(options: SecureAIClientOptions) {
         /** Non-streamed encrypted completion; resolves the decrypted JSON. */
         async create(params: SecureChatParams): Promise<any> {
           await ensureConnected(client);
-          return client.nenfetch(endpoint, {
+          return client.nenFetch(endpoint, {
             method: 'POST',
             body: JSON.stringify(params),
           });
@@ -82,14 +82,14 @@ export function createSecureAnthropic(options: SecureAIClientOptions) {
     messages: {
       async *stream(params: SecureChatParams): AsyncGenerator<string> {
         await ensureConnected(client);
-        yield* client.nenstream(endpoint, {
+        yield* client.nenStream(endpoint, {
           method: 'POST',
           body: JSON.stringify(params),
         });
       },
       async create(params: SecureChatParams): Promise<any> {
         await ensureConnected(client);
-        return client.nenfetch(endpoint, {
+        return client.nenFetch(endpoint, {
           method: 'POST',
           body: JSON.stringify(params),
         });
