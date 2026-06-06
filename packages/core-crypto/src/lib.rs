@@ -1,6 +1,9 @@
 pub mod cipher;
 pub mod kem;
 pub mod utils;
+pub mod encoding;
+pub mod hmac_auth;
+pub mod sig;
 
 #[cfg(test)]
 mod test_api;

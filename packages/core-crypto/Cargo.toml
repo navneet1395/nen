@@ -13,3 +13,18 @@ ml-kem = "0.2"
 chacha20poly1305 = "0.10"
 rand = "0.8"
 getrandom = { version = "0.2", features = ["js"] }
+getrandom_v04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
+base64 = "0.22"
+hmac = "0.12"
+sha2 = "0.10"
+ml-dsa = { version = "0.1", features = ["pkcs8"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-bulk-memory"]

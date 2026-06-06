@@ -1,48 +1,61 @@
 # Core Crypto (`core-crypto`)
 
-This is the foundation of the Isogeny framework. It contains the raw Post-Quantum Cryptography implementations written in Rust and exposes them as a WebAssembly (Wasm) module.
+The foundation of Isogeny: the Post-Quantum Cryptography primitives, written in
+Rust and compiled to WebAssembly via `wasm-bindgen`. The `@isogeny/client` and
+`@isogeny/server` packages depend on the generated Wasm in `pkg/`.
 
-## 🧠 Internal Architecture
+## 🧠 Primitives (all from the audited RustCrypto crates)
 
-This package uses:
-1. **`pqcrypto-kyber`**: For the FIPS-203 ML-KEM (Kyber-768) implementation.
-2. **`chacha20poly1305`**: For authenticated symmetric encryption (AEAD).
-3. **`wasm-bindgen`**: To expose these Rust functions to JavaScript.
+| Crate | Role |
+| :-- | :-- |
+| `ml-kem` | ML-KEM-768 key encapsulation (FIPS 203) |
+| `ml-dsa` | ML-DSA-65 identity signatures (FIPS 204) |
+| `chacha20poly1305` | AEAD payload encryption (RFC 8439) |
+| `hmac` + `sha2` | HMAC-SHA256 per-request authentication (FIPS 198-1) |
+| `base64` | Wire encoding inside the Wasm boundary |
 
-### Files
-- `src/kem.rs`: Handles Keypair Generation, Encapsulation, and Decapsulation.
-- `src/cipher.rs`: Handles ChaCha20-Poly1305 Encrypt/Decrypt and Nonce generation.
-- `src/lib.rs`: The main entry point where functions are annotated with `#[wasm_bindgen]`.
+### Source files
+- `src/kem.rs` — ML-KEM keypair generation, encapsulate, decapsulate.
+- `src/cipher.rs` — ChaCha20-Poly1305 encrypt/decrypt, nonce generation.
+- `src/hmac_auth.rs` — HMAC-SHA256 sign/verify.
+- `src/sig.rs` — ML-DSA-65 keygen, sign, verify (optional identity).
+- `src/encoding.rs` — base64 encode/decode (`isogeny_to_base64` / `isogeny_from_base64`).
+- `src/utils.rs` — shared helpers / error types.
+- `src/lib.rs` — the Wasm entry point; functions annotated with `#[wasm_bindgen]`.
 
-## 🛠 Compilation Guide
-
-To compile this Rust code into WebAssembly that works natively in Next.js, we use a custom build script.
-
-**Why a custom build script?**
-Next.js server-side code (Node.js) requires the `nodejs` WebAssembly target, while the client-side browser code requires the `web` target. We use `wasm-pack` to compile *both* and merge them.
+## 🛠 Compilation
 
 ```bash
-# Run this from inside packages/core-crypto/
+# From inside packages/core-crypto/
 ./build.sh
 ```
 
-If the build succeeds, you will see a `dist/` directory generated. The `isogeny-client` and `isogeny-server` packages point directly to this `dist/` folder via their `package.json` dependencies (`"core-crypto": "file:../core-crypto/dist"`).
+`build.sh` runs `wasm-pack` for **both** targets and writes them to the repo-root
+`pkg/`:
 
-## 🧑‍💻 Contribution Guide
+- `pkg/node/` — Node.js/serverless target (used by `@isogeny/server`).
+- `pkg/bundler/` — ESM bundler target (used by `@isogeny/client`).
 
-If you want to add a new cryptographic primitive:
+Both SDKs depend on these via `"core-crypto": "file:../../pkg/bundler"`. The release
+profile is size-optimized (`opt-level = "z"`, `lto`, `strip`, `wasm-opt -Oz`).
 
-1. Add your Rust dependency in `Cargo.toml`.
-2. Create a new file (e.g., `src/hash.rs`) and implement your logic.
-3. In `src/lib.rs`, add `pub mod hash;` and expose your function using `#[wasm_bindgen]`:
+## 🧪 Tests
+
+```bash
+cargo test   # 16 tests: KEM round-trip, AEAD tamper detection, HMAC, signatures, base64
+```
+
+## 🧑‍💻 Adding a primitive
+
+1. Add the crate to `Cargo.toml`.
+2. Implement it in a new `src/*.rs` module.
+3. Expose it from `src/lib.rs` with `#[wasm_bindgen]`:
    ```rust
    #[wasm_bindgen]
-   pub fn my_new_hash(data: &[u8]) -> Vec<u8> {
-       // logic
-   }
+   pub fn my_new_hash(data: &[u8]) -> Vec<u8> { /* … */ }
    ```
-4. Run `./build.sh`.
-5. Head over to `packages/isogeny-server` or `packages/isogeny-client` and import your new function:
-   ```typescript
-   import { my_new_hash } from 'core-crypto';
-   ```
+4. Rebuild with `./build.sh` and add a `#[test]`.
+5. Import it from a TypeScript package: `import { my_new_hash } from 'core-crypto';`
+
+> The wire format is specified in [`../../PROTOCOL.md`](../../PROTOCOL.md) — keep
+> changes in sync.
