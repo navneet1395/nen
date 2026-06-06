@@ -34,3 +34,30 @@ coverage/
 
 # Vendored D2 diagram tool (45MB binary — regenerate via apps/www/scripts/generate-flows.sh)
 apps/www/d2-v0.7.1/
+bench/results/.gitkeep
+bench/results/2026-06-06T16-59-46-873Z/loadtest.json
+bench/results/2026-06-06T16-59-46-873Z/marketing-summary.json
+bench/results/2026-06-06T16-59-46-873Z/profile.json
+bench/results/2026-06-06T16-59-46-873Z/regression.json
+bench/results/2026-06-06T16-59-46-873Z/REPORT.md
+bench/results/2026-06-06T16-59-46-873Z/summary.json
+bench/results/2026-06-06T18-23-35-138Z/loadtest.json
+bench/results/2026-06-06T18-23-35-138Z/marketing-summary.json
+bench/results/2026-06-06T18-23-35-138Z/profile.json
+bench/results/2026-06-06T18-23-35-138Z/regression.json
+bench/results/2026-06-06T18-23-35-138Z/REPORT.md
+bench/results/2026-06-06T18-23-35-138Z/summary.json
+bench/results/2026-06-06T18-30-15-867Z/loadtest.json
+bench/results/2026-06-06T18-30-15-867Z/marketing-summary.json
+bench/results/2026-06-06T18-30-15-867Z/profile.json
+bench/results/2026-06-06T18-30-15-867Z/regression.json
+bench/results/2026-06-06T18-30-15-867Z/REPORT.md
+bench/results/2026-06-06T18-30-15-867Z/scenarios.json
+bench/results/2026-06-06T18-30-15-867Z/summary.json
+bench/results/latest/loadtest.json
+bench/results/latest/marketing-summary.json
+bench/results/latest/profile.json
+bench/results/latest/regression.json
+bench/results/latest/REPORT.md
+bench/results/latest/scenarios.json
+bench/results/latest/summary.json

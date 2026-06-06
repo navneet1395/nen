@@ -123,7 +123,7 @@ async function mapLimit(items, limit, fn) {
 
 async function serverStats(target = TARGET) {
   try {
-    const r = await fetch(`${target}/api/_bench/stats`);
+    const r = await fetch(`${target}/api/bench/stats`);
     return r.ok ? await r.json() : null;
   } catch {
     return null;
