@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Quickstart | Nen Docs",
-  description: "Zero to an encrypted API call in ten lines. Install @nen/client and @nen/server, mount the session route, protect an endpoint, call nenFetch. TLS + Nen.",
+  description: "Zero to an encrypted API call in ten lines. Install @withnen/client and @withnen/server, mount the session route, protect an endpoint, call nenFetch. TLS + Nen.",
 };
 
 # Quickstart
@@ -13,12 +13,12 @@ From zero to an encrypted API call in about ten lines. TLS stays exactly as it i
 npx create-nen-app
 ```
 
-This detects your Next.js App Router project, installs `@nen/client` and `@nen/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
+This detects your Next.js App Router project, installs `@withnen/client` and `@withnen/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
 
 Already have a project? Install manually:
 
 ```bash
-npm install @nen/client @nen/server
+npm install @withnen/client @withnen/server
 ```
 
 ## 2. Mount the session routes
@@ -26,7 +26,7 @@ npm install @nen/client @nen/server
 `src/app/api/nen/[action]/route.ts`:
 
 ```typescript
-import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@nen/server';
+import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@withnen/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
@@ -47,7 +47,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
 `src/app/api/secure-data/route.ts`:
 
 ```typescript
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 
 export const POST = withNen(async (req, body) => {
   // body is already decrypted and authenticated
@@ -58,7 +58,7 @@ export const POST = withNen(async (req, body) => {
 ## 4. Call it encrypted
 
 ```typescript
-import { createNenFetch } from '@nen/client';
+import { createNenFetch } from '@withnen/client';
 
 const nenFetch = createNenFetch(''); // same-origin
 

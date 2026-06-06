@@ -2,7 +2,7 @@ import { createSecureOpenAI, createSecureAnthropic } from '../client';
 
 /**
  * A fake NenClient that records calls and replays canned stream/fetch
- * results — lets us test the @nen/ai ergonomics without real crypto or a
+ * results — lets us test the @withnen/ai ergonomics without real crypto or a
  * network. Cast to `any` at the call site since it only implements the surface
  * the AI wrappers touch.
  */

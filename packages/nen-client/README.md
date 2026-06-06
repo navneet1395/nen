@@ -1,4 +1,4 @@
-# Nen Client SDK (`@nen/client`)
+# Nen Client SDK (`@withnen/client`)
 
 The browser/frontend SDK for Nen — a drop-in `fetch` replacement that encrypts
 the payload before it leaves the tab, using a post-quantum (ML-KEM-768) handshake.
@@ -6,13 +6,13 @@ the payload before it leaves the tab, using a post-quantum (ML-KEM-768) handshak
 ## Install
 
 ```bash
-npm install @nen/client
+npm install @withnen/client
 ```
 
 ## Quick use
 
 ```ts
-import { createNenFetch, createNenStream } from '@nen/client';
+import { createNenFetch, createNenStream } from '@withnen/client';
 
 const nenFetch = createNenFetch('');            // '' = same-origin
 const data = await nenFetch('/api/secure', {    // returns the decrypted JSON

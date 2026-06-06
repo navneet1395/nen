@@ -1,4 +1,4 @@
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 
 export const POST = withNen(async (req, body) => {
   return {

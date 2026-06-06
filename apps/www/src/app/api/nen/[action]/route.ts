@@ -1,4 +1,4 @@
-import { handleHandshake, handleTerminate, handleStatus, handleRotate } from '@nen/server';
+import { handleHandshake, handleTerminate, handleStatus, handleRotate } from '@withnen/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ action: string }> | { action: string } }) {
   // Await the params for Next.js 15+ compatibility

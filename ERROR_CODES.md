@@ -106,7 +106,7 @@ ISO - 3   001
 Both SDKs export a reverse lookup so tooling/support can resolve a code from a log:
 
 ```ts
-import { describeNenCode } from '@nen/server'; // or '@nen/client'
+import { describeNenCode } from '@withnen/server'; // or '@withnen/client'
 
 describeNenCode('ISO-3001');
 // → { code: 'ISO-3001', status: 401, message: '…', hint: '…' }

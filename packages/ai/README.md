@@ -1,11 +1,11 @@
-# @nen/ai
+# @withnen/ai
 
 End-to-end encrypted AI calls — prompts and streamed responses — for modern web
 apps. Powered by Post-Quantum Cryptography (ML-KEM-768 + ChaCha20-Poly1305).
 
 ## What this protects (read this first)
 
-`@nen/ai` encrypts the prompt and the streamed response **from the user's
+`@withnen/ai` encrypts the prompt and the streamed response **from the user's
 browser to your own backend**. Across that path — your CDN, edge, load balancer,
 logs, and any proxy — the prompt is ciphertext.
 
@@ -23,13 +23,13 @@ package.
 ## Install
 
 ```bash
-npm install @nen/ai @nen/client @nen/server
+npm install @withnen/ai @withnen/client @withnen/server
 ```
 
 ## Client (browser)
 
 ```ts
-import { createSecureOpenAI } from '@nen/ai/client';
+import { createSecureOpenAI } from '@withnen/ai/client';
 
 const ai = createSecureOpenAI({ baseUrl: 'https://app.example.com' });
 
@@ -46,7 +46,7 @@ for await (const delta of ai.chat.completions.stream({
 
 ```ts
 // app/api/ai/chat/route.ts
-import { withSecureAI } from '@nen/ai/server';
+import { withSecureAI } from '@withnen/ai/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI();
@@ -67,11 +67,11 @@ export const POST = withSecureAI(async function* (body) {
 
 You also need the four Nen session routes (`/api/nen/handshake`,
 `/terminate`, `/status`, `/rotate`) wired once — `npx create-nen-app` scaffolds
-them. See `@nen/server`.
+them. See `@withnen/server`.
 
 ## How it works
 
-- Transport is `@nen/client`'s `nenStream` / `nenFetch` and `@nen/server`'s
+- Transport is `@withnen/client`'s `nenStream` / `nenFetch` and `@withnen/server`'s
   `withNenStream` — the same handshake (ML-KEM-768), HMAC-authenticated hot
   path, and chunked AEAD streaming used by the rest of Nen.
 - See the repo `PROTOCOL.md`, `THREAT_MODEL.md`, and `ERROR_CODES.md`.

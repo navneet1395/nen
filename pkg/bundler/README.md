@@ -1,8 +1,8 @@
 # Core Crypto (`core-crypto`)
 
 The foundation of Nen: the Post-Quantum Cryptography primitives, written in
-Rust and compiled to WebAssembly via `wasm-bindgen`. The `@nen/client` and
-`@nen/server` packages depend on the generated Wasm in `pkg/`.
+Rust and compiled to WebAssembly via `wasm-bindgen`. The `@withnen/client` and
+`@withnen/server` packages depend on the generated Wasm in `pkg/`.
 
 ## 🧠 Primitives (all from the audited RustCrypto crates)
 
@@ -33,8 +33,8 @@ Rust and compiled to WebAssembly via `wasm-bindgen`. The `@nen/client` and
 `build.sh` runs `wasm-pack` for **both** targets and writes them to the repo-root
 `pkg/`:
 
-- `pkg/node/` — Node.js/serverless target (used by `@nen/server`).
-- `pkg/bundler/` — ESM bundler target (used by `@nen/client`).
+- `pkg/node/` — Node.js/serverless target (used by `@withnen/server`).
+- `pkg/bundler/` — ESM bundler target (used by `@withnen/client`).
 
 Both SDKs depend on these via `"core-crypto": "file:../../pkg/bundler"`. The release
 profile is size-optimized (`opt-level = "z"`, `lto`, `strip`, `wasm-opt -Oz`).

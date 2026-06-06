@@ -152,8 +152,8 @@ declare class RedisSessionStore implements SessionStore {
  * Workers, Vercel Edge, Deno). Pass the REST URL and token from your Upstash
  * dashboard (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN).
  *
- *   import { setSessionStore } from '@nen/server';
- *   import { UpstashSessionStore } from '@nen/server';
+ *   import { setSessionStore } from '@withnen/server';
+ *   import { UpstashSessionStore } from '@withnen/server';
  *
  *   setSessionStore(new UpstashSessionStore(
  *     process.env.UPSTASH_REDIS_REST_URL!,

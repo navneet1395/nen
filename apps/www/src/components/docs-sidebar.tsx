@@ -70,7 +70,7 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Audit readiness", href: "/docs/audit-readiness", type: "page", content: "Test coverage, negative-path matrix, published artifacts, and external review roadmap for auditors and buyers." },
 
   // Page: API Reference
-  { title: "API Reference", href: "/docs/api", type: "page", content: "Every export from @nen/client and @nen/server: NenClient, nenFetch, nenStream, withNen, withNenStream, session stores, NenError, describeNenCode." },
+  { title: "API Reference", href: "/docs/api", type: "page", content: "Every export from @withnen/client and @withnen/server: NenClient, nenFetch, nenStream, withNen, withNenStream, session stores, NenError, describeNenCode." },
 
   // Page: Error codes
   { title: "Error codes (ISO-xxxx)", href: "/docs/error-codes", type: "page", content: "Every Nen failure carries a stable ISO-xxxx code with HTTP status, cause, and fix. Deep-linkable per code." }

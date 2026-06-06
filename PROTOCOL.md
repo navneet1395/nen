@@ -1,6 +1,6 @@
 # NEN-PROTOCOL-V1
 
-The wire protocol spoken between `@nen/client` and `@nen/server`. This
+The wire protocol spoken between `@withnen/client` and `@withnen/server`. This
 document describes the protocol **as implemented today** — it is the artifact a
 security reviewer or auditor reads. Where a value is hardcoded in the code, it is
 stated here exactly.

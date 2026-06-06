@@ -26,11 +26,11 @@ cd packages/core-crypto && cargo test
 cargo test hmac                              # single test by substring
 
 # TypeScript packages (jest)
-npm test --workspace @nen/server
-npm test --workspace @nen/client
-npm test --workspace @nen/ai
-npm test --workspace @nen/server -- -t "ISO-3001"   # single test by name
-npm run build --workspace @nen/server    # tsup → dist/ (CJS+ESM+.d.ts)
+npm test --workspace @withnen/server
+npm test --workspace @withnen/client
+npm test --workspace @withnen/ai
+npm test --workspace @withnen/server -- -t "ISO-3001"   # single test by name
+npm run build --workspace @withnen/server    # tsup → dist/ (CJS+ESM+.d.ts)
 
 # Marketing/docs site
 cd apps/www && npm run dev                    # http://localhost:3000
@@ -43,21 +43,21 @@ cd apps/www && npm run build:diagrams         # regenerate public/flows/*.svg fr
 Build/data flow is strictly bottom-up; a change low in the stack requires rebuilding everything above:
 
 ```
-core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @nen/{client,server}  →  @nen/ai  →  apps/www
+core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @withnen/{client,server}  →  @withnen/ai  →  apps/www
 ```
 
 - **`packages/core-crypto`** — all primitives (ML-KEM-768, ML-DSA-65, ChaCha20-Poly1305, HMAC-SHA256,
   base64) from the RustCrypto crates, exposed via `#[wasm_bindgen]`. Compiles to **two** Wasm targets:
-  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). Both `@nen/client` and
-  `@nen/server` depend on `"core-crypto": "file:../../pkg/bundler"`.
-- **`@nen/server`** — `handleHandshake/Rotate/Terminate/Status` (mounted via a single
+  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). Both `@withnen/client` and
+  `@withnen/server` depend on `"core-crypto": "file:../../pkg/bundler"`.
+- **`@withnen/server`** — `handleHandshake/Rotate/Terminate/Status` (mounted via a single
   `/api/nen/[action]` route), `decryptPayload`/`encryptPayload`, and the `withNen` /
   `withNenStream` DX wrappers. Pluggable `SessionStore`: `InMemorySessionStore` (default, bound to
   `globalThis` so Next.js HMR doesn't wipe keys), `RedisSessionStore`, `UpstashSessionStore` (REST
   over fetch — Edge-safe).
-- **`@nen/client`** — `NenClient` + `nenFetch`/`nenStream` (and `createNenFetch`/
+- **`@withnen/client`** — `NenClient` + `nenFetch`/`nenStream` (and `createNenFetch`/
   `createNenStream` factories). Handshakes once, then encrypts each request and auto-rotates on a 401.
-- **`@nen/ai`** — `createSecureOpenAI`/`createSecureAnthropic` (client) and `withSecureAI`
+- **`@withnen/ai`** — `createSecureOpenAI`/`createSecureAnthropic` (client) and `withSecureAI`
   (server), built on `nenStream`.
 
 ### The protocol (must stay in sync with PROTOCOL.md)

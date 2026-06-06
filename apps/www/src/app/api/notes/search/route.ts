@@ -1,4 +1,4 @@
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 import { listNotes } from '@/lib/notesStore';
 
 /**

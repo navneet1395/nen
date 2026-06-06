@@ -182,7 +182,7 @@ export default function ErrorCodesPage() {
         <p className="mb-3">
           Both SDKs export a reverse lookup so tooling and support can resolve a code from a log:
         </p>
-        <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 font-mono text-xs text-zinc-300 overflow-x-auto whitespace-pre">{`import { describeNenCode } from '@nen/server'; // or '@nen/client'
+        <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 font-mono text-xs text-zinc-300 overflow-x-auto whitespace-pre">{`import { describeNenCode } from '@withnen/server'; // or '@withnen/client'
 
 describeNenCode('ISO-3001');
 // → { code: 'ISO-3001', status: 401, message: '…', hint: '…' }`}</pre>

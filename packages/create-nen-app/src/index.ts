@@ -40,9 +40,9 @@ program
       console.log(pc.blue('\nInstalling Nen dependencies...'));
       const projectPath = path.resolve(process.cwd(), targetDir);
       
-      // We assume @nen/client and @nen/server are published.
+      // We assume @withnen/client and @withnen/server are published.
       // For local development, this needs to be linked.
-      execSync(`npm install @nen/client @nen/server`, { cwd: projectPath, stdio: 'inherit' });
+      execSync(`npm install @withnen/client @withnen/server`, { cwd: projectPath, stdio: 'inherit' });
 
       // Step 3: Add basic templates
       console.log(pc.blue('\nAdding Nen templates...'));
@@ -51,7 +51,7 @@ program
       fs.mkdirSync(apiDir, { recursive: true });
 
       const apiRouteCode = `
-import { handleHandshake, InMemorySessionStore, setSessionStore } from '@nen/server';
+import { handleHandshake, InMemorySessionStore, setSessionStore } from '@withnen/server';
 
 // Initialize session store (use RedisSessionStore in production)
 setSessionStore(new InMemorySessionStore());

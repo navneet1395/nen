@@ -28,7 +28,7 @@ const TIERS: Tier[] = [
     cta: "Start Building",
     href: "/docs/quickstart",
     features: [
-      "@nen/client + @nen/server",
+      "@withnen/client + @withnen/server",
       "ML-KEM-768 + ChaCha20-Poly1305",
       "Mandatory per-request HMAC",
       "Encrypted SSE streaming (nenStream)",

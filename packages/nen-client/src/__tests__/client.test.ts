@@ -55,7 +55,7 @@ describe('NenClient coded errors', () => {
 describe('describeNenCode reverse lookup', () => {
   test('resolves a known client code from a log/support ticket', () => {
     // ISO-2001 SESSION_NOT_INITIALIZED is in the client catalog (server-only
-    // codes like ISO-3001 live in @nen/server's mirror).
+    // codes like ISO-3001 live in @withnen/server's mirror).
     const spec = describeNenCode('ISO-2001');
     expect(spec).toBeDefined();
     expect(spec!.status).toBe(409);

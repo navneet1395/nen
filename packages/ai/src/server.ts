@@ -1,4 +1,4 @@
-import { withNenStream } from '@nen/server';
+import { withNenStream } from '@withnen/server';
 import type { ChatMessage, SecureChatParams } from './types';
 
 export type { ChatMessage, SecureChatParams };
@@ -14,7 +14,7 @@ export type SecureAIProvider = (
 ) => AsyncIterable<string> | Promise<AsyncIterable<string>>;
 
 /**
- * Server-side handler for `@nen/ai`. Wraps `withNenStream`: it decrypts
+ * Server-side handler for `@withnen/ai`. Wraps `withNenStream`: it decrypts
  * the incoming prompt, hands it to your `provider`, and streams the provider's
  * text chunks back to the browser ENCRYPTED, chunk by chunk.
  *
@@ -23,7 +23,7 @@ export type SecureAIProvider = (
  *
  * @example
  *   // app/api/ai/chat/route.ts
- *   import { withSecureAI } from '@nen/ai/server';
+ *   import { withSecureAI } from '@withnen/ai/server';
  *   import OpenAI from 'openai';
  *   const openai = new OpenAI();
  *

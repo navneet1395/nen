@@ -32,9 +32,9 @@ scaffold, and the marketing + docs site.
 ```
 packages/
   core-crypto/        Rust → Wasm core (ML-KEM, ChaCha20-Poly1305, HMAC, ML-DSA, base64)
-  nen-client/     @nen/client — nenFetch, nenStream, NenClient
-  nen-server/     @nen/server — withNen, withNenStream, session stores
-  ai/                 @nen/ai — createSecureOpenAI / createSecureAnthropic (the wedge)
+  nen-client/     @withnen/client — nenFetch, nenStream, NenClient
+  nen-server/     @withnen/server — withNen, withNenStream, session stores
+  ai/                 @withnen/ai — createSecureOpenAI / createSecureAnthropic (the wedge)
   create-nen-app/ npx scaffold for a pre-wired Next.js app
 apps/
   www/                Marketing + docs site (Next.js)
@@ -74,9 +74,9 @@ npm run build --workspaces --if-present
 
 ```bash
 cd packages/core-crypto && cargo test          # Rust core (16 tests)
-npm test --workspace @nen/server           # 19 tests
-npm test --workspace @nen/client           # 7 tests
-npm test --workspace @nen/ai               # 5 tests
+npm test --workspace @withnen/server           # 19 tests
+npm test --workspace @withnen/client           # 7 tests
+npm test --workspace @withnen/ai               # 5 tests
 
 # End-to-end / performance
 node scripts/test-audit.js
@@ -92,7 +92,7 @@ npx create-nen-app
 ### Encrypted request
 
 ```javascript
-import { createNenFetch } from '@nen/client';
+import { createNenFetch } from '@withnen/client';
 const nenFetch = createNenFetch('https://api.yourdomain.com');
 
 const data = await nenFetch('/api/secure-data', {
@@ -105,7 +105,7 @@ const data = await nenFetch('/api/secure-data', {
 ### Encrypted streaming (SSE)
 
 ```javascript
-import { createNenStream } from '@nen/client';
+import { createNenStream } from '@withnen/client';
 const nenStream = createNenStream('https://api.yourdomain.com');
 
 for await (const chunk of nenStream('/api/stream', {
@@ -119,7 +119,7 @@ for await (const chunk of nenStream('/api/stream', {
 ### Server route (Next.js)
 
 ```typescript
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 export const POST = withNen(async (req, body) => ({ ok: true, body }));
 ```
 

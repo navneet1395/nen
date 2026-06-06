@@ -19,12 +19,12 @@ security product. This is the honest current state plus the roadmap. Companion t
 
 - ✅ 16 Rust unit tests in `core-crypto` (KEM round-trip, AEAD tamper detection,
   HMAC sign/verify, base64, signatures).
-- ✅ Server suite (`@nen/server`): 17 tests — handshake, session lifecycle,
+- ✅ Server suite (`@withnen/server`): 17 tests — handshake, session lifecycle,
   **HMAC-mandatory downgrade-bypass regression** (`ISO-3001`), forged signature
   (`ISO-3002`), stale timestamp (`ISO-3003`), invalid session (`ISO-2002`),
   **nonce replay** (`ISO-5001`), **AEAD tamper at the HTTP layer** (`ISO-4001`),
   **invalid ML-DSA identity** (`ISO-3004`) + valid-identity acceptance.
-- ✅ Client suite (`@nen/client`): 7 tests — coded error paths (`ISO-2001`,
+- ✅ Client suite (`@withnen/client`): 7 tests — coded error paths (`ISO-2001`,
   `ISO-1003`, `ISO-1004`), `NenError` shape, and the safe-body / no-hint-leak
   guarantee. Jest env fixed (localStorage flag + `core-crypto` mapped to the Node
   wasm build for tests).

@@ -5,7 +5,7 @@ export const metadata = {
 
 # Usage
 
-Integrating Nen is four steps: mount the session routes, encrypt requests from the client, wrap the endpoints you want decrypted, and handle errors. All snippets below match the shipped `@nen/client` and `@nen/server` APIs.
+Integrating Nen is four steps: mount the session routes, encrypt requests from the client, wrap the endpoints you want decrypted, and handle errors. All snippets below match the shipped `@withnen/client` and `@withnen/server` APIs.
 
 ## 1. Mount the session routes
 
@@ -23,7 +23,7 @@ import {
   InMemorySessionStore,
   // RedisSessionStore,   // any node/serverless runtime
   // UpstashSessionStore, // Edge runtimes (Workers, Vercel Edge) — REST, no TCP
-} from '@nen/server';
+} from '@withnen/server';
 
 // ── Session store — pick one based on your runtime ──────────────────────────
 //
@@ -69,7 +69,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
 Construct an `NenClient` with your server **origin** (use `''` for same-origin), run the handshake once, then call `nenFetch`. The request body is encrypted and the JSON response is decrypted for you.
 
 ```typescript
-import { NenClient } from '@nen/client';
+import { NenClient } from '@withnen/client';
 
 const client = new NenClient('', {
   identityMode: 'pqc', // optional: adds a one-time ML-DSA identity signature
@@ -89,7 +89,7 @@ console.log(data); // { message: 'Securely processed', received: { ... } }
 Prefer a zero-ceremony helper? `createNenFetch` handshakes lazily on first use:
 
 ```typescript
-import { createNenFetch } from '@nen/client';
+import { createNenFetch } from '@withnen/client';
 
 const nenFetch = createNenFetch(''); // same-origin
 const data = await nenFetch('/api/secure-data', {
@@ -103,7 +103,7 @@ const data = await nenFetch('/api/secure-data', {
 Wrap any route with `withNen`. The middleware verifies the per-request HMAC, enforces the replay window, decrypts the body, and encrypts whatever you return.
 
 ```typescript
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 
 export const POST = withNen(async (req, body) => {
   // `body` is already decrypted and the request is already authenticated.
@@ -131,7 +131,7 @@ For LLM tokens or any server-sent stream, return an async iterable from `withNen
 
 ```typescript
 // server
-import { withNenStream } from '@nen/server';
+import { withNenStream } from '@withnen/server';
 
 export const POST = withNenStream(async (req, body) => {
   async function* tokens() {
@@ -156,7 +156,7 @@ for await (const chunk of client.nenStream('/api/chat', {
 Every Nen failure throws a `NenError` with a stable `ISO-xxxx` code. Catch it by code to give users meaningful feedback — and log the detail for yourself without leaking it to the wire.
 
 ```typescript
-import { NenError } from '@nen/client'; // or '@nen/server'
+import { NenError } from '@withnen/client'; // or '@withnen/server'
 
 try {
   const data = await nenFetch('/api/secure-data', {

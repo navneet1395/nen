@@ -192,7 +192,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
                   Client
                 </div>
-                <CodeBlock>{`import { nenFetch } from "@nen/client";
+                <CodeBlock>{`import { nenFetch } from "@withnen/client";
 
 const res = await nenFetch("/api/claims", {
   method: "POST",
@@ -204,7 +204,7 @@ const res = await nenFetch("/api/claims", {
                 <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
                   Server
                 </div>
-                <CodeBlock>{`import { withNen } from "@nen/server";
+                <CodeBlock>{`import { withNen } from "@withnen/server";
 
 export const POST = withNen(async (req, body) => {
   // body is already decrypted + verified

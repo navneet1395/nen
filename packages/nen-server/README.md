@@ -1,4 +1,4 @@
-# Nen Server SDK (`@nen/server`)
+# Nen Server SDK (`@withnen/server`)
 
 The Next.js / serverless middleware for Nen. It runs the handshake, manages
 session keys, verifies the per-request HMAC, and decrypts/encrypts payloads.
@@ -6,7 +6,7 @@ session keys, verifies the per-request HMAC, and decrypts/encrypts payloads.
 ## Install
 
 ```bash
-npm install @nen/server
+npm install @withnen/server
 ```
 
 ## Setup
@@ -17,7 +17,7 @@ Mount the session routes (`src/app/api/nen/[action]/route.ts`):
 import {
   handleHandshake, handleRotate, handleTerminate, handleStatus,
   setSessionStore, InMemorySessionStore,
-} from '@nen/server';
+} from '@withnen/server';
 
 setSessionStore(new InMemorySessionStore()); // see "Session stores" below
 
@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
 Protect any endpoint:
 
 ```typescript
-import { withNen } from '@nen/server';
+import { withNen } from '@withnen/server';
 export const POST = withNen(async (req, body) => {
   // body is already decrypted AND the request is already authenticated
   return { ok: true, body };
@@ -67,7 +67,7 @@ only for explicitly opted-in legacy clients that cannot sign.
 ## Session stores
 
 ```typescript
-import { RedisSessionStore, UpstashSessionStore } from '@nen/server';
+import { RedisSessionStore, UpstashSessionStore } from '@withnen/server';
 
 // Any node/serverless runtime (ioredis, node-redis, or @upstash/redis client):
 setSessionStore(new RedisSessionStore(redisClient));

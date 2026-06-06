@@ -1,4 +1,4 @@
-import { NenClient } from '@nen/client';
+import { NenClient } from '@withnen/client';
 import type { ChatMessage, SecureChatParams } from './types';
 
 export type { ChatMessage, SecureChatParams };

@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Installation | Nen Docs",
-  description: "Install Nen with npx create-nen-app or manually with npm install @nen/client @nen/server. Requires Next.js 13+ App Router and WebAssembly support.",
+  description: "Install Nen with npx create-nen-app or manually with npm install @withnen/client @withnen/server. Requires Next.js 13+ App Router and WebAssembly support.",
 };
 
 # Installation
@@ -9,7 +9,7 @@ Getting started with Nen is incredibly easy. We provide a CLI tool to scaffold e
 
 ## Using the CLI (Recommended)
 
-The easiest way to add Nen to an existing Next.js App Router project. It installs `@nen/client` and `@nen/server`, patches `next.config.ts` for WebAssembly, and generates the session route at `src/app/api/nen/[action]/route.ts`.
+The easiest way to add Nen to an existing Next.js App Router project. It installs `@withnen/client` and `@withnen/server`, patches `next.config.ts` for WebAssembly, and generates the session route at `src/app/api/nen/[action]/route.ts`.
 
 ```bash
 npx create-nen-app@latest my-secure-app
@@ -27,7 +27,7 @@ npm run dev
 If you want to integrate Nen into an existing project, you can install the client and server packages via npm.
 
 ```bash
-npm install @nen/client @nen/server
+npm install @withnen/client @withnen/server
 ```
 
 ### Prerequisites

@@ -11,7 +11,7 @@ npx create-nen-app
 
 It will:
 
-- install `@nen/client` and `@nen/server`,
+- install `@withnen/client` and `@withnen/server`,
 - patch `next.config.ts` for WebAssembly (`asyncWebAssembly`),
 - generate the session routes (`/api/nen/[action]` → handshake / rotate /
   terminate / status),

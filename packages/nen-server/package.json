@@ -1,5 +1,5 @@
 {
-  "name": "@nen/server",
+  "name": "@withnen/server",
   "version": "0.2.0",
   "description": "MIT licensed server middleware for end-to-end encrypted API payloads. withNen, withNenStream, session stores, HMAC auth.",
   "main": "dist/index.js",

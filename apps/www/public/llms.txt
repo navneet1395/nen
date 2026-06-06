@@ -47,9 +47,9 @@ The secondary threat: nation-state adversaries are recording encrypted traffic t
 
 ## API surface (TypeScript)
 
-### `@nen/client`
+### `@withnen/client`
 ```typescript
-import { NenClient, createNenFetch, createNenStream, NenError, describeNenCode } from '@nen/client';
+import { NenClient, createNenFetch, createNenStream, NenError, describeNenCode } from '@withnen/client';
 
 const client = new NenClient(baseUrl, { identityMode: 'tls' | 'pqc' });
 await client.handshake();
@@ -62,21 +62,21 @@ const nenFetch = createNenFetch(baseUrl); // lazy-handshake factory
 const nenStream = createNenStream(baseUrl);
 ```
 
-### `@nen/server`
+### `@withnen/server`
 ```typescript
 import { withNen, withNenStream, handleHandshake, handleRotate, handleTerminate, handleStatus,
          setSessionStore, InMemorySessionStore, RedisSessionStore, UpstashSessionStore,
-         NenError, describeNenCode } from '@nen/server';
+         NenError, describeNenCode } from '@withnen/server';
 
 // Mount at src/app/api/nen/[action]/route.ts
 export const POST = withNen(async (req, body) => { return { ok: true }; });
 export const POST = withNenStream(async (req, body) => { return asyncIterable; });
 ```
 
-### `@nen/ai`
+### `@withnen/ai`
 ```typescript
-import { createSecureOpenAI, createSecureAnthropic } from '@nen/ai';
-import { withSecureAI } from '@nen/ai/server';
+import { createSecureOpenAI, createSecureAnthropic } from '@withnen/ai';
+import { withSecureAI } from '@withnen/ai/server';
 
 // Encrypts prompts + streamed tokens between browser and YOUR backend (not to the model provider)
 const ai = createSecureOpenAI({ baseUrl: 'https://app.yourdomain.com' });
@@ -140,7 +140,7 @@ Full catalog: https://nen.dev/docs/error-codes
 ```bash
 npx create-nen-app@latest my-secure-app
 # or
-npm install @nen/client @nen/server
+npm install @withnen/client @withnen/server
 ```
 
 Requires Next.js 13+ (App Router) and WebAssembly support (`experimental.asyncWebAssembly: true` in next.config.ts).
