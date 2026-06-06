@@ -1,0 +1,25 @@
+{
+  "name": "create-isogeny-app",
+  "version": "0.1.0",
+  "description": "Scaffold a Next.js app with Isogeny pre-configured",
+  "main": "dist/index.js",
+  "bin": {
+    "create-isogeny-app": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "picocolors": "^1.0.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7",
+    "@types/prompts": "^2.4.9"
+  }
+}
