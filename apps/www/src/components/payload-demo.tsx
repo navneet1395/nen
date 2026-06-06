@@ -54,87 +54,101 @@ export function PayloadDemo() {
 
   return (
     <div className="w-full max-w-3xl mx-auto rounded-2xl border border-border bg-background/70 backdrop-blur-md shadow-2xl overflow-hidden text-left">
-      {/* toggle */}
-      <div className="flex items-center gap-1 p-1.5 bg-muted/40 border-b border-border">
+      {/* premium segmented control toggle */}
+      <div className="flex items-center gap-1 p-1.5 bg-muted/50 border-b border-border relative">
         <button
           onClick={() => setSecure(false)}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-            !secure ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          className={`cursor-pointer flex-1 relative z-10 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+            !secure ? "text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          <EyeOff className="w-4 h-4" /> Standard <code className="font-mono text-xs">fetch()</code>
+          {!secure && <div className="absolute inset-0 bg-background rounded-lg shadow-sm -z-10" />}
+          <EyeOff className="w-4 h-4" /> Standard <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">fetch()</code>
         </button>
         <button
           onClick={() => setSecure(true)}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-            secure ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          className={`cursor-pointer flex-1 relative z-10 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+            secure ? "text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          <ShieldCheck className="w-4 h-4" /> Isogeny <code className="font-mono text-xs">pqcfetch()</code>
+          {secure && <div className="absolute inset-0 bg-primary rounded-lg shadow-md -z-10" />}
+          {!secure && (
+            <span className="absolute -top-1 right-0 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+          )}
+          <ShieldCheck className="w-4 h-4" /> Isogeny <code className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${secure ? 'bg-primary-foreground/20' : 'bg-muted'}`}>pqcfetch()</code>
         </button>
       </div>
 
       <div className="grid md:grid-cols-2">
         {/* What you write — editable */}
-        <div className="p-5 border-b md:border-b-0 md:border-r border-border">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            <span>What you write</span>
-            <span className="text-[10px] font-normal normal-case text-muted-foreground/70">(editable)</span>
+        <div className="p-5 border-b md:border-b-0 md:border-r border-border bg-background/50">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span>What you write</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full animate-pulse">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              Live Editable
+            </div>
           </div>
-          <pre className="text-xs font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "pqcfetch" : "fetch"}("/api/claims", {
+          <pre className="text-[11px] font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "pqcfetch" : "fetch"}("/api/claims", {
   method: "POST",
   body:`}</pre>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            spellCheck={false}
-            rows={6}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2.5 text-xs font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-inner resize-none leading-relaxed"
-          />
-          <pre className="text-xs font-mono text-muted-foreground mt-2">{`});`}</pre>
+          <div className="relative group">
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              spellCheck={false}
+              rows={6}
+              className="cursor-text w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2.5 text-[11px] font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-inner resize-none leading-relaxed transition-all group-hover:border-emerald-500/50"
+            />
+          </div>
+          <pre className="text-[11px] font-mono text-muted-foreground mt-2">{`});`}</pre>
         </div>
 
         {/* What the wire sees */}
-        <div className="p-5">
+        <div className="p-5 bg-muted/10 relative overflow-hidden">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
             <span>What your CDN, logs &amp; proxies see</span>
           </div>
 
-          {!secure ? (
-            <div>
-              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 font-mono text-xs text-destructive/90 break-all whitespace-pre-wrap leading-relaxed min-h-[150px]">
-                {body}
-              </div>
-              <div className="flex items-start gap-2 mt-3 text-xs text-destructive">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  Readable. TLS protected it in transit, then terminated — this plaintext now sits in
-                  your logs, your database, and every proxy in between.
-                </span>
-              </div>
+          <div className={`transition-all duration-500 ${!secure ? "opacity-100 translate-y-0" : "opacity-0 absolute translate-y-4 pointer-events-none"}`}>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 font-mono text-[11px] text-destructive/90 break-all whitespace-pre-wrap leading-relaxed min-h-[150px] shadow-sm">
+              {body}
             </div>
-          ) : (
-            <div>
-              <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 font-mono text-[11px] text-primary/90 break-all whitespace-pre-wrap leading-relaxed min-h-[150px]">
-                <span className="text-muted-foreground">x-isogeny-session:</span> sid_3f9a…
-                {"\n"}
-                <span className="text-muted-foreground">x-isogeny-nonce:</span> {nonce}
-                {"\n"}
-                <span className="text-muted-foreground">x-isogeny-signature:</span> {sig}…
-                {"\n\n"}
-                <span className="text-muted-foreground">body:</span>
-                {"\n"}
-                {chunk(ciphertext, 40)}
-              </div>
-              <div className="flex items-start gap-2 mt-3 text-xs text-primary">
-                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  Ciphertext. ChaCha20-Poly1305 over an ML-KEM-768 shared secret — only the one
-                  endpoint you trust can read it. Same one-line change.
-                </span>
-              </div>
+            <div className="flex items-start gap-2 mt-4 text-[11px] text-destructive/90 bg-destructive/10 p-2.5 rounded-md border border-destructive/20">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="leading-relaxed">
+                <strong>Plaintext visible.</strong> TLS protected it in transit, but it terminates at the edge. This payload now sits entirely readable in your logs, your CDN, and every proxy.
+              </span>
             </div>
-          )}
+          </div>
+          
+          <div className={`transition-all duration-500 ${secure ? "opacity-100 translate-y-0" : "opacity-0 absolute translate-y-4 pointer-events-none"}`}>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 font-mono text-[10px] sm:text-[11px] text-primary/90 break-all whitespace-pre-wrap leading-relaxed min-h-[150px] shadow-sm">
+              <span className="text-muted-foreground">x-isogeny-session:</span> sid_3f9a…
+              {"\n"}
+              <span className="text-muted-foreground">x-isogeny-nonce:</span> {nonce}
+              {"\n"}
+              <span className="text-muted-foreground">x-isogeny-signature:</span> {sig}…
+              {"\n\n"}
+              <span className="text-muted-foreground">body:</span>
+              {"\n"}
+              <span className="text-foreground font-bold">{chunk(ciphertext, 40)}</span>
+            </div>
+            <div className="flex items-start gap-2 mt-4 text-[11px] text-primary/90 bg-primary/10 p-2.5 rounded-md border border-primary/20">
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span className="leading-relaxed">
+                <strong>End-to-End Ciphertext.</strong> ChaCha20-Poly1305 over an ML-KEM-768 shared secret. Only the terminal API endpoint you trust can read this.
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

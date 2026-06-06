@@ -1,4 +1,5 @@
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { SequenceDiagram } from "@/components/sequence-diagram";
 import { buttonVariants } from "@/components/ui/button";
 import { Check, X, ArrowRight } from "lucide-react";
 
@@ -23,7 +24,7 @@ export default function WhyNotCloudflare() {
 
       <main className="flex-1 w-full">
         <section className="w-full py-20 md:py-28 bg-gradient-to-b from-background to-muted/30 px-4">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-5xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
               &ldquo;Why not just use Cloudflare or HTTPS?&rdquo;
             </h1>
@@ -34,7 +35,7 @@ export default function WhyNotCloudflare() {
           </div>
         </section>
 
-        <article className="max-w-3xl mx-auto px-4 pb-24">
+        <article className="max-w-5xl mx-auto px-4 pb-24">
           {/* The one-liner */}
           <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 md:p-8 my-10">
             <p className="text-2xl font-bold leading-snug">
@@ -103,11 +104,20 @@ export default function WhyNotCloudflare() {
             ))}
           </ul>
 
-          <div className="my-8 flex justify-center">
-            <img
-              src="/flows/trust-boundary.svg"
-              alt="Trust Boundary Diagram"
-              className="max-w-full h-auto"
+          <div className="w-full my-8">
+            <SequenceDiagram
+              participants={[
+                { id: "client", name: "Browser", type: "client" },
+                { id: "cdn", name: "CDN / Edge", type: "server" },
+                { id: "proxy", name: "Proxy / Logs", type: "server" },
+                { id: "app", name: "Your API", type: "server" }
+              ]}
+              steps={[
+                { id: "1", from: "client", to: "cdn", label: "TLS (Channel Encrypted)", color: "muted" },
+                { id: "2", from: "cdn", to: "proxy", label: "TLS", color: "muted" },
+                { id: "3", from: "proxy", to: "app", label: "TLS", color: "muted" },
+                { id: "4", from: "client", to: "app", label: "Isogeny (Payload Ciphertext E2E)", animated: true, color: "primary" }
+              ]}
             />
           </div>
 

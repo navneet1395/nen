@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { DocsSidebar } from "@/components/docs-sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DocsLayout({
   children,
@@ -10,7 +11,7 @@ export default function DocsLayout({
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/90 supports-[backdrop-filter]:bg-background/55 backdrop-blur-xl backdrop-saturate-150 shadow-sm shadow-black/5">
+      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background shadow-sm shadow-black/5">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
           <Link
             href="/"
@@ -38,6 +39,7 @@ export default function DocsLayout({
             >
               GitHub
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>

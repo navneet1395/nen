@@ -64,7 +64,6 @@ const TIERS: Tier[] = [
       "Exportable compliance evidence (ML-KEM-768 per endpoint, timestamped)",
       "HSM / KMS integration",
       "SAML / SSO",
-      "SOC 2-oriented controls",
       "Dedicated support & SLA",
     ],
   },

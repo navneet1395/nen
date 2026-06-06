@@ -1,5 +1,6 @@
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { buttonVariants } from "@/components/ui/button";
+import { SequenceDiagram } from "@/components/sequence-diagram";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Check, X, ArrowRight, Construction } from "lucide-react";
 
@@ -25,7 +26,7 @@ export default function AIPage() {
 
       <main className="flex-1 w-full">
         <section className="w-full py-20 md:py-28 bg-gradient-to-b from-background to-muted/30 px-4">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-5xl mx-auto text-center">
             <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-6">
               The v1 wedge — Secure AI SDK
             </div>
@@ -33,14 +34,14 @@ export default function AIPage() {
               Encrypt LLM prompts across your own stack
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Prompts and streamed tokens stay ciphertext from the user&apos;s browser to the one
-              backend service you trust to call the model — your edge, CDN, logs, and proxies never
-              see them in plaintext.
+              Prompts and streamed tokens stay ciphertext from the user&apos;s
+              browser to the one backend service you trust to call the model —
+              your edge, CDN, logs, and proxies never see them in plaintext.
             </p>
           </div>
         </section>
 
-        <article className="max-w-3xl mx-auto px-4 pb-24">
+        <article className="max-w-5xl mx-auto px-4 pb-24">
           {/* Code */}
           <div className="my-10">
             <CodeBlock>{`const ai = createSecureOpenAI({ /* ... */ });
@@ -54,9 +55,11 @@ const stream = ai.chat.completions.stream({
 // proxies see only ciphertext.`}</CodeBlock>
           </div>
           <p className="text-sm text-muted-foreground -mt-4 mb-10">
-            Drop-in shapes mirroring the official SDKs — <code>createSecureOpenAI</code> and{" "}
-            <code>createSecureAnthropic</code> — built on the same transport-agnostic core as{" "}
-            <code>pqcfetch</code> and <code>pqcstream</code>.
+            Drop-in shapes mirroring the official SDKs —{" "}
+            <code>createSecureOpenAI</code> and{" "}
+            <code>createSecureAnthropic</code> — built on the same
+            transport-agnostic core as <code>pqcfetch</code> and{" "}
+            <code>pqcstream</code>.
           </p>
 
           {/* The honest framing — this is the critical section */}
@@ -64,8 +67,8 @@ const stream = ai.chat.completions.stream({
             What this honestly protects (and what it doesn&apos;t)
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
-            This is the claim most easily overstated, so we pin it down. Read this section before you
-            read the marketing.
+            This is the claim most easily overstated, so we pin it down. Read
+            this section before you read the marketing.
           </p>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -76,10 +79,14 @@ const stream = ai.chat.completions.stream({
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground leading-relaxed">
-                The prompt/response is ciphertext from the user&apos;s browser, through your
-                CDN, edge, load balancer, and logging, all the way to the backend that terminates
-                Isogeny. That backend is where prompts stop being exposed to{" "}
-                <strong className="text-foreground">your own infrastructure and any intermediary</strong>.
+                The prompt/response is ciphertext from the user&apos;s browser,
+                through your CDN, edge, load balancer, and logging, all the way
+                to the backend that terminates Isogeny. That backend is where
+                prompts stop being exposed to{" "}
+                <strong className="text-foreground">
+                  your own infrastructure and any intermediary
+                </strong>
+                .
               </CardContent>
             </Card>
             <Card className="border-destructive/30 bg-destructive/5">
@@ -89,10 +96,12 @@ const stream = ai.chat.completions.stream({
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground leading-relaxed">
-                Hiding the prompt from the <strong className="text-foreground">model provider</strong>{" "}
-                (OpenAI, Anthropic, etc.). The provider <em>must</em> see plaintext to run inference —
-                you cannot do inference on ciphertext. We will never claim &ldquo;the provider never
-                sees your prompts.&rdquo;
+                Hiding the prompt from the{" "}
+                <strong className="text-foreground">model provider</strong>{" "}
+                (OpenAI, Anthropic, etc.). The provider <em>must</em> see
+                plaintext to run inference — you cannot do inference on
+                ciphertext. We will never claim &ldquo;the provider never sees
+                your prompts.&rdquo;
               </CardContent>
             </Card>
           </div>
@@ -101,25 +110,61 @@ const stream = ai.chat.completions.stream({
             <p className="text-lg leading-relaxed">
               The honest pitch:{" "}
               <em className="text-foreground">
-                &ldquo;Your users&apos; prompts never appear in plaintext anywhere across your own
-                stack — your edge, your logs, your proxies, your vendors-in-the-middle — only inside
-                the one service you trust to call the model.&rdquo;
+                &ldquo;Your users&apos; prompts never appear in plaintext
+                anywhere across your own stack — your edge, your logs, your
+                proxies, your vendors-in-the-middle — only inside the one
+                service you trust to call the model.&rdquo;
               </em>
             </p>
             <p className="text-sm text-muted-foreground mt-4">
-              For teams that also need to hide prompts from the provider, the self-host / TEE path is
-              a separate, later capability — never an implied default.
+              For teams that also need to hide prompts from the provider, the
+              self-host / TEE path is a separate, later capability — never an
+              implied default.
             </p>
           </div>
 
           {/* Flow */}
-          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">The flow</h2>
-          <div className="my-8 flex justify-center">
-            <img src="/flows/ai-flow.svg" alt="AI Flow Diagram" className="max-w-full h-auto" />
+          <div className="w-full">
+            <SequenceDiagram
+              participants={[
+                { id: "client", name: "Client App", type: "client" },
+                { id: "cdn", name: "CDN & Logs", type: "server" },
+                { id: "backend", name: "Your Backend", type: "server" },
+                { id: "llm", name: "OpenAI / Anthropic", type: "database" },
+              ]}
+              steps={[
+                {
+                  id: "1",
+                  from: "client",
+                  to: "cdn",
+                  label: "Isogeny Encrypted Prompt",
+                  animated: true,
+                  color: "primary",
+                },
+                {
+                  id: "2",
+                  from: "cdn",
+                  to: "backend",
+                  label: "Forward Encrypted Payload",
+                  animated: true,
+                  color: "primary",
+                },
+                {
+                  id: "3",
+                  from: "backend",
+                  to: "llm",
+                  label: "Plaintext Prompt",
+                  animated: true,
+                  color: "muted",
+                },
+              ]}
+            />
           </div>
 
           {/* Why this wedge wins */}
-          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">Why AI is the wedge</h2>
+          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
+            Why AI is the wedge
+          </h2>
           <ul className="space-y-3 mb-6">
             {[
               "AI apps already stream sensitive data — prompts, PHI, legal context, financial records — through many hops of your own infrastructure.",
@@ -134,29 +179,45 @@ const stream = ai.chat.completions.stream({
           </ul>
 
           {/* Live demo placeholder */}
-          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">Live demo</h2>
+          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
+            Live demo
+          </h2>
           <div className="rounded-2xl border-2 border-dashed border-border/70 bg-muted/20 p-8 md:p-10 text-center my-6">
             <Construction className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Interactive demo coming soon</h3>
+            <h3 className="text-xl font-bold mb-2">
+              Interactive demo coming soon
+            </h3>
             <p className="text-muted-foreground max-w-xl mx-auto mb-2">
-              A live, encrypt-in-your-browser demo of <code>createSecureOpenAI</code> streaming —
-              with a network inspector showing raw base64 ciphertext alongside the decrypted tokens —
-              ships with the <code>@isogeny/ai</code> package, which is being built now.
+              A live, encrypt-in-your-browser demo of{" "}
+              <code>createSecureOpenAI</code> streaming — with a network
+              inspector showing raw base64 ciphertext alongside the decrypted
+              tokens — ships with the <code>@isogeny/ai</code> package, which is
+              being built now.
             </p>
             <p className="text-xs text-muted-foreground/80">
-              Placeholder: wire this section to <code>@isogeny/ai</code> once the package lands.
+              Placeholder: wire this section to <code>@isogeny/ai</code> once
+              the package lands.
             </p>
           </div>
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-10">
-            <Link href="/docs/quickstart" className={buttonVariants({ variant: "default" })}>
+            <Link
+              href="/docs/quickstart"
+              className={buttonVariants({ variant: "default" })}
+            >
               Quickstart <ArrowRight className="ml-1.5 h-4 w-4" />
             </Link>
-            <Link href="/docs/threat-model" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/docs/threat-model"
+              className={buttonVariants({ variant: "outline" })}
+            >
               Threat model
             </Link>
-            <Link href="/why-not-cloudflare" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/why-not-cloudflare"
+              className={buttonVariants({ variant: "outline" })}
+            >
               Why not Cloudflare?
             </Link>
           </div>

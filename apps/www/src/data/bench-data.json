@@ -1,0 +1,406 @@
+{
+  "stamp": "2026-06-06T18-30-15-867Z",
+  "env": {
+    "node": "v25.2.0",
+    "platform": "darwin 25.5.0",
+    "cpus": 10,
+    "serverRssMB": 1167.77
+  },
+  "loadtest": {
+    "suite": "loadtest",
+    "target": "http://localhost:3000",
+    "requestsPerLevel": 1000,
+    "levels": [
+      {
+        "concurrency": 10,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1345.1,
+        "throughputReqPerSec": 743.43,
+        "latencyMs": {
+          "count": 1000,
+          "min": 4.866,
+          "mean": 13.369,
+          "p50": 11.712,
+          "p90": 17.149,
+          "p99": 25.421,
+          "max": 90.065
+        },
+        "handshakeMs": {
+          "count": 10,
+          "min": 8.718,
+          "mean": 16.62,
+          "p50": 16.011,
+          "p90": 22.104,
+          "p99": 23.357,
+          "max": 23.357
+        },
+        "serverRssMB": {
+          "before": 1875.02,
+          "after": 2105.42
+        }
+      },
+      {
+        "concurrency": 25,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1228.3,
+        "throughputReqPerSec": 814.1,
+        "latencyMs": {
+          "count": 1000,
+          "min": 6.918,
+          "mean": 30.441,
+          "p50": 26.393,
+          "p90": 34.956,
+          "p99": 85.513,
+          "max": 88.702
+        },
+        "handshakeMs": {
+          "count": 25,
+          "min": 12.75,
+          "mean": 27.846,
+          "p50": 26.674,
+          "p90": 42.356,
+          "p99": 44.485,
+          "max": 44.485
+        },
+        "serverRssMB": {
+          "before": 2109.38,
+          "after": 2108.66
+        }
+      },
+      {
+        "concurrency": 50,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1152.5,
+        "throughputReqPerSec": 867.65,
+        "latencyMs": {
+          "count": 1000,
+          "min": 9.079,
+          "mean": 56.403,
+          "p50": 56.607,
+          "p90": 62.719,
+          "p99": 64.133,
+          "max": 188.148
+        },
+        "handshakeMs": {
+          "count": 50,
+          "min": 20.976,
+          "mean": 49.956,
+          "p50": 46.413,
+          "p90": 84.963,
+          "p99": 90.327,
+          "max": 90.327
+        },
+        "serverRssMB": {
+          "before": 2115.03,
+          "after": 2304.56
+        }
+      },
+      {
+        "concurrency": 100,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1327.7,
+        "throughputReqPerSec": 753.19,
+        "latencyMs": {
+          "count": 1000,
+          "min": 14.485,
+          "mean": 127.703,
+          "p50": 90.749,
+          "p90": 239.821,
+          "p99": 1066.745,
+          "max": 1307.606
+        },
+        "handshakeMs": {
+          "count": 100,
+          "min": 36.156,
+          "mean": 63.04,
+          "p50": 62.666,
+          "p90": 71.744,
+          "p99": 81.092,
+          "max": 82.08
+        },
+        "serverRssMB": {
+          "before": 2397.02,
+          "after": 2555.41
+        }
+      },
+      {
+        "concurrency": 150,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1199.7,
+        "throughputReqPerSec": 833.51,
+        "latencyMs": {
+          "count": 1000,
+          "min": 22.976,
+          "mean": 167.229,
+          "p50": 135.022,
+          "p90": 163.217,
+          "p99": 1184.332,
+          "max": 1195.678
+        },
+        "handshakeMs": {
+          "count": 150,
+          "min": 24.012,
+          "mean": 64.634,
+          "p50": 69.042,
+          "p90": 77.207,
+          "p99": 79.092,
+          "max": 79.18
+        },
+        "serverRssMB": {
+          "before": 2571.75,
+          "after": 2702.48
+        }
+      },
+      {
+        "concurrency": 200,
+        "requests": 1000,
+        "errors": 0,
+        "errorRate": 0,
+        "totalMs": 1457,
+        "throughputReqPerSec": 686.34,
+        "latencyMs": {
+          "count": 1000,
+          "min": 36.991,
+          "mean": 270.614,
+          "p50": 188.207,
+          "p90": 477.22,
+          "p99": 1441.713,
+          "max": 1452.16
+        },
+        "handshakeMs": {
+          "count": 200,
+          "min": 32.951,
+          "mean": 71.321,
+          "p50": 73.279,
+          "p90": 80.286,
+          "p99": 81.638,
+          "max": 81.648
+        },
+        "serverRssMB": {
+          "before": 2872.14,
+          "after": 2950.34
+        }
+      }
+    ],
+    "peakThroughput": {
+      "concurrency": 50,
+      "reqPerSec": 867.65,
+      "p99Ms": 64.133
+    },
+    "saturationConcurrency": 50,
+    "firstErrorsAtConcurrency": null
+  },
+  "profile": {
+    "suite": "profile",
+    "target": "http://localhost:3000",
+    "iters": 100,
+    "handshakeMs": 3.206,
+    "clientCryptoMsPerOp": {
+      "count": 100,
+      "min": 0.013,
+      "mean": 0.015,
+      "p50": 0.014,
+      "p90": 0.016,
+      "p99": 0.02,
+      "max": 0.035
+    },
+    "payloadScaling": [
+      {
+        "label": "1KB",
+        "plaintextBytes": 1035,
+        "wireBytes": 1487,
+        "wireOverheadRatio": 1.437,
+        "errors": 0,
+        "roundTripMs": {
+          "count": 100,
+          "min": 1.178,
+          "mean": 1.716,
+          "p50": 1.486,
+          "p90": 2.072,
+          "p99": 4.969,
+          "max": 9.427
+        }
+      },
+      {
+        "label": "10KB",
+        "plaintextBytes": 10251,
+        "wireBytes": 13775,
+        "wireOverheadRatio": 1.344,
+        "errors": 0,
+        "roundTripMs": {
+          "count": 100,
+          "min": 1.478,
+          "mean": 1.998,
+          "p50": 1.72,
+          "p90": 2.082,
+          "p99": 9.158,
+          "max": 9.623
+        }
+      },
+      {
+        "label": "100KB",
+        "plaintextBytes": 102411,
+        "wireBytes": 136655,
+        "wireOverheadRatio": 1.334,
+        "errors": 0,
+        "roundTripMs": {
+          "count": 100,
+          "min": 4.994,
+          "mean": 7.37,
+          "p50": 5.654,
+          "p90": 7.891,
+          "p99": 19.918,
+          "max": 122.264
+        }
+      },
+      {
+        "label": "500KB",
+        "plaintextBytes": 512011,
+        "wireBytes": 682787,
+        "wireOverheadRatio": 1.334,
+        "errors": 0,
+        "roundTripMs": {
+          "count": 100,
+          "min": 20.581,
+          "mean": 22.095,
+          "p50": 21.487,
+          "p90": 24.472,
+          "p99": 29.842,
+          "max": 36.297
+        }
+      }
+    ]
+  },
+  "scenarios": {
+    "suite": "scenarios",
+    "target": "http://localhost:3000",
+    "concurrentHandshakes": {
+      "levels": [
+        {
+          "concurrency": 10,
+          "latencyMs": {
+            "count": 10,
+            "min": 5.924,
+            "mean": 15.361,
+            "p50": 14.088,
+            "p90": 22.339,
+            "p99": 24.37,
+            "max": 24.37
+          },
+          "totalMs": 36.1,
+          "throughputReqPerSec": 276.8
+        },
+        {
+          "concurrency": 50,
+          "latencyMs": {
+            "count": 50,
+            "min": 16.045,
+            "mean": 80.294,
+            "p50": 77.806,
+            "p90": 139.641,
+            "p99": 152.487,
+            "max": 152.487
+          },
+          "totalMs": 168,
+          "throughputReqPerSec": 297.61
+        },
+        {
+          "concurrency": 100,
+          "latencyMs": {
+            "count": 100,
+            "min": 45.116,
+            "mean": 156.726,
+            "p50": 93.45,
+            "p90": 300.268,
+            "p99": 326.405,
+            "max": 328.636
+          },
+          "totalMs": 355.3,
+          "throughputReqPerSec": 281.45
+        },
+        {
+          "concurrency": 200,
+          "latencyMs": {
+            "count": 200,
+            "min": 73.429,
+            "mean": 319.393,
+            "p50": 183.689,
+            "p90": 693.795,
+            "p99": 746.889,
+            "max": 751.051
+          },
+          "totalMs": 784.6,
+          "throughputReqPerSec": 254.91
+        }
+      ],
+      "peak": {
+        "concurrency": 50,
+        "latencyMs": {
+          "count": 50,
+          "min": 16.045,
+          "mean": 80.294,
+          "p50": 77.806,
+          "p90": 139.641,
+          "p99": 152.487,
+          "max": 152.487
+        },
+        "totalMs": 168,
+        "throughputReqPerSec": 297.61
+      }
+    },
+    "keyRotation": {
+      "normalLatencyMs": {
+        "count": 1900,
+        "min": 5.72,
+        "mean": 27.268,
+        "p50": 25.943,
+        "p90": 32.264,
+        "p99": 42.794,
+        "max": 61.022
+      },
+      "rotationLatencyMs": {
+        "count": 100,
+        "min": 31.391,
+        "mean": 37.67,
+        "p50": 36.469,
+        "p90": 43.632,
+        "p99": 48.945,
+        "max": 49.48
+      },
+      "rotationsCompleted": 100
+    },
+    "longLivedSession": {
+      "totalRequests": 1000,
+      "durationSec": 1.8,
+      "latencyDrift": {
+        "firstHalfP50": 1.379,
+        "secondHalfP50": 1.221,
+        "driftMs": -0.16
+      },
+      "memoryGrowthMB": 147.64
+    },
+    "multiUserBurst": {
+      "levels": [
+        20,
+        50,
+        100
+      ],
+      "aggregateThroughput": 145.85
+    },
+    "sessionChurn": {
+      "sessionsPerSec": 252.22,
+      "totalSessions": 2540,
+      "errors": 0
+    }
+  }
+}
