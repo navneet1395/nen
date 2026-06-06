@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
+import { MobileNav } from "@/components/mobile-nav";
 
 export function SiteHeader() {
   return (
@@ -12,7 +13,7 @@ export function SiteHeader() {
           <Image src="/Logo.svg" alt="Nen Logo" width={24} height={24} className="h-6 w-auto" />
           <span>Nen</span>
         </Link>
-        <nav className="flex items-center gap-5 text-sm font-medium">
+        <nav className="flex items-center gap-4 sm:gap-5 text-sm font-medium">
           <Link href="/why-not-cloudflare" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
             Why not Cloudflare?
           </Link>
@@ -25,7 +26,7 @@ export function SiteHeader() {
           <Link href="/pricing" className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground">
             Pricing
           </Link>
-          <Link href="/docs" className="transition-colors hover:text-primary text-muted-foreground">
+          <Link href="/docs" className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground">
             Docs
           </Link>
           <a
@@ -36,10 +37,11 @@ export function SiteHeader() {
           >
             GitHub
           </a>
-          <Link href="/docs/quickstart" className={buttonVariants({ variant: "default", size: "sm" })}>
+          <Link href="/docs/quickstart" className={`hidden sm:inline-flex ${buttonVariants({ variant: "default", size: "sm" })}`}>
             Get Started
           </Link>
           <ThemeToggle />
+          <MobileNav />
         </nav>
       </div>
     </header>
