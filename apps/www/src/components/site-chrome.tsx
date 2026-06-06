@@ -28,8 +28,14 @@ export function SiteHeader() {
           <Link href="/docs" className="transition-colors hover:text-primary text-muted-foreground">
             Docs
           </Link>
-          {/* TODO: update href when repo is public */}
-          {/* <Link href="https://github.com/your-org/nen" className="hidden sm:inline ...">GitHub</Link> */}
+          <a
+            href="https://github.com/navneet1395/nen"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground"
+          >
+            GitHub
+          </a>
           <Link href="/docs/quickstart" className={buttonVariants({ variant: "default", size: "sm" })}>
             Get Started
           </Link>
@@ -66,6 +72,8 @@ export function SiteFooter() {
             <Link href="/docs" className="hover:text-primary">Documentation</Link>
             <Link href="/docs/quickstart" className="hover:text-primary">Quickstart</Link>
             <Link href="/docs/error-codes" className="hover:text-primary">Error codes</Link>
+            <a href="https://github.com/navneet1395/nen" target="_blank" rel="noopener noreferrer" className="hover:text-primary">GitHub</a>
+            <a href="https://www.npmjs.com/org/withnen" target="_blank" rel="noopener noreferrer" className="hover:text-primary">npm</a>
           </div>
           <div className="flex flex-col gap-2">
             <span className="font-semibold text-foreground">Security &amp; Compliance</span>
