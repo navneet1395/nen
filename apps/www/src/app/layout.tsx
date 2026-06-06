@@ -5,9 +5,70 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+const SITE_URL = "https://nen.dev";
+
 export const metadata: Metadata = {
-  title: "Nen | Post-Quantum Security for the Modern Web",
-  description: "Next-generation cryptographic tool for seamless PQC integration.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Nen — Post-Quantum Payload Encryption for Modern APIs",
+    template: "%s | Nen",
+  },
+  description:
+    "End-to-end encrypted API payloads powered by ML-KEM-768 (FIPS 203). TLS encrypts the channel; Nen encrypts the payload that survives TLS termination — logs, DBs, CDN nodes, third-party hops. Drop-in SDK for Next.js.",
+  keywords: [
+    "post-quantum cryptography",
+    "ML-KEM",
+    "FIPS 203",
+    "payload encryption",
+    "end-to-end encryption",
+    "API security",
+    "Next.js encryption",
+    "ChaCha20-Poly1305",
+    "harvest now decrypt later",
+    "quantum safe",
+    "PQC SDK",
+    "secure AI",
+  ],
+  authors: [{ name: "Nen" }],
+  creator: "Nen",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: "Nen",
+    title: "Nen — Post-Quantum Payload Encryption for Modern APIs",
+    description:
+      "TLS encrypts the channel; Nen encrypts the payload that survives TLS termination. ML-KEM-768 + ChaCha20-Poly1305, drop-in SDK for Next.js.",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Nen — Post-Quantum Payload Encryption",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nen — Post-Quantum Payload Encryption for Modern APIs",
+    description:
+      "TLS encrypts the channel; Nen encrypts the payload that survives TLS termination. ML-KEM-768 + ChaCha20-Poly1305, drop-in SDK for Next.js.",
+    images: ["/og.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
 };
 
 export default function RootLayout({

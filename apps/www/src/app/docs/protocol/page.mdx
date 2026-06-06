@@ -1,5 +1,10 @@
 import { SequenceDiagram } from "@/components/sequence-diagram";
 
+export const metadata = {
+  title: "Protocol Spec — NEN-PROTOCOL-V1 | Nen Docs",
+  description: "The exact wire format: ML-KEM handshake, base64 { ct, n } payloads, HMAC-SHA256 canonical string, 30s replay window, SSE stream framing, and session lifecycle. NEN-PROTOCOL-V1.",
+};
+
 # Protocol — NEN-PROTOCOL-V1
 
 The wire protocol spoken between `@nen/client` and `@nen/server`, as implemented. It runs at the application layer, **on top of TLS** — Nen assumes TLS is present and does not replace it.

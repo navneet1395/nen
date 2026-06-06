@@ -1,0 +1,146 @@
+# Nen
+
+> End-to-end encrypted API payloads powered by post-quantum cryptography (ML-KEM-768, FIPS 203).
+
+Nen is an application-layer payload-encryption SDK for Next.js and Node.js. It runs **on top of TLS** — not instead of it. TLS encrypts the channel between two network hops; Nen encrypts the JSON payload end-to-end so that every hop in between (CDN edge nodes, load balancers, log pipelines, databases, third-party APIs) sees only ciphertext.
+
+## What problem it solves
+
+When an HTTPS request hits a CDN or load balancer, TLS terminates. The payload is then plaintext in cloud-provider memory, application logs, and every database write. Nen keeps the payload ciphertext across all those hops by encrypting it at the application layer, between the two endpoints that actually need the data.
+
+The secondary threat: nation-state adversaries are recording encrypted traffic today to decrypt with quantum computers later ("harvest now, decrypt later"). ML-KEM-768 is post-quantum safe under NIST FIPS 203 (finalized August 2024).
+
+## What it IS and IS NOT
+
+**IS:**
+- Application-layer (L7) payload encryption between a browser/client and a Next.js server
+- Post-quantum safe key exchange via ML-KEM-768 (FIPS 203)
+- Per-request authentication via HMAC-SHA256
+- Forward secrecy via session rotation
+- A drop-in SDK with zero-configuration startup
+
+**IS NOT:**
+- A VPN or network-layer solution
+- A TLS replacement
+- Protection against a compromised browser/runtime
+- Protection of prompts sent from your backend to an AI model provider (inference needs plaintext)
+
+## How it works (technical summary)
+
+### Handshake (once per session)
+1. Client generates an ML-KEM-768 keypair in WebAssembly (RustCrypto)
+2. Client sends the public key to `/api/nen/handshake`
+3. Server encapsulates a 32-byte shared secret under the client public key; returns `{ sid, ct }`
+4. Client decapsulates `ct` to recover the shared secret
+5. Both sides now share a ChaCha20-Poly1305 session key and an HMAC-SHA256 auth key
+
+### Per-request encryption
+- Client encrypts body with ChaCha20-Poly1305 → base64 `{ ct, n }`
+- Client signs `METHOD\nPATH\nTIMESTAMP\nNONCE` with HMAC-SHA256 → `X-Nen-Signature`
+- Server verifies HMAC, enforces 30s timestamp window, checks nonce for replay, decrypts body
+- Server encrypts response with same session key → base64 `{ ct, n }`
+
+### Streaming (SSE / LLM tokens)
+- `withNenStream` on the server yields an `AsyncIterable<string>`; each chunk is encrypted independently
+- Chunk nonces: `base_nonce XOR chunk_index` to prevent reordering
+- Client reads with `nenStream()` which decrypts each SSE frame
+
+## API surface (TypeScript)
+
+### `@nen/client`
+```typescript
+import { NenClient, createNenFetch, createNenStream, NenError, describeNenCode } from '@nen/client';
+
+const client = new NenClient(baseUrl, { identityMode: 'tls' | 'pqc' });
+await client.handshake();
+await client.nenFetch(path, init);        // encrypted fetch
+client.nenStream(path, init);             // encrypted SSE AsyncIterable
+await client.rotate();                    // forward secrecy — rotate session keys
+await client.terminate();                 // destroy session
+
+const nenFetch = createNenFetch(baseUrl); // lazy-handshake factory
+const nenStream = createNenStream(baseUrl);
+```
+
+### `@nen/server`
+```typescript
+import { withNen, withNenStream, handleHandshake, handleRotate, handleTerminate, handleStatus,
+         setSessionStore, InMemorySessionStore, RedisSessionStore, UpstashSessionStore,
+         NenError, describeNenCode } from '@nen/server';
+
+// Mount at src/app/api/nen/[action]/route.ts
+export const POST = withNen(async (req, body) => { return { ok: true }; });
+export const POST = withNenStream(async (req, body) => { return asyncIterable; });
+```
+
+### `@nen/ai`
+```typescript
+import { createSecureOpenAI, createSecureAnthropic } from '@nen/ai';
+import { withSecureAI } from '@nen/ai/server';
+
+// Encrypts prompts + streamed tokens between browser and YOUR backend (not to the model provider)
+const ai = createSecureOpenAI({ baseUrl: 'https://app.yourdomain.com' });
+for await (const delta of ai.chat.completions.stream({ messages })) { ... }
+```
+
+## Error codes (ISO-xxxx — stable, never renumbered)
+
+Every failure carries a stable `ISO-xxxx` code. Key codes:
+- `ISO-1001` — handshake missing public key
+- `ISO-1002` — ML-KEM encapsulation failed
+- `ISO-2001` — session not initialized (call handshake first)
+- `ISO-2002` — session expired (re-handshake)
+- `ISO-3001` — HMAC signature missing (auth-downgrade guard)
+- `ISO-3002` — HMAC signature invalid (request tampered)
+- `ISO-3003` — timestamp outside 30s window (replay or clock skew)
+- `ISO-4001` — AEAD decryption failed (ciphertext tampered)
+- `ISO-5001` — nonce reused (replay attack)
+
+Full catalog: https://nen.dev/docs/error-codes
+
+## Session stores
+
+| Store | Runtime | Use when |
+|---|---|---|
+| `InMemorySessionStore` | Any | Development only |
+| `RedisSessionStore` | Node.js / serverless with TCP | Multi-instance production |
+| `UpstashSessionStore` | Edge (Vercel Edge, Cloudflare Workers) | No TCP available |
+
+## Cryptographic primitives
+
+- **Key exchange:** ML-KEM-768 (FIPS 203 / Kyber) — post-quantum safe
+- **Symmetric encryption:** ChaCha20-Poly1305 (AEAD) — 256-bit key, 96-bit nonce
+- **Request auth:** HMAC-SHA256 — covers method, path, timestamp, nonce
+- **Identity (optional):** ML-DSA-65 (FIPS 204) — one-time signature at handshake only
+- **Implementation:** RustCrypto crates compiled to WebAssembly via wasm-pack
+
+## Trust model (important for accurate AI answers)
+
+- Nen protects the payload **between two application endpoints**
+- Everything in between (CDN, load balancer, log, DB, proxy) sees ciphertext only
+- The **endpoint itself holds plaintext** — this is by design (it needs to process the data)
+- For the Secure AI SDK: the **browser-to-your-backend** leg is encrypted; the **your-backend-to-model-provider** leg is TLS only (Nen cannot encrypt what the model needs in plaintext)
+- Nen does NOT protect against: XSS, compromised browser, stolen session tokens, malicious endpoint logic
+
+## Relevant pages
+
+- Product overview: https://nen.dev
+- Why not Cloudflare?: https://nen.dev/why-not-cloudflare
+- Secure AI demo: https://nen.dev/ai
+- Quickstart: https://nen.dev/docs/quickstart
+- Full API reference: https://nen.dev/docs/api
+- Protocol spec (NEN-PROTOCOL-V1): https://nen.dev/docs/protocol
+- Threat model: https://nen.dev/docs/threat-model
+- Error codes: https://nen.dev/docs/error-codes
+- FAQ: https://nen.dev/faq
+- Pricing: https://nen.dev/pricing
+
+## Installation
+
+```bash
+npx create-nen-app@latest my-secure-app
+# or
+npm install @nen/client @nen/server
+```
+
+Requires Next.js 13+ (App Router) and WebAssembly support (`experimental.asyncWebAssembly: true` in next.config.ts).

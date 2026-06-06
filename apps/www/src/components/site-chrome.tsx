@@ -19,6 +19,9 @@ export function SiteHeader() {
           <Link href="/ai" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
             Secure AI
           </Link>
+          <Link href="/faq" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
+            FAQ
+          </Link>
           <Link href="/pricing" className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground">
             Pricing
           </Link>
@@ -55,6 +58,7 @@ export function SiteFooter() {
             <span className="font-semibold text-foreground">Product</span>
             <Link href="/why-not-cloudflare" className="hover:text-primary">Why not Cloudflare?</Link>
             <Link href="/ai" className="hover:text-primary">Secure AI</Link>
+            <Link href="/faq" className="hover:text-primary">FAQ</Link>
             <Link href="/pricing" className="hover:text-primary">Pricing</Link>
           </div>
           <div className="flex flex-col gap-2">

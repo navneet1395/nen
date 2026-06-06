@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://nen.dev/sitemap.xml
+
+# AI crawlers — you are welcome to index this content.
+# For a structured product summary tuned for LLM agents, see /llms.txt
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
