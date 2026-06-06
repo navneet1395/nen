@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Isogeny is application-layer, end-to-end **payload** encryption for APIs, powered by post-quantum
-crypto (ML-KEM-768). It runs *on top of* TLS: TLS protects the channel, Isogeny keeps the JSON body
+Nen is application-layer, end-to-end **payload** encryption for APIs, powered by post-quantum
+crypto (ML-KEM-768). It runs *on top of* TLS: TLS protects the channel, Nen keeps the JSON body
 ciphertext past TLS termination (logs, DB, CDN, proxies, third-party hops). It is **not** a VPN, not a
 TLS replacement, and does not do homomorphic compute.
 
@@ -26,11 +26,11 @@ cd packages/core-crypto && cargo test
 cargo test hmac                              # single test by substring
 
 # TypeScript packages (jest)
-npm test --workspace @isogeny/server
-npm test --workspace @isogeny/client
-npm test --workspace @isogeny/ai
-npm test --workspace @isogeny/server -- -t "ISO-3001"   # single test by name
-npm run build --workspace @isogeny/server    # tsup → dist/ (CJS+ESM+.d.ts)
+npm test --workspace @nen/server
+npm test --workspace @nen/client
+npm test --workspace @nen/ai
+npm test --workspace @nen/server -- -t "ISO-3001"   # single test by name
+npm run build --workspace @nen/server    # tsup → dist/ (CJS+ESM+.d.ts)
 
 # Marketing/docs site
 cd apps/www && npm run dev                    # http://localhost:3000
@@ -43,22 +43,22 @@ cd apps/www && npm run build:diagrams         # regenerate public/flows/*.svg fr
 Build/data flow is strictly bottom-up; a change low in the stack requires rebuilding everything above:
 
 ```
-core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @isogeny/{client,server}  →  @isogeny/ai  →  apps/www
+core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @nen/{client,server}  →  @nen/ai  →  apps/www
 ```
 
 - **`packages/core-crypto`** — all primitives (ML-KEM-768, ML-DSA-65, ChaCha20-Poly1305, HMAC-SHA256,
   base64) from the RustCrypto crates, exposed via `#[wasm_bindgen]`. Compiles to **two** Wasm targets:
-  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). Both `@isogeny/client` and
-  `@isogeny/server` depend on `"core-crypto": "file:../../pkg/bundler"`.
-- **`@isogeny/server`** — `handleHandshake/Rotate/Terminate/Status` (mounted via a single
-  `/api/isogeny/[action]` route), `decryptPayload`/`encryptPayload`, and the `withIsogeny` /
-  `withIsogenyStream` DX wrappers. Pluggable `SessionStore`: `InMemorySessionStore` (default, bound to
+  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). Both `@nen/client` and
+  `@nen/server` depend on `"core-crypto": "file:../../pkg/bundler"`.
+- **`@nen/server`** — `handleHandshake/Rotate/Terminate/Status` (mounted via a single
+  `/api/nen/[action]` route), `decryptPayload`/`encryptPayload`, and the `withNen` /
+  `withNenStream` DX wrappers. Pluggable `SessionStore`: `InMemorySessionStore` (default, bound to
   `globalThis` so Next.js HMR doesn't wipe keys), `RedisSessionStore`, `UpstashSessionStore` (REST
   over fetch — Edge-safe).
-- **`@isogeny/client`** — `IsogenyClient` + `pqcfetch`/`pqcstream` (and `createPqcFetch`/
-  `createPqcStream` factories). Handshakes once, then encrypts each request and auto-rotates on a 401.
-- **`@isogeny/ai`** — `createSecureOpenAI`/`createSecureAnthropic` (client) and `withSecureAI`
-  (server), built on `pqcstream`.
+- **`@nen/client`** — `NenClient` + `nenfetch`/`nenstream` (and `createNenFetch`/
+  `createNenStream` factories). Handshakes once, then encrypts each request and auto-rotates on a 401.
+- **`@nen/ai`** — `createSecureOpenAI`/`createSecureAnthropic` (client) and `withSecureAI`
+  (server), built on `nenstream`.
 
 ### The protocol (must stay in sync with PROTOCOL.md)
 
@@ -66,17 +66,17 @@ core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @isogeny/{client,server
   reintroduce array-vs-base64 branches.
 - Per-request **HMAC is mandatory** (`strict: true` default). The signature covers the canonical
   string `METHOD\nPATH\nTIMESTAMP\nNONCE` — **not** the ciphertext (the AEAD tag catches body
-  tampering). `withIsogeny(handler, { strict: false })` is legacy-only.
+  tampering). `withNen(handler, { strict: false })` is legacy-only.
 - The ML-KEM shared secret is used **directly** as the ChaCha20 key; the HMAC key is a *separate*
   random 32-byte key issued at handshake. **There is no HKDF** — don't add docs/code claiming one.
 - Replay defense: 30s timestamp window + per-session nonce tracking in the store.
 
 ### Error-code system (keep three catalogs in lockstep)
 
-Every failure is an `IsogenyError` carrying a stable `ISO-xxxx` code. The wire/HTTP body is
+Every failure is an `NenError` carrying a stable `ISO-xxxx` code. The wire/HTTP body is
 `{ error: { code, message } }` — a safe message only; the precise `hint` is logged server-side and
 **never** sent over the wire. The catalog is duplicated in `ERROR_CODES.md` (canonical),
-`packages/isogeny-server/src/errors.ts`, and `packages/isogeny-client/src/errors.ts` (subset). Codes
+`packages/nen-server/src/errors.ts`, and `packages/nen-client/src/errors.ts` (subset). Codes
 are a permanent contract: never reuse or renumber, and update all three together.
 
 ## Gotchas
@@ -96,7 +96,7 @@ are a permanent contract: never reuse or renumber, and update all three together
 When editing `apps/www` copy or any docs, keep claims precise — these were deliberate and a security
 reviewer will catch overclaims:
 
-- **Additive, never adversarial:** "TLS + Isogeny", never "TLS is wrong/broken".
+- **Additive, never adversarial:** "TLS + Nen", never "TLS is wrong/broken".
 - The trust boundary: everything **between the two endpoints** is ciphertext; the **endpoints hold
   plaintext by design**. Never claim "even a compromised server sees only ciphertext."
 - The AI SDK hides prompts from *your own* infra/intermediaries, **not** from the model provider

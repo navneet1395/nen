@@ -1,14 +1,14 @@
-# ISOGENY-PROTOCOL-V1
+# NEN-PROTOCOL-V1
 
-The wire protocol spoken between `@isogeny/client` and `@isogeny/server`. This
+The wire protocol spoken between `@nen/client` and `@nen/server`. This
 document describes the protocol **as implemented today** — it is the artifact a
 security reviewer or auditor reads. Where a value is hardcoded in the code, it is
 stated here exactly.
 
-- **Layer:** application (Layer 7), on top of TLS. Isogeny assumes TLS is present
+- **Layer:** application (Layer 7), on top of TLS. Nen assumes TLS is present
   and does not replace it (see [THREAT_MODEL.md](./THREAT_MODEL.md)).
 - **Goal:** keep the request/response/stream *payload* as ciphertext across every
-  hop and at-rest store between the two Isogeny endpoints, with post-quantum key
+  hop and at-rest store between the two Nen endpoints, with post-quantum key
   exchange so recorded ciphertext stays safe against harvest-now-decrypt-later.
 - **Error codes:** every failure path is a stable `ISO-xxxx` code — see
   [ERROR_CODES.md](./ERROR_CODES.md).
@@ -37,7 +37,7 @@ stated here exactly.
 | Poly1305 tag | 16 |
 
 All binary artifacts travel as **base64** strings (encoded/decoded inside Wasm via
-`isogeny_to_base64` / `isogeny_from_base64`), never as JSON number arrays.
+`nen_to_base64` / `nen_from_base64`), never as JSON number arrays.
 
 ---
 
@@ -45,11 +45,11 @@ All binary artifacts travel as **base64** strings (encoded/decoded inside Wasm v
 
 | Method | Path | Purpose | Handler |
 | :-- | :-- | :-- | :-- |
-| POST | `/api/isogeny/handshake` | Establish a session (§3) | `handleHandshake` |
-| POST | `/api/isogeny/rotate` | Destroy old session, establish a new one | `handleRotate` |
-| POST | `/api/isogeny/terminate` | Destroy a session (logout / PFS) | `handleTerminate` |
-| GET  | `/api/isogeny/status` | Liveness check for a session id | `handleStatus` |
-| *any* | developer routes | Encrypted request/response (§4) or stream (§5) | `withIsogeny` / `withIsogenyStream` |
+| POST | `/api/nen/handshake` | Establish a session (§3) | `handleHandshake` |
+| POST | `/api/nen/rotate` | Destroy old session, establish a new one | `handleRotate` |
+| POST | `/api/nen/terminate` | Destroy a session (logout / PFS) | `handleTerminate` |
+| GET  | `/api/nen/status` | Liveness check for a session id | `handleStatus` |
+| *any* | developer routes | Encrypted request/response (§4) or stream (§5) | `withNen` / `withNenStream` |
 
 ---
 
@@ -58,7 +58,7 @@ All binary artifacts travel as **base64** strings (encoded/decoded inside Wasm v
 ```
 Client                                              Server
   │  generate ML-KEM-768 keypair (pk, sk)
-  │  POST /api/isogeny/handshake
+  │  POST /api/nen/handshake
   │     { "pk": base64(pk)
   │       [, "sigPk": base64(idPk), "sigOfPk": base64(sign(idSk, pk)) ] }  ──▶
   │                                          verify identity sig if present (§6)
@@ -81,15 +81,15 @@ Client                                              Server
 
 ## 4. Encrypted request / response
 
-Every call to a `withIsogeny`-wrapped route:
+Every call to a `withNen`-wrapped route:
 
 **Request**
 
 ```
 Headers:
-  X-Isogeny-Session:    <sid>
-  X-Isogeny-Timestamp:  <unix_ms>
-  X-Isogeny-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
+  X-Nen-Session:    <sid>
+  X-Nen-Timestamp:  <unix_ms>
+  X-Nen-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
 Body (if any):
   { "ct": base64( AEAD.encrypt(ss, n, plaintext) ), "n": base64(n) }
 ```
@@ -114,7 +114,7 @@ METHOD \n PATH \n TIMESTAMP \n NONCE
    - no signature → `ISO-3001` (this is the auth-downgrade guard),
    - bad signature → `ISO-3002`,
    - `|now − timestamp| > 30_000 ms` → `ISO-3003`.
-   `strict: false` on `withIsogeny` disables this for explicitly opted-in legacy
+   `strict: false` on `withNen` disables this for explicitly opted-in legacy
    clients only.
 4. Nonce replay: the nonce string must be unseen for this session (when the store
    implements `hasNonce`/`trackNonce`). Reused → `ISO-5001`.
@@ -133,13 +133,13 @@ response surfaces as `ISO-4001` client-side.
 
 ## 5. Encrypted streaming (SSE)
 
-`withIsogenyStream` returns a `text/event-stream`. The request leg is identical to
+`withNenStream` returns a `text/event-stream`. The request leg is identical to
 §4. The response:
 
 ```
 Headers:
   Content-Type:            text/event-stream
-  X-Isogeny-Stream-Nonce:  base64(baseNonce)        // 12-byte base nonce
+  X-Nen-Stream-Nonce:  base64(baseNonce)        // 12-byte base nonce
 Body (SSE frames):
   data: base64( AEAD.encrypt(ss, nonce_i, chunk_i) )\n\n
   data: base64( AEAD.encrypt(ss, nonce_i, "__FIN__") )\n\n   // final frame
@@ -150,7 +150,7 @@ Body (SSE frames):
   independently and carries its own Poly1305 tag.
 - **Termination:** the stream ends with an encrypted `__FIN__` sentinel; the client
   stops on decrypting it.
-- Missing `X-Isogeny-Stream-Nonce` → client `ISO-7001`. Non-ok / bodyless stream →
+- Missing `X-Nen-Stream-Nonce` → client `ISO-7001`. Non-ok / bodyless stream →
   client `ISO-7002`.
 
 > Note: the XOR-counter nonce scheme is safe because `(ss, baseNonce)` is unique per
@@ -165,14 +165,14 @@ The handshake establishes confidentiality; **identity** (who the server is)
 is layered as follows:
 
 - **v1 — TLS-bound (default).** The handshake runs inside the already-authenticated
-  TLS channel, so server identity = the TLS certificate. Isogeny then adds payload
+  TLS channel, so server identity = the TLS certificate. Nen then adds payload
   confidentiality past TLS termination. Trade-off, stated plainly: we trust the web
   PKI for *identity* even though we do not trust it for *long-term confidentiality*
   — these are different properties.
 - **v2 — ML-DSA identity (opt-in).** With `identityMode: 'pqc'`, the client also
   generates an ML-DSA-65 keypair and sends `sigPk` plus `sigOfPk = sign(idSk, pk)`.
   The server verifies the signature over the ephemeral ML-KEM public key once, at
-  handshake (`isogeny_verify_signature`), giving a **TLS-independent** trust root
+  handshake (`nen_verify_signature`), giving a **TLS-independent** trust root
   for financial/government workloads. Verification is **one-time** — never
   per-request. Failure → `ISO-3004`.
 
@@ -200,6 +200,6 @@ path stays small and fast.
 
 ## 8. Versioning
 
-This is `ISOGENY-PROTOCOL-V1`. Wire-breaking changes (new canonical string, new
+This is `NEN-PROTOCOL-V1`. Wire-breaking changes (new canonical string, new
 field names, dropping the legacy number-array fallback) require a major protocol
 bump. Error codes are a **stable contract** and are never reused or renumbered.

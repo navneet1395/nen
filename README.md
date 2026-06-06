@@ -1,12 +1,12 @@
-# Isogeny — End-to-End Encrypted APIs, Powered by Post-Quantum Cryptography
+# Nen — End-to-End Encrypted APIs, Powered by Post-Quantum Cryptography
 
-**TLS protects the channel. Isogeny protects the payload.** HTTPS keeps your data
+**TLS protects the channel. Nen protects the payload.** HTTPS keeps your data
 safe in transit, then terminates — leaving the JSON body in plaintext across your
-logs, databases, CDN, proxies, and every third-party hop. Isogeny keeps that
+logs, databases, CDN, proxies, and every third-party hop. Nen keeps that
 payload encrypted the whole way, all the way to the code that actually needs it,
-using a post-quantum (ML-KEM-768) key exchange. **TLS + Isogeny.**
+using a post-quantum (ML-KEM-768) key exchange. **TLS + Nen.**
 
-This is the monorepo for the Isogeny SDKs, the Rust/Wasm crypto core, the CLI
+This is the monorepo for the Nen SDKs, the Rust/Wasm crypto core, the CLI
 scaffold, and the marketing + docs site.
 
 ## ✨ Features
@@ -19,7 +19,7 @@ scaffold, and the marketing + docs site.
   required by default (the auth-downgrade bypass is closed).
 - **Compact base64 wire format** — `{ ct, n }`, under ~1.4× of raw (v0.2.0 dropped
   the legacy number-array format).
-- **Encrypted SSE streaming** — `pqcstream` / `withIsogenyStream` encrypt each chunk
+- **Encrypted SSE streaming** — `nenstream` / `withNenStream` encrypt each chunk
   with an XOR-counter nonce — ideal for LLM tokens.
 - **Edge-ready sessions** — pluggable `SessionStore`: in-memory, Redis, or Upstash
   (REST, no TCP) for Edge runtimes.
@@ -32,10 +32,10 @@ scaffold, and the marketing + docs site.
 ```
 packages/
   core-crypto/        Rust → Wasm core (ML-KEM, ChaCha20-Poly1305, HMAC, ML-DSA, base64)
-  isogeny-client/     @isogeny/client — pqcfetch, pqcstream, IsogenyClient
-  isogeny-server/     @isogeny/server — withIsogeny, withIsogenyStream, session stores
-  ai/                 @isogeny/ai — createSecureOpenAI / createSecureAnthropic (the wedge)
-  create-isogeny-app/ npx scaffold for a pre-wired Next.js app
+  nen-client/     @nen/client — nenfetch, nenstream, NenClient
+  nen-server/     @nen/server — withNen, withNenStream, session stores
+  ai/                 @nen/ai — createSecureOpenAI / createSecureAnthropic (the wedge)
+  create-nen-app/ npx scaffold for a pre-wired Next.js app
 apps/
   www/                Marketing + docs site (Next.js)
 pkg/                  Generated Wasm output (node + bundler targets)
@@ -44,7 +44,7 @@ scripts/              E2E / stress / audit scripts
 
 ## 📚 Specs & security docs
 
-- [`PROTOCOL.md`](./PROTOCOL.md) — ISOGENY-PROTOCOL-V1 (the exact wire format).
+- [`PROTOCOL.md`](./PROTOCOL.md) — NEN-PROTOCOL-V1 (the exact wire format).
 - [`THREAT_MODEL.md`](./THREAT_MODEL.md) — what it does and does not protect.
 - [`AUDIT_READINESS.md`](./AUDIT_READINESS.md) — test coverage and audit roadmap.
 - [`ERROR_CODES.md`](./ERROR_CODES.md) — the full `ISO-xxxx` catalog.
@@ -74,9 +74,9 @@ npm run build --workspaces --if-present
 
 ```bash
 cd packages/core-crypto && cargo test          # Rust core (16 tests)
-npm test --workspace @isogeny/server           # 19 tests
-npm test --workspace @isogeny/client           # 7 tests
-npm test --workspace @isogeny/ai               # 5 tests
+npm test --workspace @nen/server           # 19 tests
+npm test --workspace @nen/client           # 7 tests
+npm test --workspace @nen/ai               # 5 tests
 
 # End-to-end / performance
 node scripts/test-audit.js
@@ -86,16 +86,16 @@ node scripts/test-stress.js
 ## 🚀 Quickstart
 
 ```bash
-npx create-isogeny-app
+npx create-nen-app
 ```
 
 ### Encrypted request
 
 ```javascript
-import { createPqcFetch } from '@isogeny/client';
-const pqcfetch = createPqcFetch('https://api.yourdomain.com');
+import { createNenFetch } from '@nen/client';
+const nenfetch = createNenFetch('https://api.yourdomain.com');
 
-const data = await pqcfetch('/api/secure-data', {
+const data = await nenfetch('/api/secure-data', {
   method: 'POST',
   body: JSON.stringify({ secret: 'Quantum-safe data' }),
 });
@@ -105,10 +105,10 @@ const data = await pqcfetch('/api/secure-data', {
 ### Encrypted streaming (SSE)
 
 ```javascript
-import { createPqcStream } from '@isogeny/client';
-const pqcstream = createPqcStream('https://api.yourdomain.com');
+import { createNenStream } from '@nen/client';
+const nenstream = createNenStream('https://api.yourdomain.com');
 
-for await (const chunk of pqcstream('/api/stream', {
+for await (const chunk of nenstream('/api/stream', {
   method: 'POST',
   body: JSON.stringify({ prompt: 'Generate secure content' }),
 })) {
@@ -119,9 +119,9 @@ for await (const chunk of pqcstream('/api/stream', {
 ### Server route (Next.js)
 
 ```typescript
-import { withIsogeny } from '@isogeny/server';
-export const POST = withIsogeny(async (req, body) => ({ ok: true, body }));
+import { withNen } from '@nen/server';
+export const POST = withNen(async (req, body) => ({ ok: true, body }));
 ```
 
-See [`packages/isogeny-client`](./packages/isogeny-client) and
-[`packages/isogeny-server`](./packages/isogeny-server) for the full API.
+See [`packages/nen-client`](./packages/nen-client) and
+[`packages/nen-server`](./packages/nen-server) for the full API.
