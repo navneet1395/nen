@@ -1,0 +1,284 @@
+# API Reference
+
+Complete export list for `@nen/client` and `@nen/server`. Every symbol, its signature, and when to use it.
+
+---
+
+## `@nen/client`
+
+### `NenClient`
+
+The main client class. Manages the session lifecycle and encrypts/decrypts requests.
+
+```typescript
+import { NenClient } from '@nen/client';
+
+const client = new NenClient(baseUrl: string, options?: NenClientOptions);
+```
+
+| Option | Type | Default | Description |
+| :-- | :-- | :-- | :-- |
+| `identityMode` | `'tls' \| 'pqc'` | `'tls'` | `'pqc'` adds a one-time ML-DSA-65 identity signature over your ephemeral ML-KEM key at handshake. Prevents active MITM on first contact. |
+
+#### Methods
+
+```typescript
+// Establish (or re-establish) a session. Must succeed before nenFetch / nenStream.
+await client.handshake(): Promise<void>
+
+// Replace the current session with a fresh one. Old session is destroyed.
+await client.rotate(): Promise<void>
+
+// Destroy the current session (logout / forward secrecy).
+await client.terminate(): Promise<void>
+
+// Encrypted fetch — mirrors the fetch() API. JSON responses are auto-decrypted.
+await client.nenFetch(path: string, init?: RequestInit): Promise<unknown>
+
+// Encrypted SSE stream — yields decrypted string chunks.
+client.nenStream(path: string, init?: RequestInit): AsyncIterable<string>
+```
+
+---
+
+### `createNenFetch`
+
+Factory that creates a `nenFetch` function with lazy handshake. Handshakes automatically on the first call — use this for simple cases where you don't need explicit lifecycle control.
+
+```typescript
+import { createNenFetch } from '@nen/client';
+
+const nenFetch = createNenFetch(baseUrl: string, options?: NenClientOptions);
+
+const data = await nenFetch('/api/secure-data', {
+  method: 'POST',
+  body: JSON.stringify({ amount: 1840 }),
+});
+```
+
+---
+
+### `createNenStream`
+
+Factory for an encrypted SSE stream with lazy handshake.
+
+```typescript
+import { createNenStream } from '@nen/client';
+
+const nenStream = createNenStream(baseUrl: string, options?: NenClientOptions);
+
+for await (const chunk of nenStream('/api/chat', { method: 'POST', body: JSON.stringify({ prompt }) })) {
+  process.stdout.write(chunk);
+}
+```
+
+---
+
+### `NenError` (client)
+
+Thrown by all client operations on failure. Carries a stable `ISO-xxxx` code.
+
+```typescript
+import { NenError } from '@nen/client';
+
+try {
+  await nenFetch('/api/secure-data', { method: 'POST', body: '...' });
+} catch (err) {
+  if (err instanceof NenError) {
+    console.log(err.code);    // e.g. 'ISO-2002'
+    console.log(err.message); // human-readable, safe to display
+  }
+}
+```
+
+---
+
+### `describeNenCode` (client)
+
+Reverse-lookup a code from the client catalog. Returns `undefined` for server-only codes.
+
+```typescript
+import { describeNenCode } from '@nen/client';
+
+describeNenCode('ISO-2001');
+// → { code: 'ISO-2001', status: 409, message: '…', hint: '…' }
+```
+
+---
+
+## `@nen/server`
+
+### `withNen`
+
+Middleware wrapper for a Next.js App Router route handler. Verifies the per-request HMAC, enforces the 30s replay window, decrypts the body, and encrypts the return value.
+
+```typescript
+import { withNen } from '@nen/server';
+
+export const POST = withNen(
+  async (req: Request, body: unknown) => {
+    // `body` is already decrypted and authenticated.
+    return { ok: true, received: body };
+  },
+  { strict: true } // default — set false ONLY for legacy clients that cannot sign
+);
+```
+
+| Option | Type | Default | Description |
+| :-- | :-- | :-- | :-- |
+| `strict` | `boolean` | `true` | When `true`, a request without a valid HMAC signature is rejected with `ISO-3001`. The auth-downgrade guard. Never disable in production. |
+
+---
+
+### `withNenStream`
+
+Stream wrapper. The handler returns an `AsyncIterable<string>`; each yielded chunk is encrypted independently and sent as an SSE frame.
+
+```typescript
+import { withNenStream } from '@nen/server';
+
+export const POST = withNenStream(async (req: Request, body: unknown) => {
+  async function* tokens() {
+    for (const word of ['secure', 'streaming', 'works']) yield word + ' ';
+  }
+  return tokens();
+});
+```
+
+The response carries `X-Nen-Stream-Nonce` and `Content-Type: text/event-stream`. The client reads it with `client.nenStream()` or `createNenStream()`.
+
+---
+
+### Session route handlers
+
+Mount all four under a single dynamic route at `src/app/api/nen/[action]/route.ts`:
+
+```typescript
+import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@nen/server';
+
+export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  switch (action) {
+    case 'handshake': return handleHandshake(req);
+    case 'rotate':    return handleRotate(req);
+    case 'terminate': return handleTerminate(req);
+    default:          return new Response('Not Found', { status: 404 });
+  }
+}
+
+export async function GET(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  if (action === 'status') return handleStatus(req);
+  return new Response('Not Found', { status: 404 });
+}
+```
+
+---
+
+### Session stores
+
+```typescript
+import {
+  setSessionStore,
+  InMemorySessionStore,
+  RedisSessionStore,
+  UpstashSessionStore,
+} from '@nen/server';
+```
+
+| Store | Runtime | When to use |
+| :-- | :-- | :-- |
+| `InMemorySessionStore` | Any | Development and single-instance deployments only. Sessions live in process memory — a second instance will not find them (`ISO-2002`). |
+| `RedisSessionStore(client)` | Node.js / serverless with TCP | Any multi-instance or serverless deployment where TCP is available. Pass your `ioredis` or `node-redis` client. |
+| `UpstashSessionStore(url, token)` | Edge runtimes | Vercel Edge, Cloudflare Workers, or any runtime without TCP. Uses the Upstash REST API over `fetch` — no extra dependency. |
+
+```typescript
+// Edge — set these env vars in your dashboard
+setSessionStore(new UpstashSessionStore(
+  process.env.UPSTASH_REDIS_REST_URL!,
+  process.env.UPSTASH_REDIS_REST_TOKEN!,
+));
+```
+
+---
+
+### `NenError` (server)
+
+Thrown inside middleware on every authentication or crypto failure. `.toResponse()` logs the hint server-side and returns a safe `{ error: { code, message } }` JSON `Response` — the internal hint is never sent to the client.
+
+```typescript
+import { NenError } from '@nen/server';
+
+// Inside a custom handler or middleware:
+throw new NenError('AUTH_SIGNATURE_MISSING');
+
+// Or wrap an unknown error:
+const err = NenError.from(unknownThrown);
+return err.toResponse();
+```
+
+---
+
+### `describeNenCode` (server)
+
+Reverse-lookup any `ISO-xxxx` code from the full server catalog.
+
+```typescript
+import { describeNenCode } from '@nen/server';
+
+describeNenCode('ISO-3001');
+// → { code: 'ISO-3001', status: 401, message: 'Request signature missing', hint: '…' }
+```
+
+See the [Error codes reference](/docs/error-codes) for the full catalog.
+
+---
+
+## `@nen/ai`
+
+Thin wrappers over `nenStream` that mirror the official OpenAI and Anthropic SDK shapes. Prompts and streamed tokens are encrypted from the browser to your backend — not from your backend to the model provider.
+
+### `createSecureOpenAI`
+
+```typescript
+import { createSecureOpenAI } from '@nen/ai';
+
+const ai = createSecureOpenAI({
+  baseUrl: 'https://app.yourdomain.com', // YOUR backend, not OpenAI
+  endpoint: '/api/ai/chat',              // optional, default '/api/ai/chat'
+});
+
+// Streamed — yields decrypted string deltas
+for await (const delta of ai.chat.completions.stream({ messages })) {
+  process.stdout.write(delta);
+}
+
+// Non-streamed — resolves decrypted JSON
+const result = await ai.chat.completions.create({ messages });
+```
+
+### `createSecureAnthropic`
+
+```typescript
+import { createSecureAnthropic } from '@nen/ai';
+
+const ai = createSecureAnthropic({
+  baseUrl: 'https://app.yourdomain.com',
+  endpoint: '/api/ai/messages', // optional, default '/api/ai/messages'
+});
+
+for await (const delta of ai.messages.stream({ messages })) {
+  process.stdout.write(delta);
+}
+```
+
+### `withSecureAI` (server)
+
+```typescript
+import { withSecureAI } from '@nen/ai/server';
+
+// Wraps withNenStream — decrypt the prompt, call the model, stream back encrypted tokens
+export const POST = withSecureAI('openai');
+```
+
+See the [Secure AI page](/ai) for the full trust boundary and what this protects.

@@ -27,7 +27,7 @@ interface SearchIndexItem {
 const DOCS_INDEX: SearchIndexItem[] = [
   // Page: Introduction
   { title: "Introduction", href: "/docs", type: "page", content: "Introduction to Nen: Next-generation cryptographic tool for seamless PQC integration." },
-  { title: "What is Post-Quantum Cryptography (PQC)?", href: "/docs#what-is-post-quantum-cryptography-pqc", type: "heading", page: "Introduction", content: "Understanding ML-KEM, ML-DSA and quantum threats to traditional RSA/ECC." },
+  { title: "Why Nen? (TLS + Nen)", href: "/docs#why-nen", type: "heading", page: "Introduction", content: "TLS encrypts the channel; Nen encrypts the payload that survives TLS termination — logs, DBs, proxies." },
   { title: "Why Nen?", href: "/docs#why-nen", type: "heading", page: "Introduction", content: "Protects application layer, prevents store-now-decrypt-later attacks." },
   { title: "Architecture at a Glance", href: "/docs#architecture-at-a-glance", type: "heading", page: "Introduction", content: "Overview of client, server, and WebAssembly components." },
 
@@ -68,6 +68,9 @@ const DOCS_INDEX: SearchIndexItem[] = [
 
   // Page: Audit readiness
   { title: "Audit readiness", href: "/docs/audit-readiness", type: "page", content: "Test coverage, negative-path matrix, published artifacts, and external review roadmap for auditors and buyers." },
+
+  // Page: API Reference
+  { title: "API Reference", href: "/docs/api", type: "page", content: "Every export from @nen/client and @nen/server: NenClient, nenFetch, nenStream, withNen, withNenStream, session stores, NenError, describeNenCode." },
 
   // Page: Error codes
   { title: "Error codes (ISO-xxxx)", href: "/docs/error-codes", type: "page", content: "Every Nen failure carries a stable ISO-xxxx code with HTTP status, cause, and fix. Deep-linkable per code." }
@@ -111,6 +114,7 @@ export function DocsSidebar() {
     {
       category: "Reference",
       items: [
+        { title: "API Reference", href: "/docs/api", icon: <FileText className="w-4 h-4" /> },
         { title: "Error Codes", href: "/docs/error-codes", icon: <Bug className="w-4 h-4" /> },
       ],
     },

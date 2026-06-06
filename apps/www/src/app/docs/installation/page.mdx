@@ -4,7 +4,7 @@ Getting started with Nen is incredibly easy. We provide a CLI tool to scaffold e
 
 ## Using the CLI (Recommended)
 
-The easiest way to start using Nen is to scaffold a new Next.js project using our CLI tool. It automatically configures Tailwind CSS, Shadcn UI, and sets up the Nen server and client templates for you.
+The easiest way to add Nen to an existing Next.js App Router project. It installs `@nen/client` and `@nen/server`, patches `next.config.ts` for WebAssembly, and generates the session route at `src/app/api/nen/[action]/route.ts`.
 
 ```bash
 npx create-nen-app@latest my-secure-app
@@ -27,7 +27,23 @@ npm install @nen/client @nen/server
 
 ### Prerequisites
 - Node.js 18 or later
-- React 18 or later (for client-side usage)
+- Next.js 13+ with the App Router
 - A modern browser that supports WebAssembly (for the client engine)
 
-Next, head over to the [Usage](/docs/usage) guide to see how to initialize the Nen engine in your application.
+### WebAssembly config (manual install only)
+
+The CLI patches this automatically. If you installed manually, add the following to `next.config.ts` so Next.js bundles the Wasm core:
+
+```typescript
+// next.config.ts
+const nextConfig = {
+  experimental: {
+    asyncWebAssembly: true,
+  },
+};
+export default nextConfig;
+```
+
+Without this, the client will throw a Wasm load error on first use.
+
+Next, head over to the [Usage](/docs/usage) guide to see how to integrate Nen into your routes.
