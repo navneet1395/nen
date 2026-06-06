@@ -2,7 +2,8 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { buttonVariants } from "@/components/ui/button";
 import { SequenceDiagram } from "@/components/sequence-diagram";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Check, X, ArrowRight, Construction } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
+import { SecureAIDemo } from "@/components/secure-ai-demo";
 
 import { CodeBlock } from "@/components/code-block";
 import Link from "next/link";
@@ -178,27 +179,14 @@ const stream = ai.chat.completions.stream({
             ))}
           </ul>
 
-          {/* Live demo placeholder */}
-          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
+          {/* Live demo */}
+          <h2 className="text-2xl font-bold tracking-tight mt-12 mb-2">
             Live demo
           </h2>
-          <div className="rounded-2xl border-2 border-dashed border-border/70 bg-muted/20 p-8 md:p-10 text-center my-6">
-            <Construction className="w-10 h-10 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">
-              Interactive demo coming soon
-            </h3>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-2">
-              A live, encrypt-in-your-browser demo of{" "}
-              <code>createSecureOpenAI</code> streaming — with a network
-              inspector showing raw base64 ciphertext alongside the decrypted
-              tokens — ships with the <code>@isogeny/ai</code> package, which is
-              being built now.
-            </p>
-            <p className="text-xs text-muted-foreground/80">
-              Placeholder: wire this section to <code>@isogeny/ai</code> once
-              the package lands.
-            </p>
-          </div>
+          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+            Pick a scenario, hit <strong className="text-foreground">Send encrypted</strong>, and watch the split view: your app sees decrypted tokens streaming in on the left; the wire — your CDN, edge, and logs — sees only base64 ciphertext frames on the right.
+          </p>
+          <SecureAIDemo />
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-10">
