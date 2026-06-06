@@ -1,0 +1,36 @@
+{
+  "name": "@isogeny/ai",
+  "version": "0.1.0",
+  "description": "End-to-end encrypted AI calls (prompts + streamed responses) for modern apps. Powered by Post-Quantum Cryptography.",
+  "exports": {
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "NODE_OPTIONS=--localstorage-file=.jest-localstorage jest --passWithNoTests",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@isogeny/client": "*",
+    "@isogeny/server": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
+    "tsup": "^8.0.2",
+    "typescript": "^5.0.0"
+  }
+}
