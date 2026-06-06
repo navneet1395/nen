@@ -44,7 +44,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/30 text-foreground">
       <SiteHeader />
 
-      <main className="flex-1 flex flex-col items-center max-w-6xl mx-auto">
+      <main className="flex-1 flex flex-col w-full overflow-x-hidden items-center max-w-6xl mx-auto">
         {/* ───────────────────────── Hero ───────────────────────── */}
         <section className="w-full py-20 md:py-28 flex flex-col items-center text-center px-4 relative overflow-hidden">
           <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-8 shadow-sm">
