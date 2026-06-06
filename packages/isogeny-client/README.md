@@ -1,34 +1,69 @@
 # Isogeny Client SDK (`@isogeny/client`)
 
-The official browser/frontend SDK for the Isogeny Post-Quantum Cryptography middleware.
+The browser/frontend SDK for Isogeny — a drop-in `fetch` replacement that encrypts
+the payload before it leaves the tab, using a post-quantum (ML-KEM-768) handshake.
 
-## 🧠 Internal Architecture
-
-This package provides a TypeScript class `IsogenyClient`. It has three primary responsibilities:
-1. **Handshake Management**: Executing the ML-KEM Kyber key generation in WebAssembly, transmitting the public key to the server, and decapsulating the returned ciphertext into a shared 32-byte symmetric key.
-2. **Payload Interception (`pqcfetch`)**: Acting as a drop-in replacement for the native `fetch` API. It automatically intercepts JSON bodies, encrypts them using ChaCha20-Poly1305, injects the `X-Isogeny-Session` header, and decrypts the response.
-3. **Auto-Recovery**: If a session is lost on the server (e.g., Node.js restarts and drops its in-memory map), `pqcfetch` catches the HTTP 401 response, automatically forces a background `.rotate()`, and seamlessly retries the encrypted request.
-
-## 🛠 Compilation Guide
-
-This package is compiled using `tsup`.
+## Install
 
 ```bash
-# Run this from inside packages/isogeny-client/
-npm install
-npm run build
+npm install @isogeny/client
 ```
 
-The build process outputs to `dist/index.js` (CJS) and `dist/index.mjs` (ESM), along with TypeScript definition files.
+## Quick use
 
-## 🧑‍💻 Contribution Guide
+```ts
+import { createPqcFetch, createPqcStream } from '@isogeny/client';
 
-To modify the client behavior:
-1. Edit `src/index.ts`.
-2. Re-run `npm run build`.
+const pqcfetch = createPqcFetch('');            // '' = same-origin
+const data = await pqcfetch('/api/secure', {    // returns the decrypted JSON
+  method: 'POST',
+  body: JSON.stringify({ ssn: '412-55-9087' }),
+});
 
-### Extending `pqcfetch`
-If you need to support streaming responses (e.g., Server-Sent Events or WebSockets) instead of just static JSON payloads, you must modify the response handling inside `pqcfetch()`. Currently, it only attempts decryption if `response.headers.get('content-type')` includes `application/json`.
+for await (const chunk of createPqcStream('')('/api/chat', {
+  method: 'POST',
+  body: JSON.stringify({ prompt }),
+})) {
+  process.stdout.write(chunk);                  // decrypted SSE tokens
+}
+```
 
-### Managing Session State
-The `sessionId` and `sharedSecret` are currently stored in the volatile memory of the `IsogenyClient` instance. If you want to persist the `sessionId` across browser reloads (though the key itself should never touch `localStorage`!), you can modify the class to accept a storage adapter.
+Prefer an explicit instance? `new IsogenyClient(serverUrl, { identityMode: 'pqc' })`
+then `await client.handshake()`, `client.pqcfetch()`, `client.pqcstream()`,
+`client.rotate()`, `client.terminate()`, `client.status()`.
+
+## What it does
+
+1. **Handshake** — generates an ML-KEM keypair in Wasm, posts the public key,
+   decapsulates the returned ciphertext into the shared secret, and stores the
+   server-issued HMAC key. With `identityMode: 'pqc'` it also signs the ephemeral
+   key with ML-DSA. The ML-KEM secret key is zeroized immediately after.
+2. **`pqcfetch`** — encrypts the JSON body (ChaCha20-Poly1305), sends
+   `{ ct, n }` base64 with the `X-Isogeny-Session`, `X-Isogeny-Timestamp`, and
+   `X-Isogeny-Signature` (HMAC) headers, and decrypts the JSON response.
+3. **`pqcstream`** — same request leg; yields decrypted SSE chunks as an async
+   generator.
+4. **Auto-recovery** — on a `401` it transparently `rotate()`s (fresh handshake)
+   and retries once.
+
+## Coded errors
+
+Failures throw an `IsogenyError` carrying a stable `ISO-xxxx` code (e.g.
+`ISO-2001` SESSION_NOT_INITIALIZED, `ISO-1003` HANDSHAKE_NETWORK). The wire/throw
+surface never leaks the internal diagnostic hint. Resolve a code with
+`describeIsogenyCode('ISO-1003')`. Full catalog: [`../../ERROR_CODES.md`](../../ERROR_CODES.md).
+
+## Build & test
+
+```bash
+npm run build   # tsup → dist/ (CJS + ESM + .d.ts)
+npm test        # jest (core-crypto mapped to the Node wasm build for tests)
+```
+
+## Notes
+
+- Session keys live in instance memory only — never `localStorage`/cookies — and
+  are lost on refresh (a fresh handshake follows). Each tab handshakes independently.
+- The wire format is base64-only (`{ ct, n }`) as of **v0.2.0**.
+
+See [`../../PROTOCOL.md`](../../PROTOCOL.md) for the exact protocol.

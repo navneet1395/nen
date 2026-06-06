@@ -8,4 +8,10 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  // The published `core-crypto` dependency points at the `bundler` wasm target,
+  // whose ESM `import * as wasm from "*.wasm"` syntax cannot be loaded by jest.
+  // Map it to the equivalent Node/CommonJS wasm build for tests only.
+  moduleNameMapper: {
+    "^core-crypto$": "<rootDir>/../../pkg/node/core_crypto.js",
+  },
 };
