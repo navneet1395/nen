@@ -1,32 +1,64 @@
+import { SequenceDiagram } from "@/components/sequence-diagram";
+
 # Protocol — ISOGENY-PROTOCOL-V1
 
 The wire protocol spoken between `@isogeny/client` and `@isogeny/server`, as implemented. It runs at the application layer, **on top of TLS** — Isogeny assumes TLS is present and does not replace it.
 
 ## Cryptographic parameters
 
-| Role | Algorithm | Standard |
-| :-- | :-- | :-- |
-| Key encapsulation (KEM) | ML-KEM-768 | FIPS 203 |
-| Payload encryption (AEAD) | ChaCha20-Poly1305 | RFC 8439 |
-| Per-request authentication | HMAC-SHA256 | FIPS 198-1 |
-| Optional identity signature | ML-DSA-65 | FIPS 204 |
+| Role                        | Algorithm         | Standard   |
+| :-------------------------- | :---------------- | :--------- |
+| Key encapsulation (KEM)     | ML-KEM-768        | FIPS 203   |
+| Payload encryption (AEAD)   | ChaCha20-Poly1305 | RFC 8439   |
+| Per-request authentication  | HMAC-SHA256       | FIPS 198-1 |
+| Optional identity signature | ML-DSA-65         | FIPS 204   |
 
 Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HMAC key 32, nonce 12, AEAD tag 16. All binary travels as **base64** (encoded inside the Wasm boundary), never as JSON number arrays.
 
 ## Endpoints
 
-| Method | Path | Purpose |
-| :-- | :-- | :-- |
-| POST | `/api/isogeny/handshake` | Establish a session |
-| POST | `/api/isogeny/rotate` | Destroy old session, establish a new one |
-| POST | `/api/isogeny/terminate` | Destroy a session (logout / forward secrecy) |
-| GET | `/api/isogeny/status` | Liveness check for a session id |
+| Method | Path                     | Purpose                                      |
+| :----- | :----------------------- | :------------------------------------------- |
+| POST   | `/api/isogeny/handshake` | Establish a session                          |
+| POST   | `/api/isogeny/rotate`    | Destroy old session, establish a new one     |
+| POST   | `/api/isogeny/terminate` | Destroy a session (logout / forward secrecy) |
+| GET    | `/api/isogeny/status`    | Liveness check for a session id              |
 
 ## Handshake (once per session)
 
 1. Client generates an ML-KEM-768 keypair and POSTs `{ "pk": base64(pk) }` (optionally `sigPk` + `sigOfPk` for ML-DSA identity).
 2. Server encapsulates → `(sharedSecret, ciphertext)`, generates a 32-byte HMAC key, stores `{ sharedSecret, hmacKey }` under a new `sid`, and returns `{ "sid", "ct": base64(ciphertext), "hmac": base64(hmacKey) }`.
 3. Client decapsulates to recover the same `sharedSecret`, then **zeroizes its secret key**.
+
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client", type: "client" },
+    { id: "server", name: "Isogeny Server", type: "server" },
+  ]}
+  steps={[
+    { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM-768 keypair" },
+    { 
+      id: "2", from: "client", to: "server", animated: true, 
+      label: "2. POST /api/isogeny/handshake",
+      body: '{\n  "pk": base64(pk)\n}' 
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "3. Encapsulate pk → (sharedSecret, ciphertext)",
+      body: "Generate 32-byte HMAC key\nStore { sharedSecret, hmacKey } under sid" 
+    },
+    { 
+      id: "4", from: "server", to: "client", animated: true, color: "success",
+      label: "4. Return Session Keys",
+      body: '{\n  "sid": "...",\n  "ct": base64(ciphertext),\n  "hmac": base64(hmacKey)\n}' 
+    },
+    { 
+      id: "5", from: "client", to: "client", 
+      label: "5. Decapsulate ct to recover sharedSecret",
+      body: "Zeroize secret key" 
+    }
+  ]}
+/>
 
 ## Encrypted request / response
 
@@ -40,7 +72,7 @@ X-Isogeny-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
 
 Body: `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)), "n": base64(n) }`
 
-The canonical string that is HMAC&apos;d is exactly:
+The canonical string that is HMAC'd is exactly:
 
 ```
 METHOD \n PATH \n TIMESTAMP \n NONCE
@@ -50,13 +82,70 @@ METHOD \n PATH \n TIMESTAMP \n NONCE
 
 Server verification order: session lookup → payload shape → **mandatory HMAC** (missing → [`ISO-3001`](/docs/error-codes#iso-3001), bad → `ISO-3002`, timestamp >30s → `ISO-3003`) → nonce replay (`ISO-5001`) → AEAD decrypt (`ISO-4001`).
 
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client", type: "client" },
+    { id: "server", name: "Isogeny Server", type: "server" },
+  ]}
+  steps={[
+    { 
+      id: "1", from: "client", to: "client", 
+      label: "1. AEAD encrypt(sharedSecret, nonce, plaintext)",
+      body: "2. Compute HMAC(hmacKey, METHOD\nPATH\nTIMESTAMP\nNONCE)" 
+    },
+    { 
+      id: "2", from: "client", to: "server", animated: true, color: "primary",
+      label: "3. Encrypted Request",
+      body: "Headers: Session, Timestamp, Signature\nBody: { ct, n }" 
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "4. Verify HMAC & Timestamp",
+      body: "5. Check nonce replay\n6. AEAD Decrypt → Plaintext" 
+    }
+  ]}
+/>
+
+
 ## Encrypted streaming (SSE)
 
-The response sets `X-Isogeny-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk&apos;s nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
+The response sets `X-Isogeny-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk's nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
+
+<SequenceDiagram
+  participants={[
+    { id: "server", name: "Isogeny Server", type: "server" },
+    { id: "client", name: "Client", type: "client" },
+  ]}
+  steps={[
+    { 
+      id: "1", from: "server", to: "server", 
+      label: "1. Generate baseNonce",
+      body: "Set X-Isogeny-Stream-Nonce header" 
+    },
+    { 
+      id: "2", from: "server", to: "client", animated: true, 
+      label: "2. SSE Response Headers"
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "3. For each chunk (i)",
+      body: "nonce = baseNonce ^ i\nct = AEAD.encrypt(chunk)\nFormat: data: base64(ct)\n\n" 
+    },
+    { 
+      id: "4", from: "server", to: "client", animated: true, color: "primary",
+      label: "4. SSE Chunk Frame"
+    },
+    { 
+      id: "5", from: "server", to: "client", 
+      label: "5. __FIN__",
+      body: "Encrypted Sentinel"
+    }
+  ]}
+/>
 
 ## Identity model
 
-- **v1 (default):** server identity rides the existing TLS certificate; the handshake runs inside the authenticated TLS channel. We trust the web PKI for *identity* even though we do not rely on it for *long-term confidentiality* — different properties.
+- **v1 (default):** server identity rides the existing TLS certificate; the handshake runs inside the authenticated TLS channel. We trust the web PKI for _identity_ even though we do not rely on it for _long-term confidentiality_ — different properties.
 - **v2 (opt-in):** with `identityMode: 'pqc'`, the client signs the ephemeral ML-KEM key with a long-lived ML-DSA key, giving a TLS-independent trust root. One-time, at handshake — never per request. Failure → [`ISO-3004`](/docs/error-codes#iso-3004).
 
 The full spec lives in `PROTOCOL.md` in the repository.

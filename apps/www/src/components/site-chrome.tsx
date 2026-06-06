@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Shield } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 
 export function SiteHeader() {
   return (
-    <header className="px-6 py-4 border-b border-border/60 bg-background/70 supports-[backdrop-filter]:bg-background/55 backdrop-blur-xl backdrop-saturate-150 shadow-sm shadow-black/5 sticky top-0 z-50">
+    <header className="px-6 py-4 border-b border-border/60 bg-background shadow-sm shadow-black/5 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <Image src="/Logo.svg" alt="Isogeny Logo" width={24} height={24} className="h-6 w-auto" />
@@ -24,15 +25,12 @@ export function SiteHeader() {
           <Link href="/docs" className="transition-colors hover:text-primary text-muted-foreground">
             Docs
           </Link>
-          <Link
-            href="https://github.com/your-org/isogeny"
-            className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground"
-          >
-            GitHub
-          </Link>
+          {/* TODO: update href when repo is public */}
+          {/* <Link href="https://github.com/your-org/isogeny" className="hidden sm:inline ...">GitHub</Link> */}
           <Link href="/docs/quickstart" className={buttonVariants({ variant: "default", size: "sm" })}>
             Get Started
           </Link>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

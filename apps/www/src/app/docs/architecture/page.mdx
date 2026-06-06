@@ -1,41 +1,106 @@
-# Under the Hood: Isogeny Architecture
+import { SequenceDiagram } from "@/components/sequence-diagram";
 
-Isogeny is built with a deep commitment to performance and strict adherence to the latest cryptographic standards. To achieve this, the heavy lifting is done inside a highly optimized WebAssembly core, while Node.js and the Browser act as orchestration layers.
+# Architecture
 
-## The WebAssembly Core (\`core-crypto\`)
+Isogeny's architecture is designed to be **stateless**, **edge-compatible**, and **post-quantum secure**. It relies on modern cryptographic primitives to establish ephemeral session keys and encrypt data end-to-end without requiring persistent TCP tunnels (like WebSockets) or complex identity infrastructure.
 
-At the heart of Isogeny is \`core-crypto\`, a Rust crate compiled to WebAssembly. This core engine provides:
+## Cryptographic Primitives
 
-1. **ML-KEM (Kyber)**: Implements FIPS 203 for Key Encapsulation. Generates ephemeral key pairs on the client, and encapsulates shared secrets on the server.
+The protocol leverages four primary cryptographic algorithms:
+
+1. **ML-KEM (Kyber)**: Implements FIPS 203 for Key Encapsulation. Used to securely establish a shared secret over an insecure channel.
 2. **ML-DSA (Dilithium)**: Implements FIPS 204 for Digital Signatures. Used strictly for identity verification during the handshake phase to prevent active man-in-the-middle attacks.
 3. **ChaCha20Poly1305**: A fast, symmetric authenticated encryption algorithm with associated data (AEAD). The ML-KEM shared secret is used directly as the AEAD key to encrypt all data payloads after the handshake.
 4. **HMAC-SHA256**: Used for hot-path per-request authentication with a separate random key issued at handshake, preventing forgery and replay via strict timestamp windowing and nonce tracking.
 
 ## The Handshake Protocol
 
-![Handshake Protocol Flow](/flows/handshake.svg)
-
 Isogeny avoids the overhead of managing long-lived stateful connections (like WebSockets or TLS tunnels) by performing a stateless cryptographic handshake.
 
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client App", type: "client" },
+    { id: "middleware", name: "Middleware", type: "server" },
+    { id: "store", name: "Session Store", type: "database" },
+  ]}
+  steps={[
+    { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM Keypair" },
+    { 
+      id: "2", from: "client", to: "middleware", animated: true, color: "primary",
+      label: "2. Send Public Key (+ opt. ML-DSA signature)" 
+    },
+    { 
+      id: "3", from: "middleware", to: "middleware", 
+      label: "3. Verify signature (if ML-DSA opt-in)",
+      body: "4. Encapsulate → sharedSecret\n5. Generate 32-byte HMAC key" 
+    },
+    { 
+      id: "4", from: "middleware", to: "store", animated: true, color: "muted",
+      label: "6. Store Session Keys" 
+    },
+    { 
+      id: "5", from: "middleware", to: "client", animated: true, color: "success",
+      label: "7. Return Ciphertext, sid, HMAC Key" 
+    },
+    { 
+      id: "6", from: "client", to: "client", 
+      label: "8. Decapsulate to Shared Secret" 
+    }
+  ]}
+/>
+
 1. **Client Initiation**: The client generates an ML-KEM key pair. Optionally, it also generates an ML-DSA signing key and signs the public key.
-2. **Key Transmission**: The client sends its Public Key, Signature, and a timestamp in a Base64 encoded payload to the \`/api/isogeny/handshake\` route.
+2. **Key Transmission**: The client sends its public key (and optionally its ML-DSA signing public key and signature) to the `/api/isogeny/handshake` route.
 3. **Server Encapsulation**: The server receives the Public Key, verifies the signature (if present), and generates a 32-byte shared secret using ML-KEM encapsulation. It also generates a separate random 32-byte HMAC key.
-4. **Session Storage**: The server stores the shared secret (ChaCha20 key) and the HMAC key in a pluggable session store — in-memory, Redis, or Upstash (REST, for Edge runtimes) — keyed by a unique \`sessionId\`.
-5. **Ciphertext Return**: The server returns the ML-KEM ciphertext, the \`sessionId\`, and the base64 HMAC key to the client.
+4. **Session Storage**: The server stores the shared secret (ChaCha20 key) and the HMAC key in a pluggable session store — in-memory, Redis, or Upstash (REST, for Edge runtimes) — keyed by a unique `sid`.
+5. **Ciphertext Return**: The server returns the ML-KEM ciphertext, the `sid`, and the base64 HMAC key to the client.
 6. **Client Decapsulation**: The client uses its private key to decapsulate the ciphertext, arriving at the exact same shared secret.
 
 ## Data Transport
 
-![Data Transport Flow](/flows/data-transport.svg)
-
 Once the handshake is complete, all API requests flow as follows:
+
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client App", type: "client" },
+    { id: "middleware", name: "Middleware", type: "server" },
+    { id: "store", name: "Session Store", type: "database" },
+    { id: "api", name: "API Route", type: "server" },
+  ]}
+  steps={[
+    { 
+      id: "1", from: "client", to: "client", 
+      label: "Encrypt Payload (ChaCha20)",
+      body: "Compute HMAC" 
+    },
+    { 
+      id: "2", from: "client", to: "middleware", animated: true, color: "primary",
+      label: "Encrypted Payload + Headers" 
+    },
+    { 
+      id: "3", from: "middleware", to: "store", animated: true, color: "muted",
+      label: "Fetch Session Keys" 
+    },
+    { 
+      id: "4", from: "store", to: "middleware", animated: true, color: "muted",
+      label: "Return Keys" 
+    },
+    { 
+      id: "5", from: "middleware", to: "middleware", 
+      label: "Verify HMAC → Timestamp → Nonce",
+      body: "1. HMAC-SHA256 over canonical string\n2. Timestamp within 30s window\n3. Nonce not replayed\n4. AEAD decrypt → plaintext" 
+    },
+    { 
+      id: "6", from: "middleware", to: "api", animated: true, color: "success",
+      label: "Pass Plaintext JSON" 
+    }
+  ]}
+/>
 
 1. The client encrypts the JSON payload with ChaCha20Poly1305 using the ML-KEM shared secret and a fresh nonce.
 2. The client computes an HMAC over the canonical string `METHOD \n PATH \n TIMESTAMP \n NONCE`.
 3. The request is sent with the encrypted body `{ ct, n }` and the headers `X-Isogeny-Session`, `X-Isogeny-Timestamp`, and `X-Isogeny-Signature`.
-4. The server's middleware intercepts the request. It fetches the session keys from the session store using the \`sessionId\`.
-5. It validates the timestamp (must be within a 30-second window) and nonce (must not have been used in the last 30 seconds).
-6. It validates the HMAC to ensure integrity.
-7. It decrypts the ciphertext and passes the raw JSON to your Next.js Route Handler.
-
-This architecture ensures that your application logic remains completely decoupled from the underlying quantum-resistant cryptography.
+4. The server's middleware fetches the session keys from the session store using the `sid` from `X-Isogeny-Session`.
+5. It verifies the HMAC-SHA256 signature over the canonical string (`METHOD\nPATH\nTIMESTAMP\nNONCE`). A missing signature is rejected with `ISO-3001`; a bad signature with `ISO-3002`.
+6. It checks the timestamp is within a 30-second window (`ISO-3003`) and that the nonce has not been replayed (`ISO-5001`).
+7. Finally it AEAD-decrypts the body (`ISO-4001` on tag failure) and passes the plaintext to the handler.
