@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build --workspace website",
+  "buildCommand": "cd apps/www && npm install && npm run build",
   "outputDirectory": "apps/www/.next",
-  "installCommand": "npm install",
+  "installCommand": "echo 'skip root install'",
   "framework": "nextjs"
 }
