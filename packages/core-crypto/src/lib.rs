@@ -2,6 +2,9 @@ pub mod cipher;
 pub mod kem;
 pub mod utils;
 
+#[cfg(test)]
+mod test_api;
+
 use wasm_bindgen::prelude::*;
 
 // -----------------------------------------------------------------------------

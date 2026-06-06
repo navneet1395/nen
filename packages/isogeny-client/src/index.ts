@@ -2,8 +2,9 @@ import * as isogenyCrypto from 'core-crypto';
 
 export class IsogenyClient {
   private sharedSecret: Uint8Array | null = null;
-  private sessionId: string | null = null;
+  sessionId: string | null = null;
   private serverUrl: string;
+  private _rotationInProgress = false;
 
   constructor(serverUrl: string) {
     this.serverUrl = serverUrl;
@@ -38,6 +39,9 @@ export class IsogenyClient {
 
     // Decapsulate the shared secret
     this.sharedSecret = isogenyCrypto.isogeny_decapsulate(ciphertext, secretKey);
+
+    // SECURITY: Immediately wipe the secret key from memory
+    secretKey.fill(0);
   }
 
   /**
@@ -75,10 +79,15 @@ export class IsogenyClient {
 
     const response = await fetch(`${this.serverUrl}${endpoint}`, fetchOptions);
 
-    if (response.status === 401) {
+    if (response.status === 401 && !this._rotationInProgress) {
       console.warn('[IsogenyClient] Session expired. Automatically rotating key...');
-      await this.rotate();
-      return this.pqcfetch(endpoint, options); // Retry once
+      this._rotationInProgress = true;
+      try {
+        await this.rotate();
+        return this.pqcfetch(endpoint, options);
+      } finally {
+        this._rotationInProgress = false;
+      }
     }
 
     if (!response.ok) return response;
@@ -141,4 +150,26 @@ export class IsogenyClient {
   async rotate(): Promise<void> {
     await this.handshake();
   }
+}
+
+/**
+ * Factory: Creates a pre-configured pqcfetch function bound to a server URL.
+ * Usage:
+ *   const pqcfetch = createPqcFetch('http://localhost:3000');
+ *   await pqcfetch('/api/secure-data', { method: 'POST', body: JSON.stringify({...}) });
+ */
+export function createPqcFetch(serverUrl: string) {
+  const client = new IsogenyClient(serverUrl);
+  let handshakePromise: Promise<void> | null = null;
+
+  return async (endpoint: string, options: RequestInit = {}): Promise<any> => {
+    if (!client.sessionId) {
+      if (!handshakePromise) {
+        handshakePromise = client.handshake();
+      }
+      await handshakePromise;
+      handshakePromise = null;
+    }
+    return client.pqcfetch(endpoint, options);
+  };
 }

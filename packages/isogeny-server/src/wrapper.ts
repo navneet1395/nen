@@ -56,6 +56,9 @@ export function withIsogeny(handler: (req: Request, body: any) => Promise<any> |
       if (err.message === 'Invalid or expired session') {
         return new Response(JSON.stringify({ error: 'Invalid or expired session' }), { status: 401 });
       }
+      if (err.message === 'Nonce replay detected') {
+        return new Response(JSON.stringify({ error: 'Nonce replay detected' }), { status: 409 });
+      }
       console.error('Isogeny Wrapper Error:', err);
       return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
     }

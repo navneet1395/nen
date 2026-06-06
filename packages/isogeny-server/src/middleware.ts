@@ -1,12 +1,8 @@
 import * as isogenyCrypto from 'core-crypto';
-import { storeSession, getSession, deleteSession, sessionExists } from './store';
+import { storeSession, getSession, deleteSession, sessionExists, getSessionStore } from './store';
 
-// We can use standard Web Crypto for generating session IDs
-function generateSessionId() {
-  return crypto.randomUUID();
-}
 /**
- * Handles incoming POST requests to /_isogeny/handshake.
+ * Handles incoming POST requests to /api/isogeny/handshake.
  * Generates a shared secret, stores it, and returns the ciphertext to the client.
  */
 export async function handleHandshake(req: Request): Promise<Response> {
@@ -37,7 +33,8 @@ export async function handleHandshake(req: Request): Promise<Response> {
 }
 
 /**
- * Handles explicit session termination (logout)
+ * Handles explicit session termination (logout).
+ * Immediately destroys the shared secret from server memory for Perfect Forward Secrecy.
  */
 export async function handleTerminate(req: Request): Promise<Response> {
   const sessionId = req.headers.get('X-Isogeny-Session');
@@ -48,7 +45,7 @@ export async function handleTerminate(req: Request): Promise<Response> {
 }
 
 /**
- * Handles lightweight session status checks
+ * Handles lightweight session status checks (heartbeats).
  */
 export async function handleStatus(req: Request): Promise<Response> {
   const sessionId = req.headers.get('X-Isogeny-Session');
@@ -59,12 +56,36 @@ export async function handleStatus(req: Request): Promise<Response> {
 }
 
 /**
- * Helper to decrypt incoming data from an Isogeny client
+ * Handles key rotation by performing a fresh handshake.
+ * The old session is destroyed and a new session with a new shared secret is created.
+ */
+export async function handleRotate(req: Request): Promise<Response> {
+  const oldSessionId = req.headers.get('X-Isogeny-Session');
+  if (oldSessionId) {
+    deleteSession(oldSessionId);
+  }
+  // Delegate to handleHandshake for the actual key exchange
+  return handleHandshake(req);
+}
+
+/**
+ * Helper to decrypt incoming data from an Isogeny client.
+ * Also performs nonce replay detection if the session store supports it.
  */
 export function decryptPayload(sessionId: string, encryptedData: { ciphertext: number[], nonce: number[] }): Uint8Array | null {
   const sharedSecret = getSession(sessionId);
   if (!sharedSecret) {
     throw new Error('Invalid or expired session');
+  }
+
+  // Nonce replay protection
+  const store = getSessionStore();
+  const nonceKey = encryptedData.nonce.join(',');
+  if (store.hasNonce && store.trackNonce) {
+    if (store.hasNonce(sessionId, nonceKey)) {
+      throw new Error('Nonce replay detected');
+    }
+    store.trackNonce(sessionId, nonceKey);
   }
 
   const nonceBytes = new Uint8Array(encryptedData.nonce);
@@ -79,7 +100,7 @@ export function decryptPayload(sessionId: string, encryptedData: { ciphertext: n
 }
 
 /**
- * Helper to encrypt outgoing data back to an Isogeny client
+ * Helper to encrypt outgoing data back to an Isogeny client.
  */
 export function encryptPayload(sessionId: string, plaintext: Uint8Array): { ciphertext: number[], nonce: number[] } {
   const sharedSecret = getSession(sessionId);

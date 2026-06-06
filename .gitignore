@@ -1,1 +1,29 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+pkg/
+
+# Next.js
+.next/
+out/
+
+# Wasm compiled binaries
+*.wasm
+
+# OS
+.DS_Store
+*.pem
+
+# Env
+.env
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/

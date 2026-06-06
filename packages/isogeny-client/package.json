@@ -8,12 +8,16 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "jest --passWithNoTests",
     "lint": "eslint src/"
   },
   "dependencies": {
     "core-crypto": "file:../../pkg/bundler"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
     "tsup": "^8.0.2",
     "typescript": "^5.0.0"
   }
