@@ -16,10 +16,11 @@ describe('Server Middleware Edge Cases', () => {
 
   test('storeSession and getSession lifecycle', () => {
     const dummySecret = new Uint8Array([1, 2, 3, 4]);
-    storeSession('session-1', dummySecret);
-    
+    const dummyHmac = new Uint8Array([5, 6, 7, 8]);
+    storeSession('session-1', dummySecret, dummyHmac);
+
     const retrieved = getSession('session-1');
-    expect(retrieved).toEqual(dummySecret);
+    expect(retrieved).toEqual({ sharedSecret: dummySecret, hmacKey: dummyHmac });
   });
 
   test('getSession with invalid ID returns null', () => {
@@ -27,16 +28,17 @@ describe('Server Middleware Edge Cases', () => {
     expect(retrieved).toBeNull();
   });
 
-  test('decryptPayload with invalid session throws error', () => {
-    expect(() => {
-      decryptPayload('fake-session', { ciphertext: [], nonce: [] });
-    }).toThrow('Invalid or expired session');
+  test('decryptPayload with invalid session throws error', async () => {
+    // ISO-2002 SESSION_INVALID_OR_EXPIRED
+    await expect(
+      decryptPayload('fake-session', { ct: 'AAAA', n: 'AAAA' })
+    ).rejects.toMatchObject({ code: 'ISO-2002' });
   });
 
-  test('encryptPayload with invalid session throws error', () => {
-    expect(() => {
-      encryptPayload('fake-session', new Uint8Array([1]));
-    }).toThrow('Invalid or expired session');
+  test('encryptPayload with invalid session throws error', async () => {
+    await expect(
+      encryptPayload('fake-session', new Uint8Array([1]))
+    ).rejects.toMatchObject({ code: 'ISO-2002' });
   });
 
   test('handleHandshake gracefully fails on missing body', async () => {
@@ -59,6 +61,7 @@ describe('Server Middleware Edge Cases', () => {
     const response = await handleHandshake(req);
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error).toBe('Invalid publicKey format');
+    // ISO-1001 HANDSHAKE_MISSING_PUBLIC_KEY — coded body { error: { code, message } }.
+    expect(body.error.code).toBe('ISO-1001');
   });
 });

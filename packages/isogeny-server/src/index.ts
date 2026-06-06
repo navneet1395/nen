@@ -8,6 +8,7 @@ export {
 } from './middleware';
 
 export { withIsogeny } from './wrapper';
+export { withIsogenyStream } from './stream-wrapper';
 
 export { 
   storeSession, 
@@ -20,3 +21,13 @@ export {
 } from './store';
 
 export type { SessionStore } from './store';
+
+export * from './store/redis';
+export * from './store/upstash';
+
+export {
+  IsogenyError,
+  ISOGENY_ERRORS,
+  describeIsogenyCode,
+} from './errors';
+export type { IsogenyErrorSpec, IsogenyErrorName } from './errors';

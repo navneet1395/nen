@@ -1,6 +1,6 @@
 {
   "name": "@isogeny/server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Next.js/Serverless middleware for Post-Quantum KEM and E2EE.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "jest --passWithNoTests",
+    "test": "NODE_OPTIONS=--localstorage-file=.jest-localstorage jest --passWithNoTests",
     "lint": "eslint src/"
   },
   "dependencies": {

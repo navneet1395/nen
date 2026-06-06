@@ -5,8 +5,8 @@
  * Redis, Cloudflare KV, Upstash, or any other backend.
  */
 export interface SessionStore {
-  get(sessionId: string): Uint8Array | null | Promise<Uint8Array | null>;
-  set(sessionId: string, sharedSecret: Uint8Array, ttlMs?: number): void | Promise<void>;
+  get(sessionId: string): { sharedSecret: Uint8Array; hmacKey: Uint8Array } | null | Promise<{ sharedSecret: Uint8Array; hmacKey: Uint8Array } | null>;
+  set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array, ttlMs?: number): void | Promise<void>;
   delete(sessionId: string): boolean | Promise<boolean>;
   exists(sessionId: string): boolean | Promise<boolean>;
   hasNonce?(sessionId: string, nonce: string): boolean | Promise<boolean>;
@@ -19,6 +19,7 @@ export interface SessionStore {
 
 interface SessionEntry {
   sharedSecret: Uint8Array;
+  hmacKey: Uint8Array;
   createdAt: number;
   usedNonces: Set<string>;
 }
@@ -42,22 +43,23 @@ export class InMemorySessionStore implements SessionStore {
     this.expiryMs = expiryMs;
   }
 
-  set(sessionId: string, sharedSecret: Uint8Array): void {
+  set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): void {
     sessionStore.set(sessionId, {
       sharedSecret,
+      hmacKey,
       createdAt: Date.now(),
       usedNonces: new Set(),
     });
   }
 
-  get(sessionId: string): Uint8Array | null {
+  get(sessionId: string): { sharedSecret: Uint8Array; hmacKey: Uint8Array } | null {
     const session = sessionStore.get(sessionId);
     if (!session) return null;
     if (Date.now() - session.createdAt > this.expiryMs) {
       sessionStore.delete(sessionId);
       return null;
     }
-    return session.sharedSecret;
+    return { sharedSecret: session.sharedSecret, hmacKey: session.hmacKey };
   }
 
   delete(sessionId: string): boolean {
@@ -108,8 +110,8 @@ export function getSessionStore(): SessionStore {
 // Convenience helpers (delegate to active store)
 // ---------------------------------------------------------------------------
 
-export function storeSession(sessionId: string, sharedSecret: Uint8Array) {
-  return _activeStore.set(sessionId, sharedSecret);
+export function storeSession(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array) {
+  return _activeStore.set(sessionId, sharedSecret, hmacKey);
 }
 
 export function getSession(sessionId: string) {

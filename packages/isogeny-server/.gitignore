@@ -1,0 +1,3 @@
+# Backing file for jest-environment-node's localStorage on Node >= 22.
+# Created by the `test` script via --localstorage-file; not source.
+.jest-localstorage

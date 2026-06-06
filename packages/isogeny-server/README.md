@@ -1,37 +1,97 @@
 # Isogeny Server SDK (`@isogeny/server`)
 
-The official Next.js server middleware and DX wrapper for the Isogeny Post-Quantum Cryptography framework.
+The Next.js / serverless middleware for Isogeny. It runs the handshake, manages
+session keys, verifies the per-request HMAC, and decrypts/encrypts payloads.
 
-## 🧠 Internal Architecture
-
-This package is responsible for managing symmetric keys on the backend and intercepting encrypted requests.
-
-1. **`src/store.ts` (Session Management)**: Maps `sessionId` strings to `Uint8Array` symmetric keys. 
-   - **Crucial Detail:** In Next.js development mode, Hot Module Replacement (HMR) wipes local variables on every save. To prevent the server from instantly forgetting cryptographic keys during development, we bind the Map to `globalThis.__ISOGENY_SESSIONS`. In production, this falls back to a standard singleton.
-2. **`src/middleware.ts` (Lifecycle Endpoints)**: Exposes `handleHandshake`, `handleStatus`, and `handleTerminate`. These functions process incoming ML-KEM public keys, run the `core-crypto` WebAssembly decapsulation, and generate standard `Response` objects.
-3. **`src/wrapper.ts` (The `withIsogeny` DX Wrapper)**: A Higher-Order Function that intercepts incoming HTTP requests. It looks for the `X-Isogeny-Session` header, decrypts the `ciphertext` using ChaCha20-Poly1305, parses the underlying JSON, and feeds it into the developer's normal Route Handler. It then encrypts the return value before transmitting the HTTP response.
-
-## 🛠 Compilation Guide
-
-This package is compiled using `tsup`.
+## Install
 
 ```bash
-# Run this from inside packages/isogeny-server/
-npm install
-npm run build
+npm install @isogeny/server
 ```
 
-The build outputs CJS and ESM to `dist/`, along with the TypeScript definition files.
+## Setup
 
-## 🧑‍💻 Contribution Guide
+Mount the session routes (`src/app/api/isogeny/[action]/route.ts`):
 
-### Adding an External Database
-Currently, `store.ts` uses an in-memory `Map`. This means session keys are isolated to a single server instance. If you deploy Isogeny behind a Load Balancer (or in Vercel Edge functions where instances spin up and die instantly), **sessions will be lost.**
+```typescript
+import {
+  handleHandshake, handleRotate, handleTerminate, handleStatus,
+  setSessionStore, InMemorySessionStore,
+} from '@isogeny/server';
 
-To make Isogeny truly stateless and scalable, you should replace the `Map` in `src/store.ts` with an external fast-cache like Redis (Upstash) or Memcached. 
-1. Modify `storeSession(id, key)` to `await redis.set(id, key, { ex: 3600 })`.
-2. Modify `getSession(id)` to `await redis.get(id)`.
-3. Rebuild the package.
+setSessionStore(new InMemorySessionStore()); // see "Session stores" below
 
-### Modifying the DX Wrapper
-If you want to change how errors are reported to the frontend (e.g., returning JSON API spec errors instead of standard `{ error: '...' }` objects), modify the `catch` block inside `src/wrapper.ts`.
+export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  if (action === 'handshake') return handleHandshake(req);
+  if (action === 'rotate')    return handleRotate(req);
+  if (action === 'terminate') return handleTerminate(req);
+  return new Response('Not Found', { status: 404 });
+}
+export async function GET(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  return action === 'status' ? handleStatus(req) : new Response('Not Found', { status: 404 });
+}
+```
+
+Protect any endpoint:
+
+```typescript
+import { withIsogeny } from '@isogeny/server';
+export const POST = withIsogeny(async (req, body) => {
+  // body is already decrypted AND the request is already authenticated
+  return { ok: true, body };
+});
+```
+
+Stream (SSE): `withIsogenyStream(async (req, body) => asyncGeneratorOfChunks)`.
+
+## How it works
+
+- **`store.ts`** — the `SessionStore` interface plus `InMemorySessionStore`
+  (bound to `globalThis` so Next.js HMR doesn't wipe keys in dev). Stores
+  `{ sharedSecret, hmacKey }` per `sessionId` and tracks nonces.
+- **`middleware.ts`** — `handleHandshake` (ML-KEM encapsulate + issue a random
+  HMAC key + optional ML-DSA identity check), `decryptPayload`, `encryptPayload`,
+  and the lifecycle handlers.
+- **`wrapper.ts` / `stream-wrapper.ts`** — the `withIsogeny` / `withIsogenyStream`
+  DX wrappers.
+
+## Mandatory per-request HMAC
+
+HMAC is **required by default**. `decryptPayload`/`withIsogeny` reject any request
+that lacks a valid `X-Isogeny-Signature` + in-window timestamp with
+[`ISO-3001`](../../ERROR_CODES.md). Pass `withIsogeny(handler, { strict: false })`
+only for explicitly opted-in legacy clients that cannot sign.
+
+## Session stores
+
+```typescript
+import { RedisSessionStore, UpstashSessionStore } from '@isogeny/server';
+
+// Any node/serverless runtime (ioredis, node-redis, or @upstash/redis client):
+setSessionStore(new RedisSessionStore(redisClient));
+
+// Edge runtimes (Workers, Vercel Edge) — Upstash REST over fetch, no TCP:
+setSessionStore(new UpstashSessionStore(
+  process.env.UPSTASH_REDIS_REST_URL!,
+  process.env.UPSTASH_REDIS_REST_TOKEN!,
+));
+```
+
+## Coded errors
+
+Every failure is an `IsogenyError` with a stable `ISO-xxxx` code. The wire body is
+`{ error: { code, message } }` (safe message only); the precise diagnosis is logged
+server-side. Resolve a code with `describeIsogenyCode(...)`. Catalog:
+[`../../ERROR_CODES.md`](../../ERROR_CODES.md).
+
+## Build & test
+
+```bash
+npm run build   # tsup → dist/ (CJS + ESM + .d.ts)
+npm test        # 19 tests: handshake, HMAC-mandatory, replay, AEAD tamper, identity, Upstash
+```
+
+The wire format is base64-only (`{ ct, n }`) as of **v0.2.0**. See
+[`../../PROTOCOL.md`](../../PROTOCOL.md).
