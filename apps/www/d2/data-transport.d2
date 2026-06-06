@@ -1,0 +1,31 @@
+direction: down
+
+Client Environment: {
+  Client Application {
+    shape: rectangle
+    Encrypt Payload (ChaCha20)
+    Compute HMAC
+  }
+}
+
+Server Environment: {
+  Middleware: Isogeny Middleware {
+    Fetch Session
+    Validate Window and Nonce
+    Verify HMAC
+    Decrypt Payload (ChaCha20)
+  }
+  
+  Nextjs Route Handler: API Route Handler { shape: package }
+  Session Store: Redis / Memory { shape: cylinder }
+  
+  Middleware -> Session Store: Fetch Session Keys
+  Session Store -> Middleware: Return Keys
+  Middleware -> Nextjs Route Handler: Pass Plaintext JSON {
+    style: { animated: true; stroke-width: 2 }
+  }
+}
+
+Client Environment.Client Application -> Server Environment.Middleware: Encrypted Payload + Headers {
+  style: { animated: true; stroke-width: 3 }
+}

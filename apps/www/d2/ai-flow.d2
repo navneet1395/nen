@@ -1,0 +1,26 @@
+direction: right
+
+Client: {
+  Browser: Web / Mobile App { shape: rectangle }
+}
+
+Your Infrastructure: {
+  CDN: CDN / Edge / Logs { shape: queue }
+  Backend: API Server { shape: rectangle }
+  
+  CDN -> Backend: Encrypted Payload {
+    style: { animated: true; stroke-width: 2 }
+  }
+}
+
+Third Party: {
+  Model Provider: OpenAI / Anthropic { shape: package }
+}
+
+Client.Browser -> Your Infrastructure.CDN: Isogeny Encrypted Prompt {
+  style: { animated: true; stroke-width: 2 }
+}
+
+Your Infrastructure.Backend -> Third Party.Model Provider: Plaintext Prompt {
+  style: { animated: true; stroke-dash: 5 }
+}

@@ -1,61 +1,56 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import Image from "next/image";
+import { DocsSidebar } from "@/components/docs-sidebar";
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-const DOC_LINKS = [
-  { name: "Introduction", href: "/docs" },
-  { name: "Installation", href: "/docs/installation" },
-  { name: "Usage", href: "/docs/usage" },
-  { name: "Advanced APIs", href: "/docs/advanced" },
-];
-
-export default function DocsLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
+export default function DocsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-accent selection:text-white flex flex-col">
-      {/* Navbar */}
-      <header className="sticky top-0 w-full z-50 flex items-center justify-between px-8 py-4 border-b border-border bg-white/80 backdrop-blur-md">
-        <Link href="/" className="text-xl font-bold tracking-tighter hover:text-accent transition-colors">Isogeny.</Link>
-        <div className="flex items-center gap-4">
-          <a href="https://github.com/navneetgupta/isogeny" className="text-sm font-medium hover:text-accent transition-colors">GitHub</a>
+    <div className="flex flex-col min-h-screen relative">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/90 supports-[backdrop-filter]:bg-background/55 backdrop-blur-xl backdrop-saturate-150 shadow-sm shadow-black/5">
+        <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-95 transition-opacity"
+          >
+            <Image
+              src="/Logo.svg"
+              alt="Isogeny Logo"
+              width={24}
+              height={24}
+              className="h-6 w-auto"
+            />
+            <span className="text-foreground">Isogeny</span>
+          </Link>
+          <nav className="flex items-center gap-6 text-sm font-medium">
+            <Link
+              href="/docs"
+              className="text-foreground transition-colors hover:text-primary"
+            >
+              Documentation
+            </Link>
+            <Link
+              href="https://github.com/your-org/isogeny"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
+              GitHub
+            </Link>
+          </nav>
         </div>
       </header>
 
-      <div className="flex-1 flex w-full max-w-7xl mx-auto">
+      <div className="flex-1 container max-w-6xl mx-auto px-4 flex flex-col md:flex-row gap-8 py-10">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-border shrink-0 py-8 px-6 hidden md:block">
-          <nav className="flex flex-col gap-2 sticky top-24">
-            <h4 className="font-semibold text-sm mb-2 text-foreground">Getting Started</h4>
-            {DOC_LINKS.map((link) => (
-              <Link 
-                key={link.href} 
-                href={link.href}
-                className={cn(
-                  "px-3 py-2 text-sm rounded-md transition-all duration-200",
-                  pathname === link.href 
-                    ? "bg-accent/10 text-accent font-medium" 
-                    : "text-muted-foreground hover:bg-border/50 hover:text-foreground"
-                )}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
+        <aside className="w-full md:w-64 shrink-0 pr-0 md:pr-6">
+          <DocsSidebar />
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 py-10 px-8 md:px-12 max-w-4xl">
-          <div className="prose prose-slate prose-headings:font-bold prose-a:text-accent hover:prose-a:text-accent-dark max-w-none">
-            {children}
-          </div>
+        {/* Content */}
+        <main className="flex-1 prose dark:prose-invert prose-zinc max-w-none prose-pre:bg-zinc-950 prose-pre:border prose-pre:border-zinc-800/80 prose-code:text-primary dark:prose-code:text-blue-300 prose-headings:scroll-mt-20">
+          <div className="p-2 md:p-4">{children}</div>
         </main>
       </div>
     </div>

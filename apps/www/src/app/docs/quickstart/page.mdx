@@ -1,0 +1,74 @@
+# Quickstart
+
+From zero to an encrypted API call in about ten lines. TLS stays exactly as it is — Isogeny adds the layer that survives TLS termination.
+
+## 1. Scaffold
+
+```bash
+npx create-isogeny-app
+```
+
+This detects your Next.js App Router project, installs `@isogeny/client` and `@isogeny/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
+
+Already have a project? Install manually:
+
+```bash
+npm install @isogeny/client @isogeny/server
+```
+
+## 2. Mount the session routes
+
+`src/app/api/isogeny/[action]/route.ts`:
+
+```typescript
+import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@isogeny/server';
+
+export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  if (action === 'handshake') return handleHandshake(req);
+  if (action === 'rotate')    return handleRotate(req);
+  if (action === 'terminate') return handleTerminate(req);
+  return new Response('Not Found', { status: 404 });
+}
+
+export async function GET(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  return action === 'status' ? handleStatus(req) : new Response('Not Found', { status: 404 });
+}
+```
+
+## 3. Protect an endpoint
+
+`src/app/api/secure-data/route.ts`:
+
+```typescript
+import { withIsogeny } from '@isogeny/server';
+
+export const POST = withIsogeny(async (req, body) => {
+  // body is already decrypted and authenticated
+  return { ok: true, received: body };
+});
+```
+
+## 4. Call it encrypted
+
+```typescript
+import { createPqcFetch } from '@isogeny/client';
+
+const pqcfetch = createPqcFetch(''); // same-origin
+
+const data = await pqcfetch('/api/secure-data', {
+  method: 'POST',
+  body: JSON.stringify({ ssn: '412-55-9087' }),
+});
+// the body left your tab as ciphertext; data is the decrypted response
+```
+
+That&apos;s it. Your CDN, logs, and proxies now see only base64 ciphertext for that payload.
+
+## Where to go next
+
+- [Usage](/docs/usage) — streaming, rotation, identity mode, and the full client/server API.
+- [Protocol spec](/docs/protocol) — the exact wire format an auditor reads.
+- [Threat model](/docs/threat-model) — what Isogeny does and does not protect.
+- [Error codes](/docs/error-codes) — every `ISO-xxxx` failure, with cause and fix.

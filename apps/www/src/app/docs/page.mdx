@@ -1,0 +1,30 @@
+# Introduction to Isogeny
+
+Welcome to **Isogeny**, the post-quantum cryptographic engine for the modern web. Isogeny provides a robust, developer-friendly way to secure your client-server communications against both classical and quantum adversaries.
+
+## What is Post-Quantum Cryptography (PQC)?
+
+Traditional encryption methods (like RSA and Elliptic Curve Cryptography) rely on the mathematical difficulty of factoring large numbers or computing discrete logarithms. Quantum computers running Shor's algorithm can solve these problems exponentially faster, rendering current public-key cryptography insecure.
+
+Post-Quantum Cryptography (PQC) involves new cryptographic algorithms that are believed to be secure against both classical and quantum computers.
+
+## Why Isogeny?
+
+Isogeny simplifies the integration of these complex PQC algorithms into your Next.js and Node.js applications.
+
+- **FIPS 203 & 204 Compliant**: Uses NIST-standardized **ML-KEM-768** for key encapsulation and optional **ML-DSA-65** for identity signatures.
+- **WebAssembly Powered**: Core cryptography is written in Rust and compiled to WebAssembly for near-native execution across environments.
+- **Hybrid Security Model**: Combines ML-KEM with ChaCha20-Poly1305 and a **mandatory per-request HMAC-SHA256** for defense in depth — the auth-downgrade bypass is closed by default.
+- **Compact Wire Format**: All binary travels as **base64** (`{ ct, n }`), under ~1.4× of raw — never JSON number arrays.
+- **Encrypted Streaming**: `pqcstream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
+- **Edge-Ready Sessions**: A pluggable session store — in-memory, **Redis**, or **Upstash** (REST, no TCP) — for stateless horizontal scaling, including Edge runtimes.
+- **Diagnosable by Design**: Every failure carries a stable [`ISO-xxxx` code](/docs/error-codes) — paste the code, get the exact cause and fix.
+
+## Architecture at a Glance
+
+1. **Handshake**: The client generates an ML-KEM keypair (and an optional ML-DSA identity signature), sending the public key to the server.
+2. **Encapsulation**: The server encapsulates a shared secret against the client's public key, generates a separate random HMAC key, and returns the ciphertext plus that HMAC key.
+3. **Establishment**: The client decapsulates to recover the same shared secret. The shared secret is the ChaCha20-Poly1305 key; the HMAC key authenticates each request.
+4. **Communication**: Every subsequent request encrypts its payload with ChaCha20-Poly1305 and is signed with a mandatory per-request HMAC.
+
+Ready to dive in? Head over to the [Installation](/docs/installation) guide.

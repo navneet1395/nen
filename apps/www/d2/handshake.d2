@@ -1,0 +1,22 @@
+direction: down
+
+Client Environment: {
+  Client Application { shape: rectangle }
+}
+
+Isogeny Server: {
+  Middleware: Isogeny Middleware { shape: rectangle }
+  Session Store: Redis / Memory { shape: cylinder }
+  
+  Middleware -> Session Store: 6. Store Session Keys
+}
+
+Client Environment.Client Application -> Client Environment.Client Application: 1. Generate ML-KEM\nKeypair
+Client Environment.Client Application -> Isogeny Server.Middleware: 2. Send Public Key,\nSignature, Timestamp {
+  style: { animated: true; stroke-width: 2 }
+}
+Isogeny Server.Middleware -> Isogeny Server.Middleware: 3. Verify Signature\n4. Encapsulate Secret\n5. Gen HMAC Key
+Isogeny Server.Middleware -> Client Environment.Client Application: 7. Return Ciphertext,\nsessionId, HMAC Key {
+  style: { animated: true; stroke-width: 2 }
+}
+Client Environment.Client Application -> Client Environment.Client Application: 8. Decapsulate to\nShared Secret

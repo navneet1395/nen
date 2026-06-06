@@ -1,0 +1,33 @@
+# Installation
+
+Getting started with Isogeny is incredibly easy. We provide a CLI tool to scaffold everything you need, or you can install the packages manually.
+
+## Using the CLI (Recommended)
+
+The easiest way to start using Isogeny is to scaffold a new Next.js project using our CLI tool. It automatically configures Tailwind CSS, Shadcn UI, and sets up the Isogeny server and client templates for you.
+
+```bash
+npx create-isogeny-app@latest my-secure-app
+```
+
+Once the setup is complete, navigate to your project and start the development server:
+
+```bash
+cd my-secure-app
+npm run dev
+```
+
+## Manual Installation
+
+If you want to integrate Isogeny into an existing project, you can install the client and server packages via npm.
+
+```bash
+npm install @isogeny/client @isogeny/server
+```
+
+### Prerequisites
+- Node.js 18 or later
+- React 18 or later (for client-side usage)
+- A modern browser that supports WebAssembly (for the client engine)
+
+Next, head over to the [Usage](/docs/usage) guide to see how to initialize the Isogeny engine in your application.

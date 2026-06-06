@@ -1,0 +1,28 @@
+direction: right
+
+Client: {
+  Browser { shape: rectangle }
+}
+
+Intermediaries: {
+  CDN: CDN Edge { shape: queue }
+  LB: Load Balancer
+  Proxy: Proxy / Logs
+  
+  CDN -> LB -> Proxy { style: { animated: true; stroke-width: 2 } }
+}
+
+Your Backend: {
+  App: Server / API { shape: rectangle }
+  DB: Database { shape: cylinder }
+  
+  App -> DB
+}
+
+Client.Browser -> Intermediaries.CDN: TLS (Channel Encrypted)
+Client.Browser -> Your Backend.App: Isogeny (Payload Ciphertext E2E) {
+  style: { animated: true; stroke-width: 3 }
+}
+Intermediaries.Proxy -> Your Backend.App {
+  style: { animated: true; stroke-width: 2 }
+}

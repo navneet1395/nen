@@ -1,0 +1,35 @@
+# Threat model
+
+What Isogeny defends, what it does not, and why — stated plainly. A security engineer finds any overclaim in thirty seconds, so we name the edges ourselves.
+
+## The one-sentence model
+
+> Everything **between the two Isogeny endpoints** sees only ciphertext. The two endpoints hold plaintext — by necessity, because someone has to read the data.
+
+Isogeny lets you choose *where* those endpoints are, pushing the trust boundary inward — past the CDN, edge, load balancer, logs, and proxies — to the specific code that needs the plaintext. This is a **different** threat model from TLS, not a competing one: TLS encrypts the channel and stops at termination; Isogeny encrypts the payload and continues past it. **TLS + Isogeny.**
+
+## Protects against
+
+- Payload exposure after TLS termination — across every hop and at-rest store between the endpoints (CDN, edge, load balancer, logs, proxies, third-party forwarders).
+- Request tampering / forgery — HMAC-SHA256 over the canonical request string ([`ISO-3002`](/docs/error-codes#iso-3002)).
+- Replay — 30-second timestamp window ([`ISO-3003`](/docs/error-codes#iso-3003)) + per-session nonce uniqueness ([`ISO-5001`](/docs/error-codes#iso-5001)).
+- Auth-downgrade by dropping headers — HMAC is **mandatory**; an unsigned request is rejected ([`ISO-3001`](/docs/error-codes#iso-3001)), never silently allowed.
+- Harvest-now, decrypt-later — ML-KEM-768, scoped to at-rest payloads and legs **not** already behind PQ-TLS (the public transit leg behind Cloudflare/AWS PQ-TLS is already covered there).
+- MITM at handshake (opt-in) — ML-DSA-65 identity signature ([`ISO-3004`](/docs/error-codes#iso-3004)).
+
+## Does NOT protect against
+
+- A compromised **endpoint** — the browser or the server process that terminates Isogeny holds plaintext by design. We never claim &ldquo;a compromised server sees only ciphertext.&rdquo;
+- Hiding plaintext from a party you deliberately send it to — e.g. an LLM provider must decrypt a prompt to run inference. That needs self-hosting, a TEE, or FHE — out of scope.
+- XSS or a malicious frontend; stolen session tokens / JWTs; malicious logic inside your own handler.
+- Compromise of the TLS PKI for *identity* in v1 (use opt-in ML-DSA identity).
+- Traffic analysis / metadata, and denial of service.
+
+## Assumptions
+
+- TLS is present and correctly configured (Isogeny runs above it).
+- The Wasm crypto core is built from the audited RustCrypto crates and untampered.
+- The server session store preserves `{ sharedSecret, hmacKey }` confidentiality and enforces its TTL.
+- Client and server clocks are within ~30 seconds; larger skew surfaces as `ISO-3003`, not a silent failure.
+
+The full model lives in `THREAT_MODEL.md` in the repository. See also [Audit readiness](/docs/audit-readiness).

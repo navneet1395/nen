@@ -1,0 +1,62 @@
+# Protocol — ISOGENY-PROTOCOL-V1
+
+The wire protocol spoken between `@isogeny/client` and `@isogeny/server`, as implemented. It runs at the application layer, **on top of TLS** — Isogeny assumes TLS is present and does not replace it.
+
+## Cryptographic parameters
+
+| Role | Algorithm | Standard |
+| :-- | :-- | :-- |
+| Key encapsulation (KEM) | ML-KEM-768 | FIPS 203 |
+| Payload encryption (AEAD) | ChaCha20-Poly1305 | RFC 8439 |
+| Per-request authentication | HMAC-SHA256 | FIPS 198-1 |
+| Optional identity signature | ML-DSA-65 | FIPS 204 |
+
+Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HMAC key 32, nonce 12, AEAD tag 16. All binary travels as **base64** (encoded inside the Wasm boundary), never as JSON number arrays.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| :-- | :-- | :-- |
+| POST | `/api/isogeny/handshake` | Establish a session |
+| POST | `/api/isogeny/rotate` | Destroy old session, establish a new one |
+| POST | `/api/isogeny/terminate` | Destroy a session (logout / forward secrecy) |
+| GET | `/api/isogeny/status` | Liveness check for a session id |
+
+## Handshake (once per session)
+
+1. Client generates an ML-KEM-768 keypair and POSTs `{ "pk": base64(pk) }` (optionally `sigPk` + `sigOfPk` for ML-DSA identity).
+2. Server encapsulates → `(sharedSecret, ciphertext)`, generates a 32-byte HMAC key, stores `{ sharedSecret, hmacKey }` under a new `sid`, and returns `{ "sid", "ct": base64(ciphertext), "hmac": base64(hmacKey) }`.
+3. Client decapsulates to recover the same `sharedSecret`, then **zeroizes its secret key**.
+
+## Encrypted request / response
+
+Headers:
+
+```
+X-Isogeny-Session:    <sid>
+X-Isogeny-Timestamp:  <unix_ms>
+X-Isogeny-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
+```
+
+Body: `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)), "n": base64(n) }`
+
+The canonical string that is HMAC&apos;d is exactly:
+
+```
+METHOD \n PATH \n TIMESTAMP \n NONCE
+```
+
+`PATH` is the URL pathname only. A path-vs-full-URL mismatch is the most common cause of [`ISO-3002`](/docs/error-codes#iso-3002).
+
+Server verification order: session lookup → payload shape → **mandatory HMAC** (missing → [`ISO-3001`](/docs/error-codes#iso-3001), bad → `ISO-3002`, timestamp >30s → `ISO-3003`) → nonce replay (`ISO-5001`) → AEAD decrypt (`ISO-4001`).
+
+## Encrypted streaming (SSE)
+
+The response sets `X-Isogeny-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk&apos;s nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
+
+## Identity model
+
+- **v1 (default):** server identity rides the existing TLS certificate; the handshake runs inside the authenticated TLS channel. We trust the web PKI for *identity* even though we do not rely on it for *long-term confidentiality* — different properties.
+- **v2 (opt-in):** with `identityMode: 'pqc'`, the client signs the ephemeral ML-KEM key with a long-lived ML-DSA key, giving a TLS-independent trust root. One-time, at handshake — never per request. Failure → [`ISO-3004`](/docs/error-codes#iso-3004).
+
+The full spec lives in `PROTOCOL.md` in the repository.
