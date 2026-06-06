@@ -1,6 +1,3 @@
 {
-  "buildCommand": "cd apps/www && npm install && npm run build",
-  "outputDirectory": "apps/www/.next",
-  "installCommand": "echo skip",
   "framework": "nextjs"
 }
