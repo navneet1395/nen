@@ -1,14 +1,14 @@
 /**
- * Isogeny Error Codes — the internal diagnostic vocabulary.
+ * Nen Error Codes — the internal diagnostic vocabulary.
  *
  * WHY THIS EXISTS
  * ---------------
- * When something goes wrong inside an Isogeny-protected request, the failure is
+ * When something goes wrong inside an Nen-protected request, the failure is
  * almost always in OUR layer (key exchange, HMAC, AEAD, replay, wire format) —
  * not in the developer's frontend or backend logic. The developer should never
  * have to read a stack trace and reverse-engineer the cryptography.
  *
- * So every Isogeny failure carries a stable `ISO-xxxx` code. The code is what
+ * So every Nen failure carries a stable `ISO-xxxx` code. The code is what
  * lands in the logs and what the developer pastes to us. Given only the code we
  * know EXACTLY what happened and what to do — the integration code stays clean
  * and the diagnosis stays on our side.
@@ -22,7 +22,7 @@
  * Canonical human reference: ../../ERROR_CODES.md (single source of truth).
  */
 
-export interface IsogenyErrorSpec {
+export interface NenErrorSpec {
   /** Stable wire/log code, e.g. "ISO-3001". Never reused. */
   code: string;
   /** Suggested HTTP status for this failure. */
@@ -45,13 +45,13 @@ export interface IsogenyErrorSpec {
  *   7xxx  Streaming
  *   9xxx  Internal / unknown
  */
-export const ISOGENY_ERRORS = {
+export const NEN_ERRORS = {
   // 1xxx — Handshake / key exchange
   HANDSHAKE_MISSING_PUBLIC_KEY: {
     code: 'ISO-1001',
     status: 400,
     message: 'Handshake request was malformed.',
-    hint: 'Handshake body contained neither `pk` (base64) nor `publicKey` (array). Client SDK out of date or request was not produced by an Isogeny client.',
+    hint: 'Handshake body contained neither `pk` (base64) nor `publicKey` (array). Client SDK out of date or request was not produced by an Nen client.',
   },
   HANDSHAKE_FAILED: {
     code: 'ISO-1002',
@@ -63,7 +63,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-1003',
     status: 503,
     message: 'Could not reach the secure handshake endpoint.',
-    hint: 'fetch() to /api/isogeny/handshake failed at the network layer. Wrong serverUrl, server down, or CORS.',
+    hint: 'fetch() to /api/nen/handshake failed at the network layer. Wrong serverUrl, server down, or CORS.',
   },
   HANDSHAKE_BAD_RESPONSE: {
     code: 'ISO-1004',
@@ -77,19 +77,19 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-2001',
     status: 409,
     message: 'Secure session is not established yet.',
-    hint: 'pqcfetch/pqcstream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey on the client).',
+    hint: 'nenfetch/nenstream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey on the client).',
   },
   SESSION_INVALID_OR_EXPIRED: {
     code: 'ISO-2002',
     status: 401,
     message: 'Secure session is invalid or has expired.',
-    hint: 'Server session store had no entry for the supplied X-Isogeny-Session. Expired by TTL, evicted, or this node never saw the handshake (stateless store needed).',
+    hint: 'Server session store had no entry for the supplied X-Nen-Session. Expired by TTL, evicted, or this node never saw the handshake (stateless store needed).',
   },
   SESSION_HEADER_MISSING: {
     code: 'ISO-2003',
     status: 401,
     message: 'Secure session header is missing.',
-    hint: 'Request arrived without an X-Isogeny-Session header. Not produced by an Isogeny client, or a proxy stripped the header.',
+    hint: 'Request arrived without an X-Nen-Session header. Not produced by an Nen client, or a proxy stripped the header.',
   },
 
   // 3xxx — Authentication
@@ -97,7 +97,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-3001',
     status: 401,
     message: 'Request authentication is missing.',
-    hint: 'No X-Isogeny-Signature on a session that requires HMAC. HMAC is MANDATORY — a request without a signature must be rejected (this is the auth-downgrade guard).',
+    hint: 'No X-Nen-Signature on a session that requires HMAC. HMAC is MANDATORY — a request without a signature must be rejected (this is the auth-downgrade guard).',
   },
   AUTH_SIGNATURE_INVALID: {
     code: 'ISO-3002',
@@ -109,7 +109,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-3003',
     status: 401,
     message: 'Request timestamp is outside the allowed window.',
-    hint: 'X-Isogeny-Timestamp is >30s from server time. Clock skew between client and server, or a replayed/delayed request.',
+    hint: 'X-Nen-Timestamp is >30s from server time. Clock skew between client and server, or a replayed/delayed request.',
   },
   AUTH_IDENTITY_SIGNATURE_INVALID: {
     code: 'ISO-3004',
@@ -151,7 +151,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-6001',
     status: 400,
     message: 'Encrypted payload format is invalid.',
-    hint: 'Body was missing the (ct, n) base64 pair. Not an Isogeny payload, or a corrupted/truncated body.',
+    hint: 'Body was missing the (ct, n) base64 pair. Not an Nen payload, or a corrupted/truncated body.',
   },
   WIRE_DECODE_FAILED: {
     code: 'ISO-6002',
@@ -165,7 +165,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-7001',
     status: 502,
     message: 'Encrypted stream is missing its nonce header.',
-    hint: 'Stream response had no X-Isogeny-Stream-Nonce. The server route did not use withIsogenyStream(), or a proxy stripped the header.',
+    hint: 'Stream response had no X-Nen-Stream-Nonce. The server route did not use withNenStream(), or a proxy stripped the header.',
   },
   STREAM_REQUEST_FAILED: {
     code: 'ISO-7002',
@@ -178,26 +178,26 @@ export const ISOGENY_ERRORS = {
   INTERNAL: {
     code: 'ISO-9000',
     status: 500,
-    message: 'An internal Isogeny error occurred.',
-    hint: 'Unclassified failure wrapped by IsogenyError.from(). See the attached detail for the original error.',
+    message: 'An internal Nen error occurred.',
+    hint: 'Unclassified failure wrapped by NenError.from(). See the attached detail for the original error.',
   },
-} satisfies Record<string, IsogenyErrorSpec>;
+} satisfies Record<string, NenErrorSpec>;
 
-export type IsogenyErrorName = keyof typeof ISOGENY_ERRORS;
+export type NenErrorName = keyof typeof NEN_ERRORS;
 
 /** Reverse lookup: given a code from a log/support ticket, find its spec. */
-export function describeIsogenyCode(code: string): IsogenyErrorSpec | undefined {
-  return Object.values(ISOGENY_ERRORS).find((s) => s.code === code);
+export function describeNenCode(code: string): NenErrorSpec | undefined {
+  return Object.values(NEN_ERRORS).find((s) => s.code === code);
 }
 
 /**
- * A coded, self-describing Isogeny failure.
+ * A coded, self-describing Nen failure.
  *
- *   throw new IsogenyError('AUTH_SIGNATURE_MISSING');
+ *   throw new NenError('AUTH_SIGNATURE_MISSING');
  *   ...
- *   } catch (e) { return IsogenyError.from(e).toResponse(); }
+ *   } catch (e) { return NenError.from(e).toResponse(); }
  */
-export class IsogenyError extends Error {
+export class NenError extends Error {
   /** Stable code, e.g. "ISO-3001". */
   readonly code: string;
   /** Suggested HTTP status. */
@@ -207,10 +207,10 @@ export class IsogenyError extends Error {
   /** Optional runtime detail (e.g. an upstream error message). Logged only. */
   readonly detail?: string;
 
-  constructor(name: IsogenyErrorName, detail?: string) {
-    const spec = ISOGENY_ERRORS[name];
+  constructor(name: NenErrorName, detail?: string) {
+    const spec = NEN_ERRORS[name];
     super(spec.message);
-    this.name = 'IsogenyError';
+    this.name = 'NenError';
     this.code = spec.code;
     this.status = spec.status;
     this.hint = spec.hint;
@@ -218,10 +218,10 @@ export class IsogenyError extends Error {
   }
 
   /** Wrap any thrown value as a coded error (unknown → ISO-9000). */
-  static from(err: unknown): IsogenyError {
-    if (err instanceof IsogenyError) return err;
+  static from(err: unknown): NenError {
+    if (err instanceof NenError) return err;
     const msg = err instanceof Error ? err.message : String(err);
-    return new IsogenyError('INTERNAL', msg);
+    return new NenError('INTERNAL', msg);
   }
 
   /**
@@ -235,10 +235,10 @@ export class IsogenyError extends Error {
 
   /**
    * Structured single-line diagnostic log. This is the line we read to diagnose:
-   *   [Isogeny] ISO-3001 (401) AUTH_SIGNATURE_MISSING: <hint> | detail=<detail>
+   *   [Nen] ISO-3001 (401) AUTH_SIGNATURE_MISSING: <hint> | detail=<detail>
    */
   log(logger: Pick<Console, 'error'> = console): void {
-    const base = `[Isogeny] ${this.code} (${this.status}): ${this.hint}`;
+    const base = `[Nen] ${this.code} (${this.status}): ${this.hint}`;
     logger.error(this.detail ? `${base} | detail=${this.detail}` : base);
   }
 

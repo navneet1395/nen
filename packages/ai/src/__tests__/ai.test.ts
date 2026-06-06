@@ -1,8 +1,8 @@
 import { createSecureOpenAI, createSecureAnthropic } from '../client';
 
 /**
- * A fake IsogenyClient that records calls and replays canned stream/fetch
- * results — lets us test the @isogeny/ai ergonomics without real crypto or a
+ * A fake NenClient that records calls and replays canned stream/fetch
+ * results — lets us test the @nen/ai ergonomics without real crypto or a
  * network. Cast to `any` at the call site since it only implements the surface
  * the AI wrappers touch.
  */
@@ -19,11 +19,11 @@ function makeFakeClient(opts: {
       calls.handshakes++;
       this.sessionId = 'sid-123';
     },
-    async *pqcstream(endpoint: string, options: any) {
+    async *nenstream(endpoint: string, options: any) {
       calls.stream.push({ endpoint, options });
       for (const c of opts.streamChunks ?? []) yield c;
     },
-    async pqcfetch(endpoint: string, options: any) {
+    async nenfetch(endpoint: string, options: any) {
       calls.fetch.push({ endpoint, options });
       return opts.fetchResult;
     },
@@ -72,7 +72,7 @@ describe('createSecureOpenAI', () => {
     });
   });
 
-  test('create() returns the decrypted JSON from pqcfetch', async () => {
+  test('create() returns the decrypted JSON from nenfetch', async () => {
     const fake = makeFakeClient({ alreadyConnected: true, fetchResult: { content: 'hi' } });
     const ai = createSecureOpenAI({ baseUrl: 'https://app.example.com', client: fake as any });
 

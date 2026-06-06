@@ -7,8 +7,8 @@ export {
   encryptPayload 
 } from './middleware';
 
-export { withIsogeny } from './wrapper';
-export { withIsogenyStream } from './stream-wrapper';
+export { withNen } from './wrapper';
+export { withNenStream } from './stream-wrapper';
 
 export { 
   storeSession, 
@@ -26,8 +26,8 @@ export * from './store/redis';
 export * from './store/upstash';
 
 export {
-  IsogenyError,
-  ISOGENY_ERRORS,
-  describeIsogenyCode,
+  NenError,
+  NEN_ERRORS,
+  describeNenCode,
 } from './errors';
-export type { IsogenyErrorSpec, IsogenyErrorName } from './errors';
+export type { NenErrorSpec, NenErrorName } from './errors';

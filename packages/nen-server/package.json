@@ -1,5 +1,5 @@
 {
-  "name": "@isogeny/server",
+  "name": "@nen/server",
   "version": "0.2.0",
   "description": "Next.js/Serverless middleware for Post-Quantum KEM and E2EE.",
   "main": "dist/index.js",

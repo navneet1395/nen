@@ -1,11 +1,11 @@
-# @isogeny/ai
+# @nen/ai
 
 End-to-end encrypted AI calls — prompts and streamed responses — for modern web
 apps. Powered by Post-Quantum Cryptography (ML-KEM-768 + ChaCha20-Poly1305).
 
 ## What this protects (read this first)
 
-`@isogeny/ai` encrypts the prompt and the streamed response **from the user's
+`@nen/ai` encrypts the prompt and the streamed response **from the user's
 browser to your own backend**. Across that path — your CDN, edge, load balancer,
 logs, and any proxy — the prompt is ciphertext.
 
@@ -16,20 +16,20 @@ model or run it in a confidential-compute TEE — that is out of scope for this
 package.
 
 ```
-[ Browser ] ──ciphertext (Isogeny)──▶ [ Your backend ] ──plaintext──▶ [ OpenAI ]
+[ Browser ] ──ciphertext (Nen)──▶ [ Your backend ] ──plaintext──▶ [ OpenAI ]
    prompt E2E-encrypted across your own infra      decrypts here       sees plaintext
 ```
 
 ## Install
 
 ```bash
-npm install @isogeny/ai @isogeny/client @isogeny/server
+npm install @nen/ai @nen/client @nen/server
 ```
 
 ## Client (browser)
 
 ```ts
-import { createSecureOpenAI } from '@isogeny/ai/client';
+import { createSecureOpenAI } from '@nen/ai/client';
 
 const ai = createSecureOpenAI({ baseUrl: 'https://app.example.com' });
 
@@ -46,7 +46,7 @@ for await (const delta of ai.chat.completions.stream({
 
 ```ts
 // app/api/ai/chat/route.ts
-import { withSecureAI } from '@isogeny/ai/server';
+import { withSecureAI } from '@nen/ai/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI();
@@ -65,13 +65,13 @@ export const POST = withSecureAI(async function* (body) {
 });
 ```
 
-You also need the four Isogeny session routes (`/api/isogeny/handshake`,
-`/terminate`, `/status`, `/rotate`) wired once — `npx create-isogeny-app` scaffolds
-them. See `@isogeny/server`.
+You also need the four Nen session routes (`/api/nen/handshake`,
+`/terminate`, `/status`, `/rotate`) wired once — `npx create-nen-app` scaffolds
+them. See `@nen/server`.
 
 ## How it works
 
-- Transport is `@isogeny/client`'s `pqcstream` / `pqcfetch` and `@isogeny/server`'s
-  `withIsogenyStream` — the same handshake (ML-KEM-768), HMAC-authenticated hot
-  path, and chunked AEAD streaming used by the rest of Isogeny.
+- Transport is `@nen/client`'s `nenstream` / `nenfetch` and `@nen/server`'s
+  `withNenStream` — the same handshake (ML-KEM-768), HMAC-authenticated hot
+  path, and chunked AEAD streaming used by the rest of Nen.
 - See the repo `PROTOCOL.md`, `THREAT_MODEL.md`, and `ERROR_CODES.md`.

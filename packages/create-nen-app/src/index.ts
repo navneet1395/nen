@@ -8,8 +8,8 @@ import fs from 'fs';
 const program = new Command();
 
 program
-  .name('create-isogeny-app')
-  .description('Scaffold a Next.js app with Isogeny pre-configured')
+  .name('create-nen-app')
+  .description('Scaffold a Next.js app with Nen pre-configured')
   .argument('[project-directory]', 'The name of the project')
   .action(async (projectDirectory) => {
     let targetDir = projectDirectory;
@@ -19,7 +19,7 @@ program
         type: 'text',
         name: 'dir',
         message: 'What is your project named?',
-        initial: 'my-isogeny-app',
+        initial: 'my-nen-app',
       });
       targetDir = response.dir;
     }
@@ -29,7 +29,7 @@ program
       process.exit(1);
     }
 
-    console.log(`\nCreating a new Isogeny app in ${pc.green(targetDir)}.\n`);
+    console.log(`\nCreating a new Nen app in ${pc.green(targetDir)}.\n`);
 
     try {
       // Step 1: Scaffold Next.js
@@ -37,21 +37,21 @@ program
       execSync(`npx create-next-app@latest ${targetDir} --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm`, { stdio: 'inherit' });
 
       // Step 2: Install dependencies
-      console.log(pc.blue('\nInstalling Isogeny dependencies...'));
+      console.log(pc.blue('\nInstalling Nen dependencies...'));
       const projectPath = path.resolve(process.cwd(), targetDir);
       
-      // We assume @isogeny/client and @isogeny/server are published.
+      // We assume @nen/client and @nen/server are published.
       // For local development, this needs to be linked.
-      execSync(`npm install @isogeny/client @isogeny/server`, { cwd: projectPath, stdio: 'inherit' });
+      execSync(`npm install @nen/client @nen/server`, { cwd: projectPath, stdio: 'inherit' });
 
       // Step 3: Add basic templates
-      console.log(pc.blue('\nAdding Isogeny templates...'));
+      console.log(pc.blue('\nAdding Nen templates...'));
       
-      const apiDir = path.join(projectPath, 'src', 'app', 'api', 'isogeny', 'handshake');
+      const apiDir = path.join(projectPath, 'src', 'app', 'api', 'nen', 'handshake');
       fs.mkdirSync(apiDir, { recursive: true });
 
       const apiRouteCode = `
-import { handleHandshake, InMemorySessionStore, setSessionStore } from '@isogeny/server';
+import { handleHandshake, InMemorySessionStore, setSessionStore } from '@nen/server';
 
 // Initialize session store (use RedisSessionStore in production)
 setSessionStore(new InMemorySessionStore());
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 `;
       fs.writeFileSync(path.join(apiDir, 'route.ts'), apiRouteCode.trim());
 
-      console.log(pc.green('\nSuccess! Created a new Isogeny app.'));
+      console.log(pc.green('\nSuccess! Created a new Nen app.'));
       console.log(`Inside that directory, you can run:\n`);
       console.log(pc.cyan(`  cd ${targetDir}`));
       console.log(pc.cyan(`  npm run dev`));

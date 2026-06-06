@@ -2,7 +2,7 @@
 name = "core-crypto"
 version = "0.1.0"
 edition = "2021"
-description = "Isogeny core cryptographic engine (ML-KEM + ChaCha20)"
+description = "Nen core cryptographic engine (ML-KEM + ChaCha20)"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -66,7 +66,7 @@ describe('UpstashSessionStore (REST contract)', () => {
     const { fetchMock, calls } = mockUpstash();
     global.fetch = fetchMock as any;
 
-    const store = new UpstashSessionStore('https://example.upstash.io', 'token', 'isogeny:session:', 60);
+    const store = new UpstashSessionStore('https://example.upstash.io', 'token', 'nen:session:', 60);
 
     expect(await store.exists(sid)).toBe(false);
     expect(await store.get(sid)).toBeNull();

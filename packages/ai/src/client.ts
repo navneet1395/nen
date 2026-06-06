@@ -1,22 +1,22 @@
-import { IsogenyClient } from '@isogeny/client';
+import { NenClient } from '@nen/client';
 import type { ChatMessage, SecureChatParams } from './types';
 
 export type { ChatMessage, SecureChatParams };
 
 export interface SecureAIClientOptions {
   /**
-   * Origin of YOUR backend — the server that terminates Isogeny, decrypts the
+   * Origin of YOUR backend — the server that terminates Nen, decrypts the
    * prompt, and calls the model provider. Prompts are ciphertext from the
    * browser to here.
    */
   baseUrl: string;
   /** Path of the secure chat route on your backend. */
   endpoint?: string;
-  /** Reuse an existing IsogenyClient (e.g. one shared across your app). */
-  client?: IsogenyClient;
+  /** Reuse an existing NenClient (e.g. one shared across your app). */
+  client?: NenClient;
 }
 
-async function ensureConnected(client: IsogenyClient): Promise<void> {
+async function ensureConnected(client: NenClient): Promise<void> {
   if (!client.sessionId) {
     await client.handshake();
   }
@@ -43,7 +43,7 @@ async function ensureConnected(client: IsogenyClient): Promise<void> {
  */
 export function createSecureOpenAI(options: SecureAIClientOptions) {
   const endpoint = options.endpoint ?? '/api/ai/chat';
-  const client = options.client ?? new IsogenyClient(options.baseUrl);
+  const client = options.client ?? new NenClient(options.baseUrl);
 
   return {
     chat: {
@@ -51,7 +51,7 @@ export function createSecureOpenAI(options: SecureAIClientOptions) {
         /** Streamed encrypted completion. Yields response text deltas. */
         async *stream(params: SecureChatParams): AsyncGenerator<string> {
           await ensureConnected(client);
-          yield* client.pqcstream(endpoint, {
+          yield* client.nenstream(endpoint, {
             method: 'POST',
             body: JSON.stringify(params),
           });
@@ -60,7 +60,7 @@ export function createSecureOpenAI(options: SecureAIClientOptions) {
         /** Non-streamed encrypted completion; resolves the decrypted JSON. */
         async create(params: SecureChatParams): Promise<any> {
           await ensureConnected(client);
-          return client.pqcfetch(endpoint, {
+          return client.nenfetch(endpoint, {
             method: 'POST',
             body: JSON.stringify(params),
           });
@@ -76,20 +76,20 @@ export function createSecureOpenAI(options: SecureAIClientOptions) {
  */
 export function createSecureAnthropic(options: SecureAIClientOptions) {
   const endpoint = options.endpoint ?? '/api/ai/messages';
-  const client = options.client ?? new IsogenyClient(options.baseUrl);
+  const client = options.client ?? new NenClient(options.baseUrl);
 
   return {
     messages: {
       async *stream(params: SecureChatParams): AsyncGenerator<string> {
         await ensureConnected(client);
-        yield* client.pqcstream(endpoint, {
+        yield* client.nenstream(endpoint, {
           method: 'POST',
           body: JSON.stringify(params),
         });
       },
       async create(params: SecureChatParams): Promise<any> {
         await ensureConnected(client);
-        return client.pqcfetch(endpoint, {
+        return client.nenfetch(endpoint, {
           method: 'POST',
           body: JSON.stringify(params),
         });

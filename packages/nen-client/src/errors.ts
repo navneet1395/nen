@@ -1,8 +1,8 @@
 /**
- * Isogeny Error Codes (client mirror).
+ * Nen Error Codes (client mirror).
  *
  * Same diagnostic vocabulary as the server. When a request fails inside the
- * Isogeny layer, the client throws an `IsogenyError` carrying a stable `ISO-xxxx`
+ * Nen layer, the client throws an `NenError` carrying a stable `ISO-xxxx`
  * code and logs a structured diagnosis. The developer's UI code only ever needs
  * the `code` — it never has to interpret the cryptography.
  *
@@ -10,14 +10,14 @@
  * Keep the codes identical to the server's `errors.ts`.
  */
 
-export interface IsogenyErrorSpec {
+export interface NenErrorSpec {
   code: string;
   status: number;
   message: string;
   hint: string;
 }
 
-export const ISOGENY_ERRORS = {
+export const NEN_ERRORS = {
   // 1xxx — Handshake / key exchange
   HANDSHAKE_FAILED: {
     code: 'ISO-1002',
@@ -29,7 +29,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-1003',
     status: 503,
     message: 'Could not reach the secure handshake endpoint.',
-    hint: 'fetch() to /api/isogeny/handshake failed at the network layer. Wrong serverUrl, server down, or CORS.',
+    hint: 'fetch() to /api/nen/handshake failed at the network layer. Wrong serverUrl, server down, or CORS.',
   },
   HANDSHAKE_BAD_RESPONSE: {
     code: 'ISO-1004',
@@ -43,7 +43,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-2001',
     status: 409,
     message: 'Secure session is not established yet.',
-    hint: 'pqcfetch/pqcstream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey).',
+    hint: 'nenfetch/nenstream was called before a successful handshake() (missing sharedSecret/sessionId/hmacKey).',
   },
 
   // 4xxx — Cryptography
@@ -59,7 +59,7 @@ export const ISOGENY_ERRORS = {
     code: 'ISO-7001',
     status: 502,
     message: 'Encrypted stream is missing its nonce header.',
-    hint: 'Stream response had no X-Isogeny-Stream-Nonce. The server route did not use withIsogenyStream(), or a proxy stripped the header.',
+    hint: 'Stream response had no X-Nen-Stream-Nonce. The server route did not use withNenStream(), or a proxy stripped the header.',
   },
   STREAM_REQUEST_FAILED: {
     code: 'ISO-7002',
@@ -72,39 +72,39 @@ export const ISOGENY_ERRORS = {
   INTERNAL: {
     code: 'ISO-9000',
     status: 500,
-    message: 'An internal Isogeny error occurred.',
-    hint: 'Unclassified failure wrapped by IsogenyError.from(). See detail for the original error.',
+    message: 'An internal Nen error occurred.',
+    hint: 'Unclassified failure wrapped by NenError.from(). See detail for the original error.',
   },
-} satisfies Record<string, IsogenyErrorSpec>;
+} satisfies Record<string, NenErrorSpec>;
 
-export type IsogenyErrorName = keyof typeof ISOGENY_ERRORS;
+export type NenErrorName = keyof typeof NEN_ERRORS;
 
 /** Reverse lookup: given a code from a log/support ticket, find its spec. */
-export function describeIsogenyCode(code: string): IsogenyErrorSpec | undefined {
-  return Object.values(ISOGENY_ERRORS).find((s) => s.code === code);
+export function describeNenCode(code: string): NenErrorSpec | undefined {
+  return Object.values(NEN_ERRORS).find((s) => s.code === code);
 }
 
-/** A coded, self-describing Isogeny failure thrown by the client SDK. */
-export class IsogenyError extends Error {
+/** A coded, self-describing Nen failure thrown by the client SDK. */
+export class NenError extends Error {
   readonly code: string;
   readonly status: number;
   readonly hint: string;
   readonly detail?: string;
 
-  constructor(name: IsogenyErrorName, detail?: string) {
-    const spec = ISOGENY_ERRORS[name];
+  constructor(name: NenErrorName, detail?: string) {
+    const spec = NEN_ERRORS[name];
     super(spec.message);
-    this.name = 'IsogenyError';
+    this.name = 'NenError';
     this.code = spec.code;
     this.status = spec.status;
     this.hint = spec.hint;
     this.detail = detail;
   }
 
-  static from(err: unknown): IsogenyError {
-    if (err instanceof IsogenyError) return err;
+  static from(err: unknown): NenError {
+    if (err instanceof NenError) return err;
     const msg = err instanceof Error ? err.message : String(err);
-    return new IsogenyError('INTERNAL', msg);
+    return new NenError('INTERNAL', msg);
   }
 
   toBody(): { error: { code: string; message: string } } {
@@ -113,7 +113,7 @@ export class IsogenyError extends Error {
 
   /** Structured single-line diagnostic log. */
   log(logger: Pick<Console, 'error'> = console): void {
-    const base = `[Isogeny] ${this.code} (${this.status}): ${this.hint}`;
+    const base = `[Nen] ${this.code} (${this.status}): ${this.hint}`;
     logger.error(this.detail ? `${base} | detail=${this.detail}` : base);
   }
 }

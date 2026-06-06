@@ -1,8 +1,8 @@
 # Core Crypto (`core-crypto`)
 
-The foundation of Isogeny: the Post-Quantum Cryptography primitives, written in
-Rust and compiled to WebAssembly via `wasm-bindgen`. The `@isogeny/client` and
-`@isogeny/server` packages depend on the generated Wasm in `pkg/`.
+The foundation of Nen: the Post-Quantum Cryptography primitives, written in
+Rust and compiled to WebAssembly via `wasm-bindgen`. The `@nen/client` and
+`@nen/server` packages depend on the generated Wasm in `pkg/`.
 
 ## 🧠 Primitives (all from the audited RustCrypto crates)
 
@@ -19,7 +19,7 @@ Rust and compiled to WebAssembly via `wasm-bindgen`. The `@isogeny/client` and
 - `src/cipher.rs` — ChaCha20-Poly1305 encrypt/decrypt, nonce generation.
 - `src/hmac_auth.rs` — HMAC-SHA256 sign/verify.
 - `src/sig.rs` — ML-DSA-65 keygen, sign, verify (optional identity).
-- `src/encoding.rs` — base64 encode/decode (`isogeny_to_base64` / `isogeny_from_base64`).
+- `src/encoding.rs` — base64 encode/decode (`nen_to_base64` / `nen_from_base64`).
 - `src/utils.rs` — shared helpers / error types.
 - `src/lib.rs` — the Wasm entry point; functions annotated with `#[wasm_bindgen]`.
 
@@ -33,8 +33,8 @@ Rust and compiled to WebAssembly via `wasm-bindgen`. The `@isogeny/client` and
 `build.sh` runs `wasm-pack` for **both** targets and writes them to the repo-root
 `pkg/`:
 
-- `pkg/node/` — Node.js/serverless target (used by `@isogeny/server`).
-- `pkg/bundler/` — ESM bundler target (used by `@isogeny/client`).
+- `pkg/node/` — Node.js/serverless target (used by `@nen/server`).
+- `pkg/bundler/` — ESM bundler target (used by `@nen/client`).
 
 Both SDKs depend on these via `"core-crypto": "file:../../pkg/bundler"`. The release
 profile is size-optimized (`opt-level = "z"`, `lto`, `strip`, `wasm-opt -Oz`).

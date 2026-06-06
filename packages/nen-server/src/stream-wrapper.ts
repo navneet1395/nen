@@ -1,7 +1,7 @@
 import { decryptPayload } from './middleware';
-import * as isogenyCrypto from 'core-crypto';
+import * as nenCrypto from 'core-crypto';
 import { getSession } from './store';
-import { IsogenyError } from './errors';
+import { NenError } from './errors';
 
 function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
   const nonce = new Uint8Array(baseNonce);
@@ -14,18 +14,18 @@ function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
 /**
  * A Next.js App Router Route Handler wrapper for streaming responses.
  * 
- * Intercepts requests, decrypts the Isogeny PQC payload,
+ * Intercepts requests, decrypts the Nen PQC payload,
  * passes the decrypted JSON to the user's handler, and then encrypts
  * the resulting ReadableStream or AsyncIterable chunk by chunk before sending it back.
  *
  * @param handler The user's route handler function that returns a ReadableStream or Response
  */
-export function withIsogenyStream(handler: (req: Request, body: any) => Promise<ReadableStream | Response | AsyncIterable<any>> | ReadableStream | Response | AsyncIterable<any>) {
+export function withNenStream(handler: (req: Request, body: any) => Promise<ReadableStream | Response | AsyncIterable<any>> | ReadableStream | Response | AsyncIterable<any>) {
   return async (req: Request) => {
     try {
-      const sessionId = req.headers.get('X-Isogeny-Session');
+      const sessionId = req.headers.get('X-Nen-Session');
       if (!sessionId) {
-        return new IsogenyError('SESSION_HEADER_MISSING').toResponse();
+        return new NenError('SESSION_HEADER_MISSING').toResponse();
       }
 
       // Read encrypted body if present
@@ -33,19 +33,19 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
       if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
         const encryptedData = await req.json();
         if (!encryptedData.ct || !encryptedData.n) {
-          return new IsogenyError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
+          return new NenError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
         }
 
         const requestMeta = {
           method: req.method,
           url: req.url,
-          timestamp: req.headers.get('X-Isogeny-Timestamp') || '',
-          signature: req.headers.get('X-Isogeny-Signature') || ''
+          timestamp: req.headers.get('X-Nen-Timestamp') || '',
+          signature: req.headers.get('X-Nen-Signature') || ''
         };
 
         const decryptedBytes = await decryptPayload(sessionId, encryptedData, requestMeta);
         if (!decryptedBytes) {
-          return new IsogenyError('CRYPTO_DECRYPT_FAILED').toResponse();
+          return new NenError('CRYPTO_DECRYPT_FAILED').toResponse();
         }
 
         const plaintextString = new TextDecoder().decode(decryptedBytes);
@@ -64,7 +64,7 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
 
       if (result instanceof Response) {
         if (!result.body) {
-          return new IsogenyError('INTERNAL', 'Stream handler Response had no body').toResponse();
+          return new NenError('INTERNAL', 'Stream handler Response had no body').toResponse();
         }
         stream = result.body;
         result.headers.forEach((v, k) => headers.set(k, v));
@@ -80,19 +80,19 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
           }
         });
       } else {
-        return new IsogenyError('INTERNAL', 'Stream handler returned a non-streamable value').toResponse();
+        return new NenError('INTERNAL', 'Stream handler returned a non-streamable value').toResponse();
       }
 
       const session = await getSession(sessionId);
       if (!session) {
-        return new IsogenyError('SESSION_INVALID_OR_EXPIRED').toResponse();
+        return new NenError('SESSION_INVALID_OR_EXPIRED').toResponse();
       }
 
-      const baseNonce = isogenyCrypto.isogeny_generate_nonce();
+      const baseNonce = nenCrypto.nen_generate_nonce();
       headers.set('Content-Type', 'text/event-stream');
       headers.set('Cache-Control', 'no-cache');
       headers.set('Connection', 'keep-alive');
-      headers.set('X-Isogeny-Stream-Nonce', isogenyCrypto.isogeny_to_base64(baseNonce));
+      headers.set('X-Nen-Stream-Nonce', nenCrypto.nen_to_base64(baseNonce));
 
       let chunkIndex = 0;
 
@@ -111,8 +111,8 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
             }
 
             const nonce = xorNonce(baseNonce, chunkIndex);
-            const ciphertext = isogenyCrypto.isogeny_encrypt(session.sharedSecret, nonce, chunkBytes);
-            const base64Ct = isogenyCrypto.isogeny_to_base64(ciphertext);
+            const ciphertext = nenCrypto.nen_encrypt(session.sharedSecret, nonce, chunkBytes);
+            const base64Ct = nenCrypto.nen_to_base64(ciphertext);
             
             // Format as SSE (Server-Sent Events)
             controller.enqueue(new TextEncoder().encode(`data: ${base64Ct}\n\n`));
@@ -125,8 +125,8 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
         flush(controller) {
           try {
             const nonce = xorNonce(baseNonce, chunkIndex);
-            const ciphertext = isogenyCrypto.isogeny_encrypt(session.sharedSecret, nonce, new TextEncoder().encode('__FIN__'));
-            const base64Ct = isogenyCrypto.isogeny_to_base64(ciphertext);
+            const ciphertext = nenCrypto.nen_encrypt(session.sharedSecret, nonce, new TextEncoder().encode('__FIN__'));
+            const base64Ct = nenCrypto.nen_to_base64(ciphertext);
             controller.enqueue(new TextEncoder().encode(`data: ${base64Ct}\n\n`));
           } catch (e) {
             console.error("Encryption error in stream flush:", e);
@@ -140,8 +140,8 @@ export function withIsogenyStream(handler: (req: Request, body: any) => Promise<
       });
 
     } catch (err: any) {
-      // Coded IsogenyErrors pass through with their status; anything else → ISO-9000.
-      return IsogenyError.from(err).toResponse();
+      // Coded NenErrors pass through with their status; anything else → ISO-9000.
+      return NenError.from(err).toResponse();
     }
   };
 }

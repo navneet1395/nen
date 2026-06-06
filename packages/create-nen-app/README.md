@@ -1,26 +1,26 @@
-# create-isogeny-app
+# create-nen-app
 
-The scaffolding CLI for Isogeny. Wires post-quantum, end-to-end encrypted API
+The scaffolding CLI for Nen. Wires post-quantum, end-to-end encrypted API
 calls into a Next.js App Router project in one command.
 
 ## Usage
 
 ```bash
-npx create-isogeny-app
+npx create-nen-app
 ```
 
 It will:
 
-- install `@isogeny/client` and `@isogeny/server`,
+- install `@nen/client` and `@nen/server`,
 - patch `next.config.ts` for WebAssembly (`asyncWebAssembly`),
-- generate the session routes (`/api/isogeny/[action]` → handshake / rotate /
+- generate the session routes (`/api/nen/[action]` → handshake / rotate /
   terminate / status),
 - generate a protected example route and a client snippet,
 - print next steps.
 
-After it finishes, swap `fetch` for `pqcfetch` on the client and wrap your routes
-with `withIsogeny` on the server — see the
-[client](../isogeny-client) and [server](../isogeny-server) READMEs.
+After it finishes, swap `fetch` for `nenfetch` on the client and wrap your routes
+with `withNen` on the server — see the
+[client](../nen-client) and [server](../nen-server) READMEs.
 
 ## Develop
 

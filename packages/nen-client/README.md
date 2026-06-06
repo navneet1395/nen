@@ -1,26 +1,26 @@
-# Isogeny Client SDK (`@isogeny/client`)
+# Nen Client SDK (`@nen/client`)
 
-The browser/frontend SDK for Isogeny — a drop-in `fetch` replacement that encrypts
+The browser/frontend SDK for Nen — a drop-in `fetch` replacement that encrypts
 the payload before it leaves the tab, using a post-quantum (ML-KEM-768) handshake.
 
 ## Install
 
 ```bash
-npm install @isogeny/client
+npm install @nen/client
 ```
 
 ## Quick use
 
 ```ts
-import { createPqcFetch, createPqcStream } from '@isogeny/client';
+import { createNenFetch, createNenStream } from '@nen/client';
 
-const pqcfetch = createPqcFetch('');            // '' = same-origin
-const data = await pqcfetch('/api/secure', {    // returns the decrypted JSON
+const nenfetch = createNenFetch('');            // '' = same-origin
+const data = await nenfetch('/api/secure', {    // returns the decrypted JSON
   method: 'POST',
   body: JSON.stringify({ ssn: '412-55-9087' }),
 });
 
-for await (const chunk of createPqcStream('')('/api/chat', {
+for await (const chunk of createNenStream('')('/api/chat', {
   method: 'POST',
   body: JSON.stringify({ prompt }),
 })) {
@@ -28,8 +28,8 @@ for await (const chunk of createPqcStream('')('/api/chat', {
 }
 ```
 
-Prefer an explicit instance? `new IsogenyClient(serverUrl, { identityMode: 'pqc' })`
-then `await client.handshake()`, `client.pqcfetch()`, `client.pqcstream()`,
+Prefer an explicit instance? `new NenClient(serverUrl, { identityMode: 'pqc' })`
+then `await client.handshake()`, `client.nenfetch()`, `client.nenstream()`,
 `client.rotate()`, `client.terminate()`, `client.status()`.
 
 ## What it does
@@ -38,20 +38,20 @@ then `await client.handshake()`, `client.pqcfetch()`, `client.pqcstream()`,
    decapsulates the returned ciphertext into the shared secret, and stores the
    server-issued HMAC key. With `identityMode: 'pqc'` it also signs the ephemeral
    key with ML-DSA. The ML-KEM secret key is zeroized immediately after.
-2. **`pqcfetch`** — encrypts the JSON body (ChaCha20-Poly1305), sends
-   `{ ct, n }` base64 with the `X-Isogeny-Session`, `X-Isogeny-Timestamp`, and
-   `X-Isogeny-Signature` (HMAC) headers, and decrypts the JSON response.
-3. **`pqcstream`** — same request leg; yields decrypted SSE chunks as an async
+2. **`nenfetch`** — encrypts the JSON body (ChaCha20-Poly1305), sends
+   `{ ct, n }` base64 with the `X-Nen-Session`, `X-Nen-Timestamp`, and
+   `X-Nen-Signature` (HMAC) headers, and decrypts the JSON response.
+3. **`nenstream`** — same request leg; yields decrypted SSE chunks as an async
    generator.
 4. **Auto-recovery** — on a `401` it transparently `rotate()`s (fresh handshake)
    and retries once.
 
 ## Coded errors
 
-Failures throw an `IsogenyError` carrying a stable `ISO-xxxx` code (e.g.
+Failures throw an `NenError` carrying a stable `ISO-xxxx` code (e.g.
 `ISO-2001` SESSION_NOT_INITIALIZED, `ISO-1003` HANDSHAKE_NETWORK). The wire/throw
 surface never leaks the internal diagnostic hint. Resolve a code with
-`describeIsogenyCode('ISO-1003')`. Full catalog: [`../../ERROR_CODES.md`](../../ERROR_CODES.md).
+`describeNenCode('ISO-1003')`. Full catalog: [`../../ERROR_CODES.md`](../../ERROR_CODES.md).
 
 ## Build & test
 

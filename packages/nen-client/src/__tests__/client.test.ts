@@ -1,22 +1,22 @@
-import { IsogenyClient, IsogenyError, describeIsogenyCode } from '../index';
+import { NenClient, NenError, describeNenCode } from '../index';
 
-describe('IsogenyClient coded errors', () => {
-  let client: IsogenyClient;
+describe('NenClient coded errors', () => {
+  let client: NenClient;
 
   beforeEach(() => {
-    client = new IsogenyClient('http://localhost:3000');
+    client = new NenClient('http://localhost:3000');
     // Mock global fetch
     global.fetch = jest.fn();
   });
 
-  test('pqcfetch before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
-    await expect(client.pqcfetch('/api/data')).rejects.toMatchObject({
+  test('nenfetch before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
+    await expect(client.nenfetch('/api/data')).rejects.toMatchObject({
       code: 'ISO-2001',
     });
   });
 
-  test('pqcstream before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
-    const gen = client.pqcstream('/api/data');
+  test('nenstream before handshake → ISO-2001 SESSION_NOT_INITIALIZED', async () => {
+    const gen = client.nenstream('/api/data');
     await expect(gen.next()).rejects.toMatchObject({ code: 'ISO-2001' });
   });
 
@@ -34,13 +34,13 @@ describe('IsogenyClient coded errors', () => {
     await expect(client.handshake()).rejects.toMatchObject({ code: 'ISO-1004' });
   });
 
-  test('thrown errors are IsogenyError instances carrying code + status', async () => {
+  test('thrown errors are NenError instances carrying code + status', async () => {
     try {
-      await client.pqcfetch('/api/data');
-      throw new Error('expected pqcfetch to throw');
+      await client.nenfetch('/api/data');
+      throw new Error('expected nenfetch to throw');
     } catch (e) {
-      expect(e).toBeInstanceOf(IsogenyError);
-      const err = e as IsogenyError;
+      expect(e).toBeInstanceOf(NenError);
+      const err = e as NenError;
       expect(err.code).toBe('ISO-2001');
       expect(err.status).toBe(409);
       // The safe wire body never leaks the internal hint.
@@ -52,16 +52,16 @@ describe('IsogenyClient coded errors', () => {
   });
 });
 
-describe('describeIsogenyCode reverse lookup', () => {
+describe('describeNenCode reverse lookup', () => {
   test('resolves a known client code from a log/support ticket', () => {
     // ISO-2001 SESSION_NOT_INITIALIZED is in the client catalog (server-only
-    // codes like ISO-3001 live in @isogeny/server's mirror).
-    const spec = describeIsogenyCode('ISO-2001');
+    // codes like ISO-3001 live in @nen/server's mirror).
+    const spec = describeNenCode('ISO-2001');
     expect(spec).toBeDefined();
     expect(spec!.status).toBe(409);
   });
 
   test('returns undefined for an unknown code', () => {
-    expect(describeIsogenyCode('ISO-0000')).toBeUndefined();
+    expect(describeNenCode('ISO-0000')).toBeUndefined();
   });
 });

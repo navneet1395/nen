@@ -1,7 +1,7 @@
 {
-  "name": "@isogeny/client",
+  "name": "@nen/client",
   "version": "0.2.0",
-  "description": "Frontend Wasm Bridge for Isogeny PQC",
+  "description": "Frontend Wasm Bridge for Nen PQC",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

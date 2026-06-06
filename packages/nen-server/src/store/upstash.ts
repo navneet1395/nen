@@ -1,5 +1,5 @@
 import { SessionStore } from '../store';
-import * as isogenyCrypto from 'core-crypto';
+import * as nenCrypto from 'core-crypto';
 
 /**
  * Upstash REST session store.
@@ -9,8 +9,8 @@ import * as isogenyCrypto from 'core-crypto';
  * Workers, Vercel Edge, Deno). Pass the REST URL and token from your Upstash
  * dashboard (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN).
  *
- *   import { setSessionStore } from '@isogeny/server';
- *   import { UpstashSessionStore } from '@isogeny/server';
+ *   import { setSessionStore } from '@nen/server';
+ *   import { UpstashSessionStore } from '@nen/server';
  *
  *   setSessionStore(new UpstashSessionStore(
  *     process.env.UPSTASH_REDIS_REST_URL!,
@@ -23,7 +23,7 @@ export class UpstashSessionStore implements SessionStore {
   private prefix: string;
   private ttlSeconds: number;
 
-  constructor(restUrl: string, restToken: string, prefix = 'isogeny:session:', ttlSeconds = 3600) {
+  constructor(restUrl: string, restToken: string, prefix = 'nen:session:', ttlSeconds = 3600) {
     // Normalize: drop a trailing slash so command paths concatenate cleanly.
     this.url = restUrl.replace(/\/$/, '');
     this.token = restToken;
@@ -54,8 +54,8 @@ export class UpstashSessionStore implements SessionStore {
   async set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): Promise<void> {
     const key = `${this.prefix}${sessionId}`;
     const sessionData = JSON.stringify({
-      sharedSecret: isogenyCrypto.isogeny_to_base64(sharedSecret),
-      hmacKey: isogenyCrypto.isogeny_to_base64(hmacKey),
+      sharedSecret: nenCrypto.nen_to_base64(sharedSecret),
+      hmacKey: nenCrypto.nen_to_base64(hmacKey),
       createdAt: Date.now(),
     });
     await this.cmd(['SET', key, sessionData, 'EX', this.ttlSeconds]);
@@ -68,11 +68,11 @@ export class UpstashSessionStore implements SessionStore {
     try {
       const session = JSON.parse(dataStr);
       return {
-        sharedSecret: isogenyCrypto.isogeny_from_base64(session.sharedSecret),
-        hmacKey: isogenyCrypto.isogeny_from_base64(session.hmacKey),
+        sharedSecret: nenCrypto.nen_from_base64(session.sharedSecret),
+        hmacKey: nenCrypto.nen_from_base64(session.hmacKey),
       };
     } catch (e) {
-      console.error('Failed to parse Isogeny session from Upstash', e);
+      console.error('Failed to parse Nen session from Upstash', e);
       return null;
     }
   }

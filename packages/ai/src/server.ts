@@ -1,4 +1,4 @@
-import { withIsogenyStream } from '@isogeny/server';
+import { withNenStream } from '@nen/server';
 import type { ChatMessage, SecureChatParams } from './types';
 
 export type { ChatMessage, SecureChatParams };
@@ -14,16 +14,16 @@ export type SecureAIProvider = (
 ) => AsyncIterable<string> | Promise<AsyncIterable<string>>;
 
 /**
- * Server-side handler for `@isogeny/ai`. Wraps `withIsogenyStream`: it decrypts
+ * Server-side handler for `@nen/ai`. Wraps `withNenStream`: it decrypts
  * the incoming prompt, hands it to your `provider`, and streams the provider's
  * text chunks back to the browser ENCRYPTED, chunk by chunk.
  *
- * Isogeny secures the transport between the browser and this handler. Inside the
+ * Nen secures the transport between the browser and this handler. Inside the
  * handler you call the model provider with plaintext — by necessity.
  *
  * @example
  *   // app/api/ai/chat/route.ts
- *   import { withSecureAI } from '@isogeny/ai/server';
+ *   import { withSecureAI } from '@nen/ai/server';
  *   import OpenAI from 'openai';
  *   const openai = new OpenAI();
  *
@@ -40,7 +40,7 @@ export type SecureAIProvider = (
  *   });
  */
 export function withSecureAI(provider: SecureAIProvider) {
-  return withIsogenyStream(async (req, body) => {
+  return withNenStream(async (req, body) => {
     return provider(body as SecureChatParams, req);
   });
 }

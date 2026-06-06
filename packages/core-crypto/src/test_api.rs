@@ -20,7 +20,7 @@ mod tests {
     fn test_chacha20_roundtrip_plaintext_matches() {
         let key = vec![0x42u8; 32]; // 32-byte key
         let nonce = cipher::generate_nonce();
-        let plaintext = b"Hello Isogeny! This is a secret message.";
+        let plaintext = b"Hello Nen! This is a secret message.";
 
         let ciphertext = cipher::encrypt(&key, &nonce, plaintext).unwrap();
         let decrypted = cipher::decrypt(&key, &nonce, &ciphertext).unwrap();

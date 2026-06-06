@@ -1,10 +1,10 @@
 {
-  "name": "create-isogeny-app",
+  "name": "create-nen-app",
   "version": "0.1.0",
-  "description": "Scaffold a Next.js app with Isogeny pre-configured",
+  "description": "Scaffold a Next.js app with Nen pre-configured",
   "main": "dist/index.js",
   "bin": {
-    "create-isogeny-app": "./dist/index.js"
+    "create-nen-app": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

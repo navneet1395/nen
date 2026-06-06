@@ -15,13 +15,13 @@ use wasm_bindgen::prelude::*;
 // -----------------------------------------------------------------------------
 
 #[wasm_bindgen]
-pub struct IsogenyKeypair {
+pub struct NenKeypair {
     public_key: Vec<u8>,
     secret_key: Vec<u8>,
 }
 
 #[wasm_bindgen]
-impl IsogenyKeypair {
+impl NenKeypair {
     #[wasm_bindgen(getter)]
     pub fn public_key(&self) -> Vec<u8> {
         self.public_key.clone()
@@ -34,13 +34,13 @@ impl IsogenyKeypair {
 }
 
 #[wasm_bindgen]
-pub struct IsogenyEncapsulation {
+pub struct NenEncapsulation {
     shared_secret: Vec<u8>,
     ciphertext: Vec<u8>,
 }
 
 #[wasm_bindgen]
-impl IsogenyEncapsulation {
+impl NenEncapsulation {
     #[wasm_bindgen(getter)]
     pub fn shared_secret(&self) -> Vec<u8> {
         self.shared_secret.clone()
@@ -57,18 +57,18 @@ impl IsogenyEncapsulation {
 // -----------------------------------------------------------------------------
 
 #[wasm_bindgen]
-pub fn isogeny_generate_keypair() -> IsogenyKeypair {
+pub fn nen_generate_keypair() -> NenKeypair {
     let (public_key, secret_key) = kem::generate_keypair();
-    IsogenyKeypair {
+    NenKeypair {
         public_key,
         secret_key,
     }
 }
 
 #[wasm_bindgen]
-pub fn isogeny_encapsulate(public_key: &[u8]) -> Result<IsogenyEncapsulation, JsValue> {
+pub fn nen_encapsulate(public_key: &[u8]) -> Result<NenEncapsulation, JsValue> {
     match kem::encapsulate(public_key) {
-        Ok((shared_secret, ciphertext)) => Ok(IsogenyEncapsulation {
+        Ok((shared_secret, ciphertext)) => Ok(NenEncapsulation {
             shared_secret,
             ciphertext,
         }),
@@ -77,7 +77,7 @@ pub fn isogeny_encapsulate(public_key: &[u8]) -> Result<IsogenyEncapsulation, Js
 }
 
 #[wasm_bindgen]
-pub fn isogeny_decapsulate(ciphertext: &[u8], secret_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn nen_decapsulate(ciphertext: &[u8], secret_key: &[u8]) -> Result<Vec<u8>, JsValue> {
     kem::decapsulate(ciphertext, secret_key).map_err(|e| JsValue::from_str(e))
 }
 
@@ -86,16 +86,16 @@ pub fn isogeny_decapsulate(ciphertext: &[u8], secret_key: &[u8]) -> Result<Vec<u
 // -----------------------------------------------------------------------------
 
 #[wasm_bindgen]
-pub fn isogeny_generate_nonce() -> Vec<u8> {
+pub fn nen_generate_nonce() -> Vec<u8> {
     cipher::generate_nonce()
 }
 
 #[wasm_bindgen]
-pub fn isogeny_encrypt(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn nen_encrypt(key: &[u8], nonce: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, JsValue> {
     cipher::encrypt(key, nonce, plaintext).map_err(|e| JsValue::from_str(e))
 }
 
 #[wasm_bindgen]
-pub fn isogeny_decrypt(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn nen_decrypt(key: &[u8], nonce: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, JsValue> {
     cipher::decrypt(key, nonce, ciphertext).map_err(|e| JsValue::from_str(e))
 }

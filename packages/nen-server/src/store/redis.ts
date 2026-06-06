@@ -1,5 +1,5 @@
 import { SessionStore } from '../store';
-import * as isogenyCrypto from 'core-crypto';
+import * as nenCrypto from 'core-crypto';
 
 /**
  * Interface representing a minimal Redis client (like Upstash Redis)
@@ -19,7 +19,7 @@ export class RedisSessionStore implements SessionStore {
   private prefix: string;
   private expiryMs: number;
 
-  constructor(redisClient: MinimalRedisClient, prefix = 'isogeny:session:', expiryMs = 3600000) {
+  constructor(redisClient: MinimalRedisClient, prefix = 'nen:session:', expiryMs = 3600000) {
     this.redis = redisClient;
     this.prefix = prefix;
     this.expiryMs = expiryMs;
@@ -28,8 +28,8 @@ export class RedisSessionStore implements SessionStore {
   async set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): Promise<void> {
     const key = `${this.prefix}${sessionId}`;
     const sessionData = {
-      sharedSecret: isogenyCrypto.isogeny_to_base64(sharedSecret),
-      hmacKey: isogenyCrypto.isogeny_to_base64(hmacKey),
+      sharedSecret: nenCrypto.nen_to_base64(sharedSecret),
+      hmacKey: nenCrypto.nen_to_base64(hmacKey),
       createdAt: Date.now()
     };
     
@@ -45,11 +45,11 @@ export class RedisSessionStore implements SessionStore {
     try {
       const session = JSON.parse(dataStr);
       return {
-        sharedSecret: isogenyCrypto.isogeny_from_base64(session.sharedSecret),
-        hmacKey: isogenyCrypto.isogeny_from_base64(session.hmacKey)
+        sharedSecret: nenCrypto.nen_from_base64(session.sharedSecret),
+        hmacKey: nenCrypto.nen_from_base64(session.hmacKey)
       };
     } catch (e) {
-      console.error('Failed to parse Isogeny session from Redis', e);
+      console.error('Failed to parse Nen session from Redis', e);
       return null;
     }
   }

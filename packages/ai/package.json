@@ -1,5 +1,5 @@
 {
-  "name": "@isogeny/ai",
+  "name": "@nen/ai",
   "version": "0.1.0",
   "description": "End-to-end encrypted AI calls (prompts + streamed responses) for modern apps. Powered by Post-Quantum Cryptography.",
   "exports": {
@@ -22,8 +22,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@isogeny/client": "*",
-    "@isogeny/server": "*"
+    "@nen/client": "*",
+    "@nen/server": "*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

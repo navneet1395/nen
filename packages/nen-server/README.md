@@ -1,23 +1,23 @@
-# Isogeny Server SDK (`@isogeny/server`)
+# Nen Server SDK (`@nen/server`)
 
-The Next.js / serverless middleware for Isogeny. It runs the handshake, manages
+The Next.js / serverless middleware for Nen. It runs the handshake, manages
 session keys, verifies the per-request HMAC, and decrypts/encrypts payloads.
 
 ## Install
 
 ```bash
-npm install @isogeny/server
+npm install @nen/server
 ```
 
 ## Setup
 
-Mount the session routes (`src/app/api/isogeny/[action]/route.ts`):
+Mount the session routes (`src/app/api/nen/[action]/route.ts`):
 
 ```typescript
 import {
   handleHandshake, handleRotate, handleTerminate, handleStatus,
   setSessionStore, InMemorySessionStore,
-} from '@isogeny/server';
+} from '@nen/server';
 
 setSessionStore(new InMemorySessionStore()); // see "Session stores" below
 
@@ -37,14 +37,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
 Protect any endpoint:
 
 ```typescript
-import { withIsogeny } from '@isogeny/server';
-export const POST = withIsogeny(async (req, body) => {
+import { withNen } from '@nen/server';
+export const POST = withNen(async (req, body) => {
   // body is already decrypted AND the request is already authenticated
   return { ok: true, body };
 });
 ```
 
-Stream (SSE): `withIsogenyStream(async (req, body) => asyncGeneratorOfChunks)`.
+Stream (SSE): `withNenStream(async (req, body) => asyncGeneratorOfChunks)`.
 
 ## How it works
 
@@ -54,20 +54,20 @@ Stream (SSE): `withIsogenyStream(async (req, body) => asyncGeneratorOfChunks)`.
 - **`middleware.ts`** — `handleHandshake` (ML-KEM encapsulate + issue a random
   HMAC key + optional ML-DSA identity check), `decryptPayload`, `encryptPayload`,
   and the lifecycle handlers.
-- **`wrapper.ts` / `stream-wrapper.ts`** — the `withIsogeny` / `withIsogenyStream`
+- **`wrapper.ts` / `stream-wrapper.ts`** — the `withNen` / `withNenStream`
   DX wrappers.
 
 ## Mandatory per-request HMAC
 
-HMAC is **required by default**. `decryptPayload`/`withIsogeny` reject any request
-that lacks a valid `X-Isogeny-Signature` + in-window timestamp with
-[`ISO-3001`](../../ERROR_CODES.md). Pass `withIsogeny(handler, { strict: false })`
+HMAC is **required by default**. `decryptPayload`/`withNen` reject any request
+that lacks a valid `X-Nen-Signature` + in-window timestamp with
+[`ISO-3001`](../../ERROR_CODES.md). Pass `withNen(handler, { strict: false })`
 only for explicitly opted-in legacy clients that cannot sign.
 
 ## Session stores
 
 ```typescript
-import { RedisSessionStore, UpstashSessionStore } from '@isogeny/server';
+import { RedisSessionStore, UpstashSessionStore } from '@nen/server';
 
 // Any node/serverless runtime (ioredis, node-redis, or @upstash/redis client):
 setSessionStore(new RedisSessionStore(redisClient));
@@ -81,9 +81,9 @@ setSessionStore(new UpstashSessionStore(
 
 ## Coded errors
 
-Every failure is an `IsogenyError` with a stable `ISO-xxxx` code. The wire body is
+Every failure is an `NenError` with a stable `ISO-xxxx` code. The wire body is
 `{ error: { code, message } }` (safe message only); the precise diagnosis is logged
-server-side. Resolve a code with `describeIsogenyCode(...)`. Catalog:
+server-side. Resolve a code with `describeNenCode(...)`. Catalog:
 [`../../ERROR_CODES.md`](../../ERROR_CODES.md).
 
 ## Build & test

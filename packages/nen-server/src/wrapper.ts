@@ -1,9 +1,9 @@
 import { decryptPayload, encryptPayload } from './middleware';
-import { IsogenyError } from './errors';
+import { NenError } from './errors';
 
 /**
  * A Next.js App Router Route Handler wrapper.
- * Intercepts POST/PUT requests, decrypts the Isogeny PQC payload,
+ * Intercepts POST/PUT requests, decrypts the Nen PQC payload,
  * passes the decrypted JSON to the user's handler, and then encrypts
  * the JSON response before sending it back.
  *
@@ -14,36 +14,36 @@ import { IsogenyError } from './errors';
  *   legacy clients that cannot sign requests — doing so disables per-request
  *   authentication and the timestamp replay window.
  */
-export function withIsogeny(
+export function withNen(
   handler: (req: Request, body: any) => Promise<any> | any,
   options: { strict?: boolean } = {}
 ) {
   const strict = options.strict ?? true;
   return async (req: Request) => {
     try {
-      const sessionId = req.headers.get('X-Isogeny-Session');
+      const sessionId = req.headers.get('X-Nen-Session');
       if (!sessionId) {
-        return new IsogenyError('SESSION_HEADER_MISSING').toResponse();
+        return new NenError('SESSION_HEADER_MISSING').toResponse();
       }
 
       // Read encrypted body (base64-only wire format: { ct, n })
       const encryptedData = await req.json();
       if (!encryptedData.ct || !encryptedData.n) {
-        return new IsogenyError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
+        return new NenError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
       }
 
       // Collect request metadata for HMAC verification
       const requestMeta = {
         method: req.method,
         url: req.url,
-        timestamp: req.headers.get('X-Isogeny-Timestamp') || '',
-        signature: req.headers.get('X-Isogeny-Signature') || ''
+        timestamp: req.headers.get('X-Nen-Timestamp') || '',
+        signature: req.headers.get('X-Nen-Signature') || ''
       };
 
-      // Decrypt (auth/session/replay failures throw coded IsogenyErrors)
+      // Decrypt (auth/session/replay failures throw coded NenErrors)
       const decryptedBytes = await decryptPayload(sessionId, encryptedData, requestMeta, strict);
       if (!decryptedBytes) {
-        return new IsogenyError('CRYPTO_DECRYPT_FAILED').toResponse();
+        return new NenError('CRYPTO_DECRYPT_FAILED').toResponse();
       }
 
       // Parse decrypted plaintext to JSON
@@ -52,7 +52,7 @@ export function withIsogeny(
       try {
         decryptedBody = JSON.parse(plaintextString);
       } catch (e) {
-        return new IsogenyError('CRYPTO_PAYLOAD_NOT_JSON').toResponse();
+        return new NenError('CRYPTO_PAYLOAD_NOT_JSON').toResponse();
       }
 
       // Execute user handler
@@ -71,10 +71,10 @@ export function withIsogeny(
         headers: { 'Content-Type': 'application/json' }
       });
     } catch (err: any) {
-      // Every Isogeny failure is a coded IsogenyError; anything else becomes
+      // Every Nen failure is a coded NenError; anything else becomes
       // ISO-9000 (500). The safe { code, message } body goes on the wire and the
       // precise diagnosis is logged — see ERROR_CODES.md.
-      return IsogenyError.from(err).toResponse();
+      return NenError.from(err).toResponse();
     }
   };
 }

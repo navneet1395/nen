@@ -1,30 +1,30 @@
-import * as isogenyCrypto from 'core-crypto';
-import { IsogenyError } from './errors';
+import * as nenCrypto from 'core-crypto';
+import { NenError } from './errors';
 
-export { IsogenyError, ISOGENY_ERRORS, describeIsogenyCode } from './errors';
-export type { IsogenyErrorSpec, IsogenyErrorName } from './errors';
+export { NenError, NEN_ERRORS, describeNenCode } from './errors';
+export type { NenErrorSpec, NenErrorName } from './errors';
 
-export interface IsogenyClientOptions {
+export interface NenClientOptions {
   identityMode?: 'none' | 'pqc';
 }
 
-/** Throw a coded IsogenyError, logging the diagnosis first. */
-function fail(name: import('./errors').IsogenyErrorName, detail?: string): never {
-  const err = new IsogenyError(name, detail);
+/** Throw a coded NenError, logging the diagnosis first. */
+function fail(name: import('./errors').NenErrorName, detail?: string): never {
+  const err = new NenError(name, detail);
   err.log();
   throw err;
 }
 
-export class IsogenyClient {
+export class NenClient {
   private sharedSecret: Uint8Array | null = null;
   private hmacKey: Uint8Array | null = null;
   sessionId: string | null = null;
   private serverUrl: string;
-  private options: IsogenyClientOptions;
+  private options: NenClientOptions;
   private _rotationInProgress = false;
   private signingKeypair: any = null; // Holds the ML-DSA keypair if identityMode is 'pqc'
 
-  constructor(serverUrl: string, options: IsogenyClientOptions = {}) {
+  constructor(serverUrl: string, options: NenClientOptions = {}) {
     this.serverUrl = serverUrl;
     this.options = { identityMode: 'none', ...options };
   }
@@ -34,31 +34,31 @@ export class IsogenyClient {
    */
   async handshake(): Promise<void> {
     // Generate keypair for ML-KEM
-    const keypair = isogenyCrypto.isogeny_generate_keypair();
+    const keypair = nenCrypto.nen_generate_keypair();
     const publicKey = keypair.public_key;
     const secretKey = keypair.secret_key;
 
     const payload: any = {
-      pk: isogenyCrypto.isogeny_to_base64(publicKey),
+      pk: nenCrypto.nen_to_base64(publicKey),
     };
 
     // If PQC identity mode is enabled, attach signature
     if (this.options.identityMode === 'pqc') {
       if (!this.signingKeypair) {
-        this.signingKeypair = isogenyCrypto.isogeny_generate_signing_keypair();
+        this.signingKeypair = nenCrypto.nen_generate_signing_keypair();
       }
       
       const sigPk = this.signingKeypair.public_key;
-      const sigOfPk = isogenyCrypto.isogeny_sign(this.signingKeypair.secret_key, publicKey);
+      const sigOfPk = nenCrypto.nen_sign(this.signingKeypair.secret_key, publicKey);
       
-      payload.sigPk = isogenyCrypto.isogeny_to_base64(sigPk);
-      payload.sigOfPk = isogenyCrypto.isogeny_to_base64(sigOfPk);
+      payload.sigPk = nenCrypto.nen_to_base64(sigPk);
+      payload.sigOfPk = nenCrypto.nen_to_base64(sigOfPk);
     }
 
     // Send public key (and optional signature) to server
     let response: Response;
     try {
-      response = await fetch(`${this.serverUrl}/api/isogeny/handshake`, {
+      response = await fetch(`${this.serverUrl}/api/nen/handshake`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -75,13 +75,13 @@ export class IsogenyClient {
     this.sessionId = data.sid;
 
     if (data.hmac) {
-      this.hmacKey = isogenyCrypto.isogeny_from_base64(data.hmac);
+      this.hmacKey = nenCrypto.nen_from_base64(data.hmac);
     }
 
-    const ciphertext = isogenyCrypto.isogeny_from_base64(data.ct);
+    const ciphertext = nenCrypto.nen_from_base64(data.ct);
 
     // Decapsulate the shared secret
-    this.sharedSecret = isogenyCrypto.isogeny_decapsulate(ciphertext, secretKey);
+    this.sharedSecret = nenCrypto.nen_decapsulate(ciphertext, secretKey);
 
     // SECURITY: Immediately wipe the secret key from memory
     secretKey.fill(0);
@@ -91,7 +91,7 @@ export class IsogenyClient {
    * Post-Quantum Encrypted Fetch.
    * Encrypts the request body and decrypts the response.
    */
-  async pqcfetch(endpoint: string, options: RequestInit = {}): Promise<any> {
+  async nenfetch(endpoint: string, options: RequestInit = {}): Promise<any> {
     if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
@@ -102,13 +102,13 @@ export class IsogenyClient {
     if (options.body) {
       // Encrypt the body
       const plaintext = new TextEncoder().encode(options.body as string);
-      const nonce = isogenyCrypto.isogeny_generate_nonce();
-      const ciphertext = isogenyCrypto.isogeny_encrypt(this.sharedSecret, nonce, plaintext);
+      const nonce = nenCrypto.nen_generate_nonce();
+      const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
       
-      nonceBase64 = isogenyCrypto.isogeny_to_base64(nonce);
+      nonceBase64 = nenCrypto.nen_to_base64(nonce);
       requestBody = JSON.stringify({
         sessionId: this.sessionId,
-        ct: isogenyCrypto.isogeny_to_base64(ciphertext),
+        ct: nenCrypto.nen_to_base64(ciphertext),
         n: nonceBase64
       });
     }
@@ -119,17 +119,17 @@ export class IsogenyClient {
     // Construct canonical string and compute HMAC
     const canonical = `${method}\n${endpoint}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
-    const signatureBytes = isogenyCrypto.isogeny_hmac_sign(this.hmacKey, canonicalBytes);
-    const signatureBase64 = isogenyCrypto.isogeny_to_base64(signatureBytes);
+    const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
+    const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
       ...options,
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
-        'X-Isogeny-Session': this.sessionId,
-        'X-Isogeny-Timestamp': timestamp,
-        'X-Isogeny-Signature': signatureBase64
+        'X-Nen-Session': this.sessionId,
+        'X-Nen-Timestamp': timestamp,
+        'X-Nen-Signature': signatureBase64
       },
       body: requestBody
     };
@@ -137,11 +137,11 @@ export class IsogenyClient {
     const response = await fetch(`${this.serverUrl}${endpoint}`, fetchOptions);
 
     if (response.status === 401 && !this._rotationInProgress) {
-      console.warn('[IsogenyClient] Session expired. Automatically rotating key...');
+      console.warn('[NenClient] Session expired. Automatically rotating key...');
       this._rotationInProgress = true;
       try {
         await this.rotate();
-        return this.pqcfetch(endpoint, options);
+        return this.nenfetch(endpoint, options);
       } finally {
         this._rotationInProgress = false;
       }
@@ -154,14 +154,14 @@ export class IsogenyClient {
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
 
-      // Base64-only wire format (ISOGENY-PROTOCOL-V1): { ct, n }.
+      // Base64-only wire format (NEN-PROTOCOL-V1): { ct, n }.
       if (data.ct && data.n) {
-        const ct = isogenyCrypto.isogeny_from_base64(data.ct);
-        const nonce = isogenyCrypto.isogeny_from_base64(data.n);
+        const ct = nenCrypto.nen_from_base64(data.ct);
+        const nonce = nenCrypto.nen_from_base64(data.n);
 
         let decrypted: Uint8Array;
         try {
-          decrypted = isogenyCrypto.isogeny_decrypt(this.sharedSecret, nonce, ct);
+          decrypted = nenCrypto.nen_decrypt(this.sharedSecret, nonce, ct);
         } catch (e) {
           fail('CRYPTO_DECRYPT_FAILED', e instanceof Error ? e.message : String(e));
         }
@@ -178,7 +178,7 @@ export class IsogenyClient {
    * Post-Quantum Encrypted Stream.
    * Encrypts the request body and returns an AsyncGenerator that yields decrypted chunks.
    */
-  async *pqcstream(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
+  async *nenstream(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
     if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
@@ -188,13 +188,13 @@ export class IsogenyClient {
     
     if (options.body) {
       const plaintext = new TextEncoder().encode(options.body as string);
-      const nonce = isogenyCrypto.isogeny_generate_nonce();
-      const ciphertext = isogenyCrypto.isogeny_encrypt(this.sharedSecret, nonce, plaintext);
+      const nonce = nenCrypto.nen_generate_nonce();
+      const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
       
-      nonceBase64 = isogenyCrypto.isogeny_to_base64(nonce);
+      nonceBase64 = nenCrypto.nen_to_base64(nonce);
       requestBody = JSON.stringify({
         sessionId: this.sessionId,
-        ct: isogenyCrypto.isogeny_to_base64(ciphertext),
+        ct: nenCrypto.nen_to_base64(ciphertext),
         n: nonceBase64
       });
     }
@@ -204,17 +204,17 @@ export class IsogenyClient {
     
     const canonical = `${method}\n${endpoint}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
-    const signatureBytes = isogenyCrypto.isogeny_hmac_sign(this.hmacKey, canonicalBytes);
-    const signatureBase64 = isogenyCrypto.isogeny_to_base64(signatureBytes);
+    const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
+    const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
       ...options,
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
-        'X-Isogeny-Session': this.sessionId,
-        'X-Isogeny-Timestamp': timestamp,
-        'X-Isogeny-Signature': signatureBase64
+        'X-Nen-Session': this.sessionId,
+        'X-Nen-Timestamp': timestamp,
+        'X-Nen-Signature': signatureBase64
       },
       body: requestBody
     };
@@ -222,11 +222,11 @@ export class IsogenyClient {
     const response = await fetch(`${this.serverUrl}${endpoint}`, fetchOptions);
 
     if (response.status === 401 && !this._rotationInProgress) {
-      console.warn('[IsogenyClient] Session expired. Automatically rotating key...');
+      console.warn('[NenClient] Session expired. Automatically rotating key...');
       this._rotationInProgress = true;
       try {
         await this.rotate();
-        yield* this.pqcstream(endpoint, options);
+        yield* this.nenstream(endpoint, options);
         return;
       } finally {
         this._rotationInProgress = false;
@@ -237,11 +237,11 @@ export class IsogenyClient {
       fail('STREAM_REQUEST_FAILED', `status=${response.status} ${response.statusText}`);
     }
 
-    const baseNonceBase64 = response.headers.get('X-Isogeny-Stream-Nonce');
+    const baseNonceBase64 = response.headers.get('X-Nen-Stream-Nonce');
     if (!baseNonceBase64) {
       fail('STREAM_MISSING_NONCE_HEADER');
     }
-    const baseNonce = isogenyCrypto.isogeny_from_base64(baseNonceBase64);
+    const baseNonce = nenCrypto.nen_from_base64(baseNonceBase64);
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -264,10 +264,10 @@ export class IsogenyClient {
             const base64Ct = line.substring(6).trim();
             if (!base64Ct) continue;
 
-            const ciphertext = isogenyCrypto.isogeny_from_base64(base64Ct);
+            const ciphertext = nenCrypto.nen_from_base64(base64Ct);
             const nonce = xorNonce(baseNonce, chunkIndex);
             
-            const decrypted = isogenyCrypto.isogeny_decrypt(this.sharedSecret, nonce, ciphertext);
+            const decrypted = nenCrypto.nen_decrypt(this.sharedSecret, nonce, ciphertext);
             const decryptedStr = new TextDecoder().decode(decrypted);
 
             if (decryptedStr === '__FIN__') {
@@ -290,12 +290,12 @@ export class IsogenyClient {
   async terminate(): Promise<void> {
     if (!this.sessionId) return;
     try {
-      await fetch(`${this.serverUrl}/api/isogeny/terminate`, {
+      await fetch(`${this.serverUrl}/api/nen/terminate`, {
         method: 'POST',
-        headers: { 'X-Isogeny-Session': this.sessionId }
+        headers: { 'X-Nen-Session': this.sessionId }
       });
     } catch (e) {
-      console.warn('Failed to cleanly terminate Isogeny session on server');
+      console.warn('Failed to cleanly terminate Nen session on server');
     }
     this.sessionId = null;
     this.sharedSecret = null;
@@ -307,9 +307,9 @@ export class IsogenyClient {
   async status(): Promise<boolean> {
     if (!this.sessionId) return false;
     try {
-      const response = await fetch(`${this.serverUrl}/api/isogeny/status`, {
+      const response = await fetch(`${this.serverUrl}/api/nen/status`, {
         method: 'GET',
-        headers: { 'X-Isogeny-Session': this.sessionId }
+        headers: { 'X-Nen-Session': this.sessionId }
       });
       return response.status === 200;
     } catch (e) {
@@ -334,13 +334,13 @@ function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
 }
 
 /**
- * Factory: Creates a pre-configured pqcfetch function bound to a server URL.
+ * Factory: Creates a pre-configured nenfetch function bound to a server URL.
  * Usage:
- *   const pqcfetch = createPqcFetch('http://localhost:3000');
- *   await pqcfetch('/api/secure-data', { method: 'POST', body: JSON.stringify({...}) });
+ *   const nenfetch = createNenFetch('http://localhost:3000');
+ *   await nenfetch('/api/secure-data', { method: 'POST', body: JSON.stringify({...}) });
  */
-export function createPqcFetch(serverUrl: string) {
-  const client = new IsogenyClient(serverUrl);
+export function createNenFetch(serverUrl: string) {
+  const client = new NenClient(serverUrl);
   let handshakePromise: Promise<void> | null = null;
 
   return async (endpoint: string, options: RequestInit = {}): Promise<any> => {
@@ -351,15 +351,15 @@ export function createPqcFetch(serverUrl: string) {
       await handshakePromise;
       handshakePromise = null;
     }
-    return client.pqcfetch(endpoint, options);
+    return client.nenfetch(endpoint, options);
   };
 }
 
 /**
- * Factory: Creates a pre-configured pqcstream function bound to a server URL.
+ * Factory: Creates a pre-configured nenstream function bound to a server URL.
  */
-export function createPqcStream(serverUrl: string) {
-  const client = new IsogenyClient(serverUrl);
+export function createNenStream(serverUrl: string) {
+  const client = new NenClient(serverUrl);
   let handshakePromise: Promise<void> | null = null;
 
   return async function*(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
@@ -370,6 +370,6 @@ export function createPqcStream(serverUrl: string) {
       await handshakePromise;
       handshakePromise = null;
     }
-    yield* client.pqcstream(endpoint, options);
+    yield* client.nenstream(endpoint, options);
   };
 }
