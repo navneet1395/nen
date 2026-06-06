@@ -1,7 +1,7 @@
 {
   "name": "@nen/server",
   "version": "0.2.0",
-  "description": "Next.js/Serverless middleware for Post-Quantum KEM and E2EE.",
+  "description": "MIT licensed server middleware for end-to-end encrypted API payloads. withNen, withNenStream, session stores, HMAC auth.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -21,5 +21,19 @@
     "ts-jest": "^29.4.11",
     "tsup": "^8.0.2",
     "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/nen-server"
+  },
+  "bugs": {
+    "url": "https://github.com/navneet1395/nen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

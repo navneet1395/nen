@@ -1,7 +1,7 @@
 {
   "name": "create-nen-app",
   "version": "0.1.0",
-  "description": "Scaffold a Next.js app with Nen pre-configured",
+  "description": "CLI scaffold for adding Nen post-quantum payload encryption to a Next.js App Router project.",
   "main": "dist/index.js",
   "bin": {
     "create-nen-app": "./dist/index.js"
@@ -21,5 +21,19 @@
     "typescript": "^5.4.5",
     "@types/node": "^20.12.7",
     "@types/prompts": "^2.4.9"
+  },
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/create-nen-app"
+  },
+  "bugs": {
+    "url": "https://github.com/navneet1395/nen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

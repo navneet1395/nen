@@ -1,7 +1,7 @@
 {
   "name": "@nen/client",
   "version": "0.2.0",
-  "description": "Frontend Wasm Bridge for Nen PQC",
+  "description": "MIT licensed client SDK for end-to-end encrypted API payloads. ML-KEM-768 key exchange + ChaCha20-Poly1305 encryption.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -20,5 +20,19 @@
     "ts-jest": "^29.4.11",
     "tsup": "^8.0.2",
     "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/nen-client"
+  },
+  "bugs": {
+    "url": "https://github.com/navneet1395/nen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

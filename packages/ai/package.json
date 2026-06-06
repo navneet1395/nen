@@ -1,7 +1,7 @@
 {
   "name": "@nen/ai",
   "version": "0.1.0",
-  "description": "End-to-end encrypted AI calls (prompts + streamed responses) for modern apps. Powered by Post-Quantum Cryptography.",
+  "description": "MIT licensed Secure AI SDK \u2014 E2EE prompts and streamed tokens between browser and your backend. Wraps OpenAI and Anthropic.",
   "exports": {
     "./client": {
       "types": "./dist/client.d.ts",
@@ -14,7 +14,9 @@
       "require": "./dist/server.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -32,5 +34,19 @@
     "ts-jest": "^29.4.11",
     "tsup": "^8.0.2",
     "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/ai"
+  },
+  "bugs": {
+    "url": "https://github.com/navneet1395/nen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

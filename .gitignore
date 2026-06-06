@@ -61,3 +61,8 @@ bench/results/latest/regression.json
 bench/results/latest/REPORT.md
 bench/results/latest/scenarios.json
 bench/results/latest/summary.json
+.vercel
+isolate-*.v8.log
+*.v8.log
+.env.local
+.env.production
