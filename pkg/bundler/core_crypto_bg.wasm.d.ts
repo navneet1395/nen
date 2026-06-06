@@ -1,0 +1,32 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_get_nensigningkeypair_public_key: (a: number, b: number) => void;
+export const __wbg_get_nensigningkeypair_secret_key: (a: number, b: number) => void;
+export const __wbg_nenencapsulation_free: (a: number, b: number) => void;
+export const __wbg_nensigningkeypair_free: (a: number, b: number) => void;
+export const __wbg_set_nensigningkeypair_public_key: (a: number, b: number, c: number) => void;
+export const __wbg_set_nensigningkeypair_secret_key: (a: number, b: number, c: number) => void;
+export const nen_decapsulate: (a: number, b: number, c: number, d: number, e: number) => void;
+export const nen_decrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const nen_encapsulate: (a: number, b: number, c: number) => void;
+export const nen_encrypt: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const nen_from_base64: (a: number, b: number, c: number) => void;
+export const nen_generate_keypair: () => number;
+export const nen_generate_nonce: (a: number) => void;
+export const nen_generate_signing_keypair: (a: number) => void;
+export const nen_hmac_sign: (a: number, b: number, c: number, d: number, e: number) => void;
+export const nen_hmac_verify: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const nen_sign: (a: number, b: number, c: number, d: number, e: number) => void;
+export const nen_to_base64: (a: number, b: number, c: number) => void;
+export const nen_verify_signature: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const nenencapsulation_ciphertext: (a: number, b: number) => void;
+export const nenencapsulation_shared_secret: (a: number, b: number) => void;
+export const __wbg_nenkeypair_free: (a: number, b: number) => void;
+export const nenkeypair_secret_key: (a: number, b: number) => void;
+export const nenkeypair_public_key: (a: number, b: number) => void;
+export const __wbindgen_export: (a: number) => void;
+export const __wbindgen_add_to_stack_pointer: (a: number) => number;
+export const __wbindgen_export2: (a: number, b: number, c: number) => void;
+export const __wbindgen_export3: (a: number, b: number) => number;
+export const __wbindgen_export4: (a: number, b: number, c: number, d: number) => number;
