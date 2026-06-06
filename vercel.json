@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd apps/www && npm install && npm run build",
+  "buildCommand": "cd apps/www && rm -rf .next && npm install && npm run build",
   "outputDirectory": "apps/www/.next",
   "installCommand": "echo 'skip root install'",
   "framework": "nextjs"
