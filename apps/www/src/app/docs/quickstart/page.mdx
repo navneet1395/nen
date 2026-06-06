@@ -1,27 +1,27 @@
 # Quickstart
 
-From zero to an encrypted API call in about ten lines. TLS stays exactly as it is — Isogeny adds the layer that survives TLS termination.
+From zero to an encrypted API call in about ten lines. TLS stays exactly as it is — Nen adds the layer that survives TLS termination.
 
 ## 1. Scaffold
 
 ```bash
-npx create-isogeny-app
+npx create-nen-app
 ```
 
-This detects your Next.js App Router project, installs `@isogeny/client` and `@isogeny/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
+This detects your Next.js App Router project, installs `@nen/client` and `@nen/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
 
 Already have a project? Install manually:
 
 ```bash
-npm install @isogeny/client @isogeny/server
+npm install @nen/client @nen/server
 ```
 
 ## 2. Mount the session routes
 
-`src/app/api/isogeny/[action]/route.ts`:
+`src/app/api/nen/[action]/route.ts`:
 
 ```typescript
-import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@isogeny/server';
+import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@nen/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
@@ -42,9 +42,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
 `src/app/api/secure-data/route.ts`:
 
 ```typescript
-import { withIsogeny } from '@isogeny/server';
+import { withNen } from '@nen/server';
 
-export const POST = withIsogeny(async (req, body) => {
+export const POST = withNen(async (req, body) => {
   // body is already decrypted and authenticated
   return { ok: true, received: body };
 });
@@ -53,11 +53,11 @@ export const POST = withIsogeny(async (req, body) => {
 ## 4. Call it encrypted
 
 ```typescript
-import { createPqcFetch } from '@isogeny/client';
+import { createNenFetch } from '@nen/client';
 
-const pqcfetch = createPqcFetch(''); // same-origin
+const nenfetch = createNenFetch(''); // same-origin
 
-const data = await pqcfetch('/api/secure-data', {
+const data = await nenfetch('/api/secure-data', {
   method: 'POST',
   body: JSON.stringify({ ssn: '412-55-9087' }),
 });
@@ -70,5 +70,5 @@ That&apos;s it. Your CDN, logs, and proxies now see only base64 ciphertext for t
 
 - [Usage](/docs/usage) — streaming, rotation, identity mode, and the full client/server API.
 - [Protocol spec](/docs/protocol) — the exact wire format an auditor reads.
-- [Threat model](/docs/threat-model) — what Isogeny does and does not protect.
+- [Threat model](/docs/threat-model) — what Nen does and does not protect.
 - [Error codes](/docs/error-codes) — every `ISO-xxxx` failure, with cause and fix.

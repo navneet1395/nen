@@ -149,7 +149,7 @@ export function SecureAIDemo() {
     await delay(120);
     addWire({
       kind: "handshake-req",
-      label: "→ POST /api/isogeny/handshake",
+      label: "→ POST /api/nen/handshake",
       detail: `{ "pk": "${shortB64(24, 1)}…" }`,
     });
 
@@ -169,9 +169,9 @@ export function SecureAIDemo() {
       kind: "request",
       label: "→ POST /api/ai/chat",
       detail: [
-        `x-isogeny-session: ${sid.current.slice(0, 12)}…`,
-        `x-isogeny-nonce:   ${nonce.slice(0, 12)}…`,
-        `x-isogeny-signature: ${sig.slice(0, 12)}…`,
+        `x-nen-session: ${sid.current.slice(0, 12)}…`,
+        `x-nen-nonce:   ${nonce.slice(0, 12)}…`,
+        `x-nen-signature: ${sig.slice(0, 12)}…`,
         `body: { "ct": "${encryptedPrompt.slice(0, 28)}…",`,
         `        "n":  "${nonce.slice(0, 16)}…" }`,
       ].join("\n"),
@@ -185,7 +185,7 @@ export function SecureAIDemo() {
     addWire({
       kind: "sse-frame",
       label: "← 200 text/event-stream",
-      detail: `x-isogeny-stream-nonce: ${baseStreamNonce}`,
+      detail: `x-nen-stream-nonce: ${baseStreamNonce}`,
     });
 
     // 4. Stream response tokens + SSE frames in parallel
@@ -251,15 +251,15 @@ export function SecureAIDemo() {
   // Wire entry styling
   const wireKindStyle: Record<WireEntry["kind"], string> = {
     "handshake-req":
-      "border-zinc-700/60 bg-zinc-900/80 text-zinc-400",
+      "border-border/60 bg-muted/50 text-foreground/80 dark:bg-muted/20",
     "handshake-res":
-      "border-emerald-800/60 bg-emerald-950/30 text-emerald-400",
-    request:
-      "border-primary/40 bg-primary/5 text-primary/90",
+      "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400",
+    "request":
+      "border-primary/30 bg-primary/10 text-primary/90 dark:border-primary/20 dark:bg-primary/80 dark:text-primary-foreground",
     "sse-frame":
-      "border-violet-800/40 bg-violet-950/20 text-violet-300",
+      "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400",
     "sse-fin":
-      "border-amber-800/40 bg-amber-950/20 text-amber-400",
+      "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400",
   };
 
   const phaseLabel: Record<Phase, string> = {
@@ -287,10 +287,10 @@ export function SecureAIDemo() {
           <span
             className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border ${
               phase === "done"
-                ? "text-emerald-400 border-emerald-800/60 bg-emerald-950/30"
+                ? "text-emerald-700 border-emerald-500/30 bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:bg-emerald-500/10"
                 : phase === "idle"
-                ? "text-muted-foreground border-border"
-                : "text-primary border-primary/40 bg-primary/5"
+                ? "text-muted-foreground border-border bg-muted/50 dark:bg-muted/20"
+                : "text-primary border-primary/30 bg-primary/10 dark:border-primary/20 dark:bg-primary/10"
             }`}
           >
             {isRunning && (
@@ -404,7 +404,7 @@ export function SecureAIDemo() {
         </div>
 
         {/* ── Right: Network Inspector (what the WIRE sees) ── */}
-        <div className="flex flex-col p-4 gap-3 min-h-[420px] bg-zinc-950/30">
+        <div className="flex flex-col p-4 gap-3 min-h-[420px] bg-background/50">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Lock className="w-3 h-3 text-primary" />
             Wire sees (ciphertext only)

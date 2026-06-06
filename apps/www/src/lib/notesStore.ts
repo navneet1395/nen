@@ -1,7 +1,7 @@
 /**
  * In-memory "notes" store backing the encrypted CRUD demo app.
  *
- * This exists purely to give the Isogeny SDK a realistic resource to protect
+ * This exists purely to give the Nen SDK a realistic resource to protect
  * (create / read / update / delete / list) so the regression + load harness in
  * /bench has something to drive. It is NOT part of the shippable SDK.
  *
@@ -19,8 +19,8 @@ export interface Note {
 
 type Store = Map<string, Note>;
 
-const g = globalThis as unknown as { __isogenyNotes?: Store };
-const notes: Store = g.__isogenyNotes ?? (g.__isogenyNotes = new Map());
+const g = globalThis as unknown as { __nenNotes?: Store };
+const notes: Store = g.__nenNotes ?? (g.__nenNotes = new Map());
 
 function id(): string {
   return (

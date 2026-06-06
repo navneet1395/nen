@@ -5,14 +5,14 @@ What an auditor or buyer can verify today, and what is on the roadmap. The free 
 ## Cryptographic foundations
 
 - Standards-based primitives only — ML-KEM-768 (FIPS 203), ChaCha20-Poly1305 (RFC 8439), HMAC-SHA256 (FIPS 198-1), ML-DSA-65 (FIPS 204).
-- Implementations come from the audited **RustCrypto** crates — Isogeny does not hand-roll primitives.
-- No custom transport crypto: Isogeny runs above TLS.
+- Implementations come from the audited **RustCrypto** crates — Nen does not hand-roll primitives.
+- No custom transport crypto: Nen runs above TLS.
 
 ## Test coverage
 
 - **16** Rust unit tests in `core-crypto` (KEM round-trip, AEAD tamper detection, HMAC, base64, signatures).
 - **17** server tests — handshake, session lifecycle, the HMAC-mandatory downgrade-bypass regression ([`ISO-3001`](/docs/error-codes#iso-3001)), forged signature (`ISO-3002`), stale timestamp (`ISO-3003`), invalid session (`ISO-2002`), nonce replay (`ISO-5001`), AEAD tamper at the HTTP layer (`ISO-4001`), and invalid ML-DSA identity (`ISO-3004`).
-- **7** client tests — coded error paths, `IsogenyError` shape, and the guarantee that the wire body never leaks the internal diagnostic hint.
+- **7** client tests — coded error paths, `NenError` shape, and the guarantee that the wire body never leaks the internal diagnostic hint.
 
 ## Negative-path matrix
 

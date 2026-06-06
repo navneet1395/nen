@@ -1,6 +1,6 @@
-# Isogeny — Marketing & Docs Site (`www`)
+# Nen — Marketing & Docs Site (`www`)
 
-The Next.js (App Router) marketing site and documentation for Isogeny.
+The Next.js (App Router) marketing site and documentation for Nen.
 
 ## Develop
 
@@ -14,12 +14,12 @@ npm run build    # production build
 ```
 src/app/
   page.tsx                 Home — story flow + interactive PayloadDemo
-  why-not-cloudflare/      The "TLS + Isogeny" positioning page
+  why-not-cloudflare/      The "TLS + Nen" positioning page
   ai/                      Secure AI wedge page
   pricing/                 Three tiers (OSS / Cloud / Enterprise)
   docs/                    MDX docs (quickstart, usage, protocol, threat-model,
                            audit-readiness, crypto, architecture, error-codes)
-  api/                     Demo Isogeny routes (handshake + secure-data + stream)
+  api/                     Demo Nen routes (handshake + secure-data + stream)
 src/components/            Site chrome, code-block (copy button), flow diagrams, demos
 src/mdx-components.tsx     Styled MDX table/pre/link overrides
 ```
@@ -47,7 +47,7 @@ npm run build:diagrams   # runs scripts/generate-flows.sh (needs the d2 CLI)
 
 ## Content guidelines
 
-Keep claims precise and **additive** — "TLS + Isogeny", never "TLS is wrong".
+Keep claims precise and **additive** — "TLS + Nen", never "TLS is wrong".
 Never overclaim: everything *between* the two endpoints is ciphertext, the
 endpoints hold plaintext by design, and the AI page must not imply the model
 provider is blind to prompts. See `../../THREAT_MODEL.md`.

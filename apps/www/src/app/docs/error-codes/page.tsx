@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Error codes (ISO-xxxx) reference | Isogeny Docs",
+  title: "Error codes (ISO-xxxx) reference | Nen Docs",
   description:
-    "The complete Isogeny error-code catalog. Every failure inside the Isogeny layer carries a stable ISO-xxxx code with its HTTP status, cause, and fix. Deep-linkable per code so support can point you straight at the answer.",
+    "The complete Nen error-code catalog. Every failure inside the Nen layer carries a stable ISO-xxxx code with its HTTP status, cause, and fix. Deep-linkable per code so support can point you straight at the answer.",
 };
 
 interface ErrorCode {
@@ -24,9 +24,9 @@ const CATEGORIES: ErrorCategory[] = [
     range: "1xxx",
     title: "Handshake / key exchange",
     codes: [
-      { code: "ISO-1001", http: 400, name: "HANDSHAKE_MISSING_PUBLIC_KEY", detail: "Handshake body had neither `pk` nor `publicKey`. Client SDK out of date, or the request wasn't made by an Isogeny client." },
+      { code: "ISO-1001", http: 400, name: "HANDSHAKE_MISSING_PUBLIC_KEY", detail: "Handshake body had neither `pk` nor `publicKey`. Client SDK out of date, or the request wasn't made by an Nen client." },
       { code: "ISO-1002", http: 500, name: "HANDSHAKE_FAILED", detail: "ML-KEM encapsulation/decapsulation threw. Malformed/wrong-length public key, or a Wasm load failure." },
-      { code: "ISO-1003", http: 503, name: "HANDSHAKE_NETWORK", detail: "Couldn't reach /api/isogeny/handshake. Wrong serverUrl, server down, or CORS." },
+      { code: "ISO-1003", http: 503, name: "HANDSHAKE_NETWORK", detail: "Couldn't reach /api/nen/handshake. Wrong serverUrl, server down, or CORS." },
       { code: "ISO-1004", http: 502, name: "HANDSHAKE_BAD_RESPONSE", detail: "Handshake responded non-2xx or without sid/ct. The route isn't wired to handleHandshake()." },
     ],
   },
@@ -34,18 +34,18 @@ const CATEGORIES: ErrorCategory[] = [
     range: "2xxx",
     title: "Session lifecycle",
     codes: [
-      { code: "ISO-2001", http: 409, name: "SESSION_NOT_INITIALIZED", detail: "pqcfetch/pqcstream called before a successful handshake()." },
-      { code: "ISO-2002", http: 401, name: "SESSION_INVALID_OR_EXPIRED", detail: "Server has no entry for X-Isogeny-Session. Expired by TTL, evicted, or this node never saw the handshake (use a shared/stateless store)." },
-      { code: "ISO-2003", http: 401, name: "SESSION_HEADER_MISSING", detail: "No X-Isogeny-Session header. Not an Isogeny client, or a proxy stripped it." },
+      { code: "ISO-2001", http: 409, name: "SESSION_NOT_INITIALIZED", detail: "nenfetch/nenstream called before a successful handshake()." },
+      { code: "ISO-2002", http: 401, name: "SESSION_INVALID_OR_EXPIRED", detail: "Server has no entry for X-Nen-Session. Expired by TTL, evicted, or this node never saw the handshake (use a shared/stateless store)." },
+      { code: "ISO-2003", http: 401, name: "SESSION_HEADER_MISSING", detail: "No X-Nen-Session header. Not an Nen client, or a proxy stripped it." },
     ],
   },
   {
     range: "3xxx",
     title: "Authentication (HMAC / identity)",
     codes: [
-      { code: "ISO-3001", http: 401, name: "AUTH_SIGNATURE_MISSING", detail: "No X-Isogeny-Signature on a session that requires HMAC. HMAC is mandatory — this is the auth-downgrade guard." },
+      { code: "ISO-3001", http: 401, name: "AUTH_SIGNATURE_MISSING", detail: "No X-Nen-Signature on a session that requires HMAC. HMAC is mandatory — this is the auth-downgrade guard." },
       { code: "ISO-3002", http: 401, name: "AUTH_SIGNATURE_INVALID", detail: "HMAC over METHOD\\nPATH\\nTIMESTAMP\\nNONCE didn't match. Tampered request, wrong key, or a canonical-string mismatch (commonly path-vs-full-URL)." },
-      { code: "ISO-3003", http: 401, name: "AUTH_TIMESTAMP_OUT_OF_WINDOW", detail: "X-Isogeny-Timestamp is >30s from server time. Clock skew or a replayed/delayed request." },
+      { code: "ISO-3003", http: 401, name: "AUTH_TIMESTAMP_OUT_OF_WINDOW", detail: "X-Nen-Timestamp is >30s from server time. Clock skew or a replayed/delayed request." },
       { code: "ISO-3004", http: 401, name: "AUTH_IDENTITY_SIGNATURE_INVALID", detail: "Optional ML-DSA identity signature over the ephemeral key didn't verify. Wrong identity key or a MITM at handshake." },
     ],
   },
@@ -69,7 +69,7 @@ const CATEGORIES: ErrorCategory[] = [
     range: "6xxx",
     title: "Wire format / encoding",
     codes: [
-      { code: "ISO-6001", http: 400, name: "WIRE_INVALID_PAYLOAD_FORMAT", detail: "Body was missing the (ct, n) base64 pair. Not an Isogeny payload, or a corrupted/truncated body." },
+      { code: "ISO-6001", http: 400, name: "WIRE_INVALID_PAYLOAD_FORMAT", detail: "Body was missing the (ct, n) base64 pair. Not an Nen payload, or a corrupted/truncated body." },
       { code: "ISO-6002", http: 400, name: "WIRE_DECODE_FAILED", detail: "base64 decode of ct/n/pk failed. Truncated by a proxy, or non-base64 data." },
     ],
   },
@@ -77,7 +77,7 @@ const CATEGORIES: ErrorCategory[] = [
     range: "7xxx",
     title: "Streaming",
     codes: [
-      { code: "ISO-7001", http: 502, name: "STREAM_MISSING_NONCE_HEADER", detail: "Stream response had no X-Isogeny-Stream-Nonce. The route didn't use withIsogenyStream(), or a proxy stripped it." },
+      { code: "ISO-7001", http: 502, name: "STREAM_MISSING_NONCE_HEADER", detail: "Stream response had no X-Nen-Stream-Nonce. The route didn't use withNenStream(), or a proxy stripped it." },
       { code: "ISO-7002", http: 502, name: "STREAM_REQUEST_FAILED", detail: "Stream response was non-ok or had no body. Upstream handler errored before streaming." },
     ],
   },
@@ -85,7 +85,7 @@ const CATEGORIES: ErrorCategory[] = [
     range: "9xxx",
     title: "Internal / unknown",
     codes: [
-      { code: "ISO-9000", http: 500, name: "INTERNAL", detail: "Unclassified failure wrapped by IsogenyError.from(). The original error is in the logged detail." },
+      { code: "ISO-9000", http: 500, name: "INTERNAL", detail: "Unclassified failure wrapped by NenError.from(). The original error is in the logged detail." },
     ],
   },
 ];
@@ -113,7 +113,7 @@ export default function ErrorCodesPage() {
     <div className="not-prose">
       <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">Error codes</h1>
       <p className="text-muted-foreground leading-relaxed mb-6 max-w-2xl">
-        Every failure inside the Isogeny layer carries a stable{" "}
+        Every failure inside the Nen layer carries a stable{" "}
         <code className="text-primary font-mono">ISO-xxxx</code> code. Paste the code; this page tells
         you exactly what happened and the fix. Each code has its own anchor — deep-link straight to it,
         e.g. <code className="text-primary font-mono">/docs/error-codes#iso-3001</code>.
@@ -182,9 +182,9 @@ export default function ErrorCodesPage() {
         <p className="mb-3">
           Both SDKs export a reverse lookup so tooling and support can resolve a code from a log:
         </p>
-        <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 font-mono text-xs text-zinc-300 overflow-x-auto whitespace-pre">{`import { describeIsogenyCode } from '@isogeny/server'; // or '@isogeny/client'
+        <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 font-mono text-xs text-zinc-300 overflow-x-auto whitespace-pre">{`import { describeNenCode } from '@nen/server'; // or '@nen/client'
 
-describeIsogenyCode('ISO-3001');
+describeNenCode('ISO-3001');
 // → { code: 'ISO-3001', status: 401, message: '…', hint: '…' }`}</pre>
       </div>
 

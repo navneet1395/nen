@@ -9,8 +9,8 @@ export function SiteHeader() {
     <header className="px-6 py-4 border-b border-border/60 bg-background shadow-sm shadow-black/5 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-          <Image src="/Logo.svg" alt="Isogeny Logo" width={24} height={24} className="h-6 w-auto" />
-          <span>Isogeny</span>
+          <Image src="/Logo.svg" alt="Nen Logo" width={24} height={24} className="h-6 w-auto" />
+          <span>Nen</span>
         </Link>
         <nav className="flex items-center gap-5 text-sm font-medium">
           <Link href="/why-not-cloudflare" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
@@ -26,7 +26,7 @@ export function SiteHeader() {
             Docs
           </Link>
           {/* TODO: update href when repo is public */}
-          {/* <Link href="https://github.com/your-org/isogeny" className="hidden sm:inline ...">GitHub</Link> */}
+          {/* <Link href="https://github.com/your-org/nen" className="hidden sm:inline ...">GitHub</Link> */}
           <Link href="/docs/quickstart" className={buttonVariants({ variant: "default", size: "sm" })}>
             Get Started
           </Link>
@@ -44,8 +44,8 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 mb-1">
-              <Image src="/Logo.svg" alt="Isogeny Logo" width={20} height={20} className="h-5 w-auto" />
-              <span className="font-semibold text-foreground">Isogeny</span>
+              <Image src="/Logo.svg" alt="Nen Logo" width={20} height={20} className="h-5 w-auto" />
+              <span className="font-semibold text-foreground">Nen</span>
             </div>
             <p className="text-xs leading-relaxed">
               End-to-end encrypted APIs for modern web apps. Powered by post-quantum cryptography.
@@ -71,7 +71,7 @@ export function SiteFooter() {
           </div>
         </div>
         <p className="pt-4 border-t border-border/40">
-          © 2026 Isogeny. We encrypt the payload, not the channel — TLS already does that.
+          © 2026 Nen. We encrypt the payload, not the channel — TLS already does that.
         </p>
       </div>
     </footer>

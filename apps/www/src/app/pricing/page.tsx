@@ -4,9 +4,9 @@ import { Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Pricing | Isogeny",
+  title: "Pricing | Nen",
   description:
-    "Isogeny is open-source and free to run. Pay when you need the dashboard, audit logs, and exportable compliance evidence your auditor asks for. Three tiers: OSS, Cloud, and Enterprise.",
+    "Nen is open-source and free to run. Pay when you need the dashboard, audit logs, and exportable compliance evidence your auditor asks for. Three tiers: OSS, Cloud, and Enterprise.",
 };
 
 interface Tier {
@@ -28,10 +28,10 @@ const TIERS: Tier[] = [
     cta: "Start Building",
     href: "/docs/quickstart",
     features: [
-      "@isogeny/client + @isogeny/server",
+      "@nen/client + @nen/server",
       "ML-KEM-768 + ChaCha20-Poly1305",
       "Mandatory per-request HMAC",
-      "Encrypted SSE streaming (pqcstream)",
+      "Encrypted SSE streaming (nenstream)",
       "In-memory & Redis session stores",
       "Public protocol spec & threat model",
     ],
@@ -58,7 +58,7 @@ const TIERS: Tier[] = [
     price: "Custom",
     tagline: "The proof your auditor signs off on.",
     cta: "Talk to us",
-    href: "mailto:sales@isogeny.dev",
+    href: "mailto:sales@nen.dev",
     features: [
       "Everything in Cloud",
       "Exportable compliance evidence (ML-KEM-768 per endpoint, timestamped)",
@@ -133,7 +133,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-12 max-w-xl mx-auto">
-            Not sure you need Isogeny at all? We say so plainly on the{" "}
+            Not sure you need Nen at all? We say so plainly on the{" "}
             <Link href="/why-not-cloudflare" className="text-primary hover:underline">
               &ldquo;why not Cloudflare&rdquo;
             </Link>{" "}

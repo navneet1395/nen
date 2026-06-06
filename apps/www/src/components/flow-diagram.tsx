@@ -48,13 +48,13 @@ function Rail({
   className?: string;
   colStart: number;
   colEnd: number;
-  variant: "tls" | "isogeny";
+  variant: "tls" | "nen";
 }) {
   const styles =
-    variant === "isogeny"
+    variant === "nen"
       ? "border-primary/40 bg-primary/10 text-primary"
       : "border-zinc-400/40 bg-muted/40 text-muted-foreground";
-  const Icon = variant === "isogeny" ? ShieldCheck : Lock;
+  const Icon = variant === "nen" ? ShieldCheck : Lock;
   return (
     <div
       className={`flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold ${styles} ${className ?? ""}`}
@@ -67,7 +67,7 @@ function Rail({
 }
 
 /**
- * The trust-boundary pipeline: TLS covers only the first hop; Isogeny keeps the
+ * The trust-boundary pipeline: TLS covers only the first hop; Nen keeps the
  * payload as ciphertext across every intermediary, between the two endpoints.
  * Replaces the old ASCII-art <pre> block.
  */
@@ -104,8 +104,8 @@ export function TrustBoundaryDiagram() {
         <div className="col-span-6 mt-3 grid grid-cols-6 gap-x-2 gap-y-2">
           <Rail variant="tls" label="TLS · encrypts the channel" colStart={1} colEnd={3} />
           <Rail
-            variant="isogeny"
-            label="Isogeny · payload stays ciphertext"
+            variant="nen"
+            label="Nen · payload stays ciphertext"
             colStart={2}
             colEnd={6}
           />
@@ -113,7 +113,7 @@ export function TrustBoundaryDiagram() {
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground">
-        TLS covers the first hop, then terminates. Isogeny keeps the payload encrypted across every
+        TLS covers the first hop, then terminates. Nen keeps the payload encrypted across every
         intermediary between the two endpoints — the endpoints themselves hold plaintext by design.
       </p>
     </div>
@@ -140,14 +140,14 @@ export function AiFlowDiagram() {
         </div>
 
         <div className="col-span-4 mt-3 grid grid-cols-4 gap-x-2 gap-y-2">
-          <Rail variant="isogeny" label="Encrypted · prompt is ciphertext" colStart={1} colEnd={3} />
+          <Rail variant="nen" label="Encrypted · prompt is ciphertext" colStart={1} colEnd={3} />
           <Rail variant="tls" label="Decrypts, then calls the model" colStart={3} colEnd={5} />
         </div>
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground">
         The prompt is ciphertext from the browser across your own infrastructure. Your backend
-        decrypts it and calls the provider — who must see plaintext to run inference. Isogeny hides the
+        decrypts it and calls the provider — who must see plaintext to run inference. Nen hides the
         prompt from your stack, not from the model.
       </p>
     </div>

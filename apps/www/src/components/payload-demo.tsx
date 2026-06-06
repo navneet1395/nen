@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { Eye, EyeOff, ShieldCheck, AlertTriangle } from "lucide-react";
 
 /**
- * The hero gut-punch: the SAME request, before and after Isogeny.
+ * The hero gut-punch: the SAME request, before and after Nen.
  * Standard fetch() leaves the body as readable plaintext that every CDN, log,
- * and proxy can read. pqcfetch() turns it into ciphertext + signed headers.
+ * and proxy can read. nenfetch() turns it into ciphertext + signed headers.
  *
  * The ciphertext here is illustrative (a visual transform of the plaintext) —
  * the real thing is ChaCha20-Poly1305 over an ML-KEM shared secret.
@@ -78,7 +78,7 @@ export function PayloadDemo() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
             </span>
           )}
-          <ShieldCheck className="w-4 h-4" /> Isogeny <code className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${secure ? 'bg-primary-foreground/20' : 'bg-muted'}`}>pqcfetch()</code>
+          <ShieldCheck className="w-4 h-4" /> Nen <code className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${secure ? 'bg-primary-foreground/20' : 'bg-muted'}`}>nenfetch()</code>
         </button>
       </div>
 
@@ -97,7 +97,7 @@ export function PayloadDemo() {
               Live Editable
             </div>
           </div>
-          <pre className="text-[11px] font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "pqcfetch" : "fetch"}("/api/claims", {
+          <pre className="text-[11px] font-mono text-muted-foreground mb-2 leading-relaxed">{`${secure ? "nenfetch" : "fetch"}("/api/claims", {
   method: "POST",
   body:`}</pre>
           <div className="relative group">
@@ -132,11 +132,11 @@ export function PayloadDemo() {
           
           <div className={`transition-all duration-500 ${secure ? "opacity-100 translate-y-0" : "opacity-0 absolute translate-y-4 pointer-events-none"}`}>
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 font-mono text-[10px] sm:text-[11px] text-primary/90 break-all whitespace-pre-wrap leading-relaxed min-h-[150px] shadow-sm">
-              <span className="text-muted-foreground">x-isogeny-session:</span> sid_3f9a…
+              <span className="text-muted-foreground">x-nen-session:</span> sid_3f9a…
               {"\n"}
-              <span className="text-muted-foreground">x-isogeny-nonce:</span> {nonce}
+              <span className="text-muted-foreground">x-nen-nonce:</span> {nonce}
               {"\n"}
-              <span className="text-muted-foreground">x-isogeny-signature:</span> {sig}…
+              <span className="text-muted-foreground">x-nen-signature:</span> {sig}…
               {"\n\n"}
               <span className="text-muted-foreground">body:</span>
               {"\n"}

@@ -26,9 +26,9 @@ import Link from "next/link";
 
 export const metadata = {
   title:
-    "Isogeny | End-to-End Encrypted APIs, Powered by Post-Quantum Cryptography",
+    "Nen | End-to-End Encrypted APIs, Powered by Post-Quantum Cryptography",
   description:
-    "TLS keeps your data safe in transit, then terminates. Isogeny encrypts the API payload that survives termination — your logs, databases, CDN, proxies, and third-party hops see only ciphertext. Application-layer encryption with ML-KEM-768 post-quantum key exchange. TLS + Isogeny.",
+    "TLS keeps your data safe in transit, then terminates. Nen encrypts the API payload that survives termination — your logs, databases, CDN, proxies, and third-party hops see only ciphertext. Application-layer encryption with ML-KEM-768 post-quantum key exchange. TLS + Nen.",
   keywords: [
     "post-quantum readiness",
     "application-layer encryption for APIs",
@@ -62,7 +62,7 @@ export default function Home() {
             instant TLS terminates, the JSON body lies in plaintext across your
             logs, databases, CDN, proxies, and every third-party hop.{" "}
             <strong className="text-foreground">
-              Isogeny keeps it encrypted the whole way.
+              Nen keeps it encrypted the whole way.
             </strong>{" "}
             One line of code. Same TLS you already trust.
           </p>
@@ -99,7 +99,7 @@ export default function Home() {
           <div className="flex items-center justify-center h-12 px-6 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 font-mono text-sm shadow-xl">
             <span className="text-zinc-600 mr-2">$</span>
             <span className="text-blue-400 mr-1.5">npx</span>
-            <span>create-isogeny-app</span>
+            <span>create-nen-app</span>
           </div>
         </section>
 
@@ -118,7 +118,7 @@ export default function Home() {
                 balancer, the CDN edge, the serverless runtime. From there your
                 payload travels in the clear. This isn&apos;t a flaw in TLS;
                 it&apos;s simply where TLS&apos;s job ends. It&apos;s where
-                Isogeny&apos;s begins.
+                Nen&apos;s begins.
               </p>
             </div>
 
@@ -166,7 +166,7 @@ export default function Home() {
                   className: "font-semibold",
                 })}
               >
-                TLS + Isogeny, explained <ArrowRight className="ml-2 h-4 w-4" />
+                TLS + Nen, explained <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -180,8 +180,8 @@ export default function Home() {
                 You already wrote 90% of this
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Swap <code>fetch</code> for <code>pqcfetch</code> on the client.
-                Wrap your route with <code>withIsogeny</code> on the server. The
+                Swap <code>fetch</code> for <code>nenfetch</code> on the client.
+                Wrap your route with <code>withNen</code> on the server. The
                 handshake, key rotation, HMAC, and replay protection happen
                 underneath. About ten lines, start to finish.
               </p>
@@ -192,9 +192,9 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
                   Client
                 </div>
-                <CodeBlock>{`import { pqcfetch } from "@isogeny/client";
+                <CodeBlock>{`import { nenfetch } from "@nen/client";
 
-const res = await pqcfetch("/api/claims", {
+const res = await nenfetch("/api/claims", {
   method: "POST",
   body: JSON.stringify(claim),
 });
@@ -204,9 +204,9 @@ const res = await pqcfetch("/api/claims", {
                 <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
                   Server
                 </div>
-                <CodeBlock>{`import { withIsogeny } from "@isogeny/server";
+                <CodeBlock>{`import { withNen } from "@nen/server";
 
-export const POST = withIsogeny(async (req, body) => {
+export const POST = withNen(async (req, body) => {
   // body is already decrypted + verified
   return { ok: true };
 });
@@ -250,7 +250,7 @@ export const POST = withIsogeny(async (req, body) => {
             <div className="rounded-2xl border border-border/60 bg-background p-6 md:p-8 mb-6">
               <p className="text-lg leading-relaxed">
                 <strong className="text-foreground">
-                  Everything between the two Isogeny endpoints sees only
+                  Everything between the two Nen endpoints sees only
                   ciphertext.
                 </strong>{" "}
                 The two endpoints hold plaintext — by necessity, because someone
@@ -298,7 +298,7 @@ export const POST = withIsogeny(async (req, body) => {
                     id: "4",
                     from: "client",
                     to: "app",
-                    label: "Isogeny (Payload Ciphertext E2E)",
+                    label: "Nen (Payload Ciphertext E2E)",
                     animated: true,
                     color: "primary",
                   },
@@ -317,7 +317,7 @@ export const POST = withIsogeny(async (req, body) => {
               >
                 full threat model
               </Link>{" "}
-              for what Isogeny does and does not protect against.
+              for what Nen does and does not protect against.
             </p>
           </div>
         </section>
@@ -333,7 +333,7 @@ export const POST = withIsogeny(async (req, body) => {
                 What that one line actually does
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Behind <code>pqcfetch</code> is a full post-quantum handshake:
+                Behind <code>nenfetch</code> is a full post-quantum handshake:
                 an ML-KEM key encapsulation, an optional ML-DSA identity
                 signature, and a derived ChaCha20-Poly1305 session. Run it step
                 by step — change the payload, change the security level, and
@@ -359,7 +359,7 @@ export const POST = withIsogeny(async (req, body) => {
               </h2>
               <p className="text-muted-foreground mb-4 leading-relaxed">
                 AI apps stream prompts, PHI, legal context, and financial
-                records through many hops of your own infrastructure. Isogeny
+                records through many hops of your own infrastructure. Nen
                 keeps prompts and streamed tokens as ciphertext from the
                 user&apos;s browser to the one backend service you trust to call
                 the model.
@@ -479,12 +479,12 @@ const stream = ai.chat.completions.stream({
               <Feature
                 icon={<Code2 className="w-6 h-6 text-primary" />}
                 title="Encrypted SSE streaming"
-                body="pqcstream encrypts each chunk with ChaCha20-Poly1305 and an XOR-counter nonce, decrypting tokens as they arrive."
+                body="nenstream encrypts each chunk with ChaCha20-Poly1305 and an XOR-counter nonce, decrypting tokens as they arrive."
               />
               <Feature
                 icon={<ArrowRight className="w-6 h-6 text-primary" />}
                 title="Drop-in integration"
-                body="withIsogeny middleware and pqcfetch client for Next.js App Router — about ten lines from npx create-isogeny-app to a working handshake."
+                body="withNen middleware and nenfetch client for Next.js App Router — about ten lines from npx create-nen-app to a working handshake."
               />
             </div>
           </div>

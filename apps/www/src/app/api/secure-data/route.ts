@@ -1,6 +1,6 @@
-import { withIsogeny } from '@isogeny/server';
+import { withNen } from '@nen/server';
 
-export const POST = withIsogeny(async (req, body) => {
+export const POST = withNen(async (req, body) => {
   return {
     message: 'Securely processed',
     received: body

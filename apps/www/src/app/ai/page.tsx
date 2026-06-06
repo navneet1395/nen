@@ -9,9 +9,9 @@ import { CodeBlock } from "@/components/code-block";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Secure AI — Encrypt LLM prompts across your stack | Isogeny",
+  title: "Secure AI — Encrypt LLM prompts across your stack | Nen",
   description:
-    "Isogeny encrypts AI prompts and streamed tokens end-to-end from the user's browser to your own backend — your CDN, edge, logs, and proxies see only ciphertext. Honest scope: it does not hide prompts from the model provider, which must decrypt to run inference. For encrypt-LLM-prompts compliance.",
+    "Nen encrypts AI prompts and streamed tokens end-to-end from the user's browser to your own backend — your CDN, edge, logs, and proxies see only ciphertext. Honest scope: it does not hide prompts from the model provider, which must decrypt to run inference. For encrypt-LLM-prompts compliance.",
   keywords: [
     "encrypt LLM prompts compliance",
     "secure AI SDK",
@@ -59,8 +59,8 @@ const stream = ai.chat.completions.stream({
             Drop-in shapes mirroring the official SDKs —{" "}
             <code>createSecureOpenAI</code> and{" "}
             <code>createSecureAnthropic</code> — built on the same
-            transport-agnostic core as <code>pqcfetch</code> and{" "}
-            <code>pqcstream</code>.
+            transport-agnostic core as <code>nenfetch</code> and{" "}
+            <code>nenstream</code>.
           </p>
 
           {/* The honest framing — this is the critical section */}
@@ -82,7 +82,7 @@ const stream = ai.chat.completions.stream({
               <CardContent className="text-sm text-muted-foreground leading-relaxed">
                 The prompt/response is ciphertext from the user&apos;s browser,
                 through your CDN, edge, load balancer, and logging, all the way
-                to the backend that terminates Isogeny. That backend is where
+                to the backend that terminates Nen. That backend is where
                 prompts stop being exposed to{" "}
                 <strong className="text-foreground">
                   your own infrastructure and any intermediary
@@ -138,7 +138,7 @@ const stream = ai.chat.completions.stream({
                   id: "1",
                   from: "client",
                   to: "cdn",
-                  label: "Isogeny Encrypted Prompt",
+                  label: "Nen Encrypted Prompt",
                   animated: true,
                   color: "primary",
                 },
@@ -170,7 +170,7 @@ const stream = ai.chat.completions.stream({
             {[
               "AI apps already stream sensitive data — prompts, PHI, legal context, financial records — through many hops of your own infrastructure.",
               "Health, legal, and fintech AI companies feel this pain today and carry budget and compliance urgency.",
-              "Secure streaming is a rare, defensible niche — most PQC projects stop at request/response. pqcstream already does chunked, authenticated SSE.",
+              "Secure streaming is a rare, defensible niche — most PQC projects stop at request/response. nenstream already does chunked, authenticated SSE.",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />

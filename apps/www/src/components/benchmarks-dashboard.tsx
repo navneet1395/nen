@@ -286,7 +286,7 @@ export function BenchmarksDashboard() {
             <span className="text-zinc-500">Built to be ignored.</span>
           </h2>
           <p className="text-zinc-600 dark:text-muted-foreground max-w-2xl mx-auto text-lg">
-            Post-quantum cryptography sounds slow. We made it invisible. Isogeny
+            Post-quantum cryptography sounds slow. We made it invisible. Nen
             sustains thousands of encrypted requests with sub-millisecond crypto
             overhead.
           </p>
@@ -298,7 +298,7 @@ export function BenchmarksDashboard() {
             <div className="lg:col-span-5 flex flex-col justify-center">
               <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">Sustained Throughput</h3>
               <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-8">
-                Isogeny is highly optimized for concurrent workloads. Built-in session caching and efficient key derivation means the server scales effortlessly across thousands of active connections without sacrificing latency.
+                Nen is highly optimized for concurrent workloads. Built-in session caching and efficient key derivation means the server scales effortlessly across thousands of active connections without sacrificing latency.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <StatCard
@@ -358,7 +358,7 @@ export function BenchmarksDashboard() {
                 Real-World Scenarios
               </h3>
               <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                We don't just benchmark simple loops. We evaluate Isogeny against demanding application patterns like session churn, connection bursts, and extended lifetime sessions to ensure stability.
+                We don't just benchmark simple loops. We evaluate Nen against demanding application patterns like session churn, connection bursts, and extended lifetime sessions to ensure stability.
               </p>
             </div>
 

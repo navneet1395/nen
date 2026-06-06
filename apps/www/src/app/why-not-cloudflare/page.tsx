@@ -6,9 +6,9 @@ import { Check, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Why not just use Cloudflare / HTTPS? | Isogeny",
+  title: "Why not just use Cloudflare / HTTPS? | Nen",
   description:
-    "TLS protects the channel; Isogeny protects the payload. Cloudflare and AWS already ship post-quantum TLS for free — but the payload becomes plaintext the instant TLS terminates. Here is exactly where Isogeny is additive, and where it is not.",
+    "TLS protects the channel; Nen protects the payload. Cloudflare and AWS already ship post-quantum TLS for free — but the payload becomes plaintext the instant TLS terminates. Here is exactly where Nen is additive, and where it is not.",
   keywords: [
     "post-quantum readiness",
     "application-layer encryption for APIs",
@@ -40,13 +40,13 @@ export default function WhyNotCloudflare() {
           <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 md:p-8 my-10">
             <p className="text-2xl font-bold leading-snug">
               TLS protects the <span className="text-primary">channel</span>.
-              Isogeny protects the <span className="text-primary">payload</span>
+              Nen protects the <span className="text-primary">payload</span>
               .
             </p>
             <p className="text-muted-foreground mt-4 leading-relaxed">
               Your data is encrypted in transit (TLS), but <em>naked</em> the
               instant TLS terminates — in your CDN, your load balancer, your
-              logs, your proxies, and any third-party hop. Isogeny keeps the
+              logs, your proxies, and any third-party hop. Nen keeps the
               payload as ciphertext across all of that, all the way to the
               application code that actually needs it.
             </p>
@@ -64,11 +64,11 @@ export default function WhyNotCloudflare() {
             PQ-protected.{" "}
             <strong className="text-foreground">
               If your only concern is the public transit leg, you may not need
-              Isogeny.
+              Nen.
             </strong>
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            Isogeny is a{" "}
+            Nen is a{" "}
             <strong className="text-foreground">different threat model</strong>,
             not a competing one. We are additive on purpose: we defend the
             surface TLS structurally cannot reach — everything that happens{" "}
@@ -116,7 +116,7 @@ export default function WhyNotCloudflare() {
                 { id: "1", from: "client", to: "cdn", label: "TLS (Channel Encrypted)", color: "muted" },
                 { id: "2", from: "cdn", to: "proxy", label: "TLS", color: "muted" },
                 { id: "3", from: "proxy", to: "app", label: "TLS", color: "muted" },
-                { id: "4", from: "client", to: "app", label: "Isogeny (Payload Ciphertext E2E)", animated: true, color: "primary" }
+                { id: "4", from: "client", to: "app", label: "Nen (Payload Ciphertext E2E)", animated: true, color: "primary" }
               ]}
             />
           </div>
@@ -133,52 +133,52 @@ export default function WhyNotCloudflare() {
                   <th className="p-4 font-semibold">
                     PQ-TLS (Cloudflare / AWS)
                   </th>
-                  <th className="p-4 font-semibold">Isogeny</th>
+                  <th className="p-4 font-semibold">Nen</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
                 <ComparisonRow
                   concern="Public transit leg, browser → edge"
                   tls="yes"
-                  isogeny="redundant"
-                  isogenyNote="TLS already covers this"
+                  nen="redundant"
+                  nenNote="TLS already covers this"
                 />
                 <ComparisonRow
                   concern="Payload in logs after termination"
                   tls="no"
-                  isogeny="yes"
+                  nen="yes"
                 />
                 <ComparisonRow
                   concern="Payload at rest in DB / queue"
                   tls="no"
-                  isogeny="yes"
+                  nen="yes"
                 />
                 <ComparisonRow
                   concern="Internal hops not behind PQ-TLS"
                   tls="no"
-                  isogeny="yes"
+                  nen="yes"
                 />
                 <ComparisonRow
                   concern="Third-party forwarders / proxies"
                   tls="no"
-                  isogeny="yes"
+                  nen="yes"
                 />
                 <ComparisonRow
                   concern="Harvest-now-decrypt-later on at-rest payloads"
                   tls="no"
-                  isogeny="yes"
+                  nen="yes"
                 />
                 <ComparisonRow
                   concern="A compromised terminating server"
                   tls="no"
-                  isogeny="no"
-                  isogenyNote="endpoints hold plaintext by design"
+                  nen="no"
+                  nenNote="endpoints hold plaintext by design"
                 />
                 <ComparisonRow
                   concern="Hiding plaintext from a recipient you send it to"
                   tls="no"
-                  isogeny="no"
-                  isogenyNote="needs TEE / FHE — out of scope"
+                  nen="no"
+                  nenNote="needs TEE / FHE — out of scope"
                 />
               </tbody>
             </table>
@@ -190,7 +190,7 @@ export default function WhyNotCloudflare() {
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-4">
             PQ-TLS already defends the transit leg against HNDL — for free. So
-            Isogeny&apos;s HNDL value is{" "}
+            Nen&apos;s HNDL value is{" "}
             <strong className="text-foreground">specifically</strong> for:
           </p>
           <ul className="space-y-3 mb-4">
@@ -300,13 +300,13 @@ function Cell({
 function ComparisonRow({
   concern,
   tls,
-  isogeny,
-  isogenyNote,
+  nen,
+  nenNote,
 }: {
   concern: string;
   tls: "yes" | "no" | "redundant";
-  isogeny: "yes" | "no" | "redundant";
-  isogenyNote?: string;
+  nen: "yes" | "no" | "redundant";
+  nenNote?: string;
 }) {
   return (
     <tr className="hover:bg-muted/20">
@@ -315,7 +315,7 @@ function ComparisonRow({
         <Cell kind={tls} />
       </td>
       <td className="p-4">
-        <Cell kind={isogeny} note={isogenyNote} />
+        <Cell kind={nen} note={nenNote} />
       </td>
     </tr>
   );

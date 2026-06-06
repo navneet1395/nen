@@ -106,7 +106,7 @@ export function InteractiveDemo() {
     await new Promise((r) => setTimeout(r, 1000));
     setStep(2);
     addLog(
-      `[NETWORK] POST /api/isogeny/handshake - Transmitting Client Public Key.`,
+      `[NETWORK] POST /api/nen/handshake - Transmitting Client Public Key.`,
     );
     addLog(
       `[NETWORK] Payload: { pk_len: ${kemLevel === "512" ? 800 : kemLevel === "768" ? 1184 : 1568}B, algo: "ML-KEM-${kemLevel}" }`,
@@ -345,7 +345,7 @@ export function InteractiveDemo() {
           >
             <div className="bg-muted/30 p-3 border-b flex items-center gap-2 font-medium text-sm">
               <Server className="w-4 h-4 text-primary" />
-              Isogeny Middleware
+              Nen Middleware
             </div>
             <div className="p-4 space-y-3 min-h-[200px] flex flex-col justify-center">
               {step >= 3 ? (
@@ -393,7 +393,7 @@ export function InteractiveDemo() {
         <div className="bg-muted/30 p-4 font-mono text-xs border-t min-h-[140px] flex flex-col justify-end">
           <div className="flex items-center gap-2 mb-2 text-muted-foreground pb-2 border-b border-border/50">
             <TerminalSquare className="w-4 h-4" />
-            <span>isogeny-engine.log</span>
+            <span>nen-engine.log</span>
           </div>
           <div className="space-y-1 overflow-hidden">
             {logs.map((log, i) => (

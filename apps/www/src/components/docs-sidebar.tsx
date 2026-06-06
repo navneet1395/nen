@@ -26,28 +26,28 @@ interface SearchIndexItem {
 
 const DOCS_INDEX: SearchIndexItem[] = [
   // Page: Introduction
-  { title: "Introduction", href: "/docs", type: "page", content: "Introduction to Isogeny: Next-generation cryptographic tool for seamless PQC integration." },
+  { title: "Introduction", href: "/docs", type: "page", content: "Introduction to Nen: Next-generation cryptographic tool for seamless PQC integration." },
   { title: "What is Post-Quantum Cryptography (PQC)?", href: "/docs#what-is-post-quantum-cryptography-pqc", type: "heading", page: "Introduction", content: "Understanding ML-KEM, ML-DSA and quantum threats to traditional RSA/ECC." },
-  { title: "Why Isogeny?", href: "/docs#why-isogeny", type: "heading", page: "Introduction", content: "Protects application layer, prevents store-now-decrypt-later attacks." },
+  { title: "Why Nen?", href: "/docs#why-nen", type: "heading", page: "Introduction", content: "Protects application layer, prevents store-now-decrypt-later attacks." },
   { title: "Architecture at a Glance", href: "/docs#architecture-at-a-glance", type: "heading", page: "Introduction", content: "Overview of client, server, and WebAssembly components." },
 
   // Page: Quickstart
-  { title: "Quickstart", href: "/docs/quickstart", type: "page", content: "Zero to an encrypted API call in ten lines. npx create-isogeny-app, mount session routes, protect an endpoint, call pqcfetch. TLS plus Isogeny." },
+  { title: "Quickstart", href: "/docs/quickstart", type: "page", content: "Zero to an encrypted API call in ten lines. npx create-nen-app, mount session routes, protect an endpoint, call nenfetch. TLS plus Nen." },
 
   // Page: Installation
-  { title: "Installation", href: "/docs/installation", type: "page", content: "Get started with installing Isogeny packages." },
-  { title: "Using the CLI (Recommended)", href: "/docs/installation#using-the-cli-recommended", type: "heading", page: "Installation", content: "npx create-isogeny-app command creates boilerplate with configuration." },
-  { title: "Manual Installation", href: "/docs/installation#manual-installation", type: "heading", page: "Installation", content: "Manual setup for isogeny-server and isogeny-client packages." },
+  { title: "Installation", href: "/docs/installation", type: "page", content: "Get started with installing Nen packages." },
+  { title: "Using the CLI (Recommended)", href: "/docs/installation#using-the-cli-recommended", type: "heading", page: "Installation", content: "npx create-nen-app command creates boilerplate with configuration." },
+  { title: "Manual Installation", href: "/docs/installation#manual-installation", type: "heading", page: "Installation", content: "Manual setup for nen-server and nen-client packages." },
   { title: "Prerequisites", href: "/docs/installation#prerequisites", type: "heading", page: "Installation", content: "NodeJS runtime, NextJS or Express backend requirements." },
 
   // Page: Usage
-  { title: "Usage Guide", href: "/docs/usage", type: "page", content: "How to use Isogeny in your full-stack applications." },
-  { title: "Setting up the Server Handshake Route", href: "/docs/usage#1-setting-up-the-server-handshake-route", type: "heading", page: "Usage Guide", content: "Next.js Route Handlers setup with withIsogeny middleware." },
-  { title: "Using the Client Engine", href: "/docs/usage#2-using-the-client-engine", type: "heading", page: "Usage Guide", content: "Creating an IsogenyClient instance and sending requests." },
+  { title: "Usage Guide", href: "/docs/usage", type: "page", content: "How to use Nen in your full-stack applications." },
+  { title: "Setting up the Server Handshake Route", href: "/docs/usage#1-setting-up-the-server-handshake-route", type: "heading", page: "Usage Guide", content: "Next.js Route Handlers setup with withNen middleware." },
+  { title: "Using the Client Engine", href: "/docs/usage#2-using-the-client-engine", type: "heading", page: "Usage Guide", content: "Creating an NenClient instance and sending requests." },
   { title: "Protecting Server Endpoints", href: "/docs/usage#3-protecting-server-endpoints", type: "heading", page: "Usage Guide", content: "Verifying secure payloads using middleware signature checks." },
 
   // Page: Architecture Detail
-  { title: "Under the Hood", href: "/docs/architecture", type: "page", content: "Deep dive into Isogeny architecture." },
+  { title: "Under the Hood", href: "/docs/architecture", type: "page", content: "Deep dive into Nen architecture." },
   { title: "The WebAssembly Core (core-crypto)", href: "/docs/architecture#the-webassembly-core-core-crypto", type: "heading", page: "Under the Hood", content: "Rust-compiled Wasm core running ML-KEM and ML-DSA natively." },
   { title: "The Handshake Protocol", href: "/docs/architecture#the-handshake-protocol", type: "heading", page: "Under the Hood", content: "Four-step cryptographic handshake establishing session keys." },
   { title: "Data Transport", href: "/docs/architecture#data-transport", type: "heading", page: "Under the Hood", content: "How ciphertext payloads are structured and decrypted." },
@@ -61,16 +61,16 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Request Authentication: HMAC-SHA256", href: "/docs/crypto#request-authentication-hmac-sha256", type: "heading", page: "Cryptography Specs", content: "Message authentication code preventing request tampering." },
 
   // Page: Protocol
-  { title: "Protocol — ISOGENY-PROTOCOL-V1", href: "/docs/protocol", type: "page", content: "The exact wire format: handshake, base64 payloads, HMAC canonical string, replay window, stream framing, identity model." },
+  { title: "Protocol — NEN-PROTOCOL-V1", href: "/docs/protocol", type: "page", content: "The exact wire format: handshake, base64 payloads, HMAC canonical string, replay window, stream framing, identity model." },
 
   // Page: Threat model
-  { title: "Threat model", href: "/docs/threat-model", type: "page", content: "What Isogeny protects and does not protect. Trust boundary between endpoints. TLS plus Isogeny, not versus." },
+  { title: "Threat model", href: "/docs/threat-model", type: "page", content: "What Nen protects and does not protect. Trust boundary between endpoints. TLS plus Nen, not versus." },
 
   // Page: Audit readiness
   { title: "Audit readiness", href: "/docs/audit-readiness", type: "page", content: "Test coverage, negative-path matrix, published artifacts, and external review roadmap for auditors and buyers." },
 
   // Page: Error codes
-  { title: "Error codes (ISO-xxxx)", href: "/docs/error-codes", type: "page", content: "Every Isogeny failure carries a stable ISO-xxxx code with HTTP status, cause, and fix. Deep-linkable per code." }
+  { title: "Error codes (ISO-xxxx)", href: "/docs/error-codes", type: "page", content: "Every Nen failure carries a stable ISO-xxxx code with HTTP status, cause, and fix. Deep-linkable per code." }
 ];
 
 export function DocsSidebar() {

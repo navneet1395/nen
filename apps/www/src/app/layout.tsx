@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Isogeny | Post-Quantum Security for the Modern Web",
+  title: "Nen | Post-Quantum Security for the Modern Web",
   description: "Next-generation cryptographic tool for seamless PQC integration.",
 };
 

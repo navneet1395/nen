@@ -6,7 +6,7 @@ export function ArchitectureVisualizer() {
   return (
     <div className="w-full max-w-5xl mx-auto py-8">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Where Isogeny Fits</h2>
+        <h2 className="text-3xl font-bold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Where Nen Fits</h2>
         <p className="text-muted-foreground max-w-xl mx-auto">
           An application-layer post-quantum tunnel. We bypass compromised networks and edge nodes, delivering secure end-to-end encryption directly between user and server.
         </p>
@@ -83,7 +83,7 @@ export function ArchitectureVisualizer() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-background/80 backdrop-blur border px-4 py-1.5 rounded-full shadow-sm">
           <span className="text-xs font-bold text-primary flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            Isogeny Post-Quantum Tunnel
+            Nen Post-Quantum Tunnel
           </span>
         </div>
 
@@ -98,7 +98,7 @@ export function ArchitectureVisualizer() {
           </div>
           <div className="mt-4 text-center">
             <h3 className="font-bold text-sm">Next.js API</h3>
-            <p className="text-[10px] text-muted-foreground">Isogeny Middleware</p>
+            <p className="text-[10px] text-muted-foreground">Nen Middleware</p>
           </div>
         </div>
       </div>

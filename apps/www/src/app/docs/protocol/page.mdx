@@ -1,8 +1,8 @@
 import { SequenceDiagram } from "@/components/sequence-diagram";
 
-# Protocol — ISOGENY-PROTOCOL-V1
+# Protocol — NEN-PROTOCOL-V1
 
-The wire protocol spoken between `@isogeny/client` and `@isogeny/server`, as implemented. It runs at the application layer, **on top of TLS** — Isogeny assumes TLS is present and does not replace it.
+The wire protocol spoken between `@nen/client` and `@nen/server`, as implemented. It runs at the application layer, **on top of TLS** — Nen assumes TLS is present and does not replace it.
 
 ## Cryptographic parameters
 
@@ -19,10 +19,10 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
 
 | Method | Path                     | Purpose                                      |
 | :----- | :----------------------- | :------------------------------------------- |
-| POST   | `/api/isogeny/handshake` | Establish a session                          |
-| POST   | `/api/isogeny/rotate`    | Destroy old session, establish a new one     |
-| POST   | `/api/isogeny/terminate` | Destroy a session (logout / forward secrecy) |
-| GET    | `/api/isogeny/status`    | Liveness check for a session id              |
+| POST   | `/api/nen/handshake` | Establish a session                          |
+| POST   | `/api/nen/rotate`    | Destroy old session, establish a new one     |
+| POST   | `/api/nen/terminate` | Destroy a session (logout / forward secrecy) |
+| GET    | `/api/nen/status`    | Liveness check for a session id              |
 
 ## Handshake (once per session)
 
@@ -33,13 +33,13 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
 <SequenceDiagram
   participants={[
     { id: "client", name: "Client", type: "client" },
-    { id: "server", name: "Isogeny Server", type: "server" },
+    { id: "server", name: "Nen Server", type: "server" },
   ]}
   steps={[
     { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM-768 keypair" },
     { 
       id: "2", from: "client", to: "server", animated: true, 
-      label: "2. POST /api/isogeny/handshake",
+      label: "2. POST /api/nen/handshake",
       body: '{\n  "pk": base64(pk)\n}' 
     },
     { 
@@ -65,9 +65,9 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
 Headers:
 
 ```
-X-Isogeny-Session:    <sid>
-X-Isogeny-Timestamp:  <unix_ms>
-X-Isogeny-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
+X-Nen-Session:    <sid>
+X-Nen-Timestamp:  <unix_ms>
+X-Nen-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
 ```
 
 Body: `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)), "n": base64(n) }`
@@ -85,7 +85,7 @@ Server verification order: session lookup → payload shape → **mandatory HMAC
 <SequenceDiagram
   participants={[
     { id: "client", name: "Client", type: "client" },
-    { id: "server", name: "Isogeny Server", type: "server" },
+    { id: "server", name: "Nen Server", type: "server" },
   ]}
   steps={[
     { 
@@ -109,18 +109,18 @@ Server verification order: session lookup → payload shape → **mandatory HMAC
 
 ## Encrypted streaming (SSE)
 
-The response sets `X-Isogeny-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk's nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
+The response sets `X-Nen-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk's nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
 
 <SequenceDiagram
   participants={[
-    { id: "server", name: "Isogeny Server", type: "server" },
+    { id: "server", name: "Nen Server", type: "server" },
     { id: "client", name: "Client", type: "client" },
   ]}
   steps={[
     { 
       id: "1", from: "server", to: "server", 
       label: "1. Generate baseNonce",
-      body: "Set X-Isogeny-Stream-Nonce header" 
+      body: "Set X-Nen-Stream-Nonce header" 
     },
     { 
       id: "2", from: "server", to: "client", animated: true, 

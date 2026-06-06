@@ -1,12 +1,12 @@
 # Threat model
 
-What Isogeny defends, what it does not, and why — stated plainly. A security engineer finds any overclaim in thirty seconds, so we name the edges ourselves.
+What Nen defends, what it does not, and why — stated plainly. A security engineer finds any overclaim in thirty seconds, so we name the edges ourselves.
 
 ## The one-sentence model
 
-> Everything **between the two Isogeny endpoints** sees only ciphertext. The two endpoints hold plaintext — by necessity, because someone has to read the data.
+> Everything **between the two Nen endpoints** sees only ciphertext. The two endpoints hold plaintext — by necessity, because someone has to read the data.
 
-Isogeny lets you choose *where* those endpoints are, pushing the trust boundary inward — past the CDN, edge, load balancer, logs, and proxies — to the specific code that needs the plaintext. This is a **different** threat model from TLS, not a competing one: TLS encrypts the channel and stops at termination; Isogeny encrypts the payload and continues past it. **TLS + Isogeny.**
+Nen lets you choose *where* those endpoints are, pushing the trust boundary inward — past the CDN, edge, load balancer, logs, and proxies — to the specific code that needs the plaintext. This is a **different** threat model from TLS, not a competing one: TLS encrypts the channel and stops at termination; Nen encrypts the payload and continues past it. **TLS + Nen.**
 
 ## Protects against
 
@@ -19,7 +19,7 @@ Isogeny lets you choose *where* those endpoints are, pushing the trust boundary 
 
 ## Does NOT protect against
 
-- A compromised **endpoint** — the browser or the server process that terminates Isogeny holds plaintext by design. We never claim &ldquo;a compromised server sees only ciphertext.&rdquo;
+- A compromised **endpoint** — the browser or the server process that terminates Nen holds plaintext by design. We never claim &ldquo;a compromised server sees only ciphertext.&rdquo;
 - Hiding plaintext from a party you deliberately send it to — e.g. an LLM provider must decrypt a prompt to run inference. That needs self-hosting, a TEE, or FHE — out of scope.
 - XSS or a malicious frontend; stolen session tokens / JWTs; malicious logic inside your own handler.
 - Compromise of the TLS PKI for *identity* in v1 (use opt-in ML-DSA identity).
@@ -27,7 +27,7 @@ Isogeny lets you choose *where* those endpoints are, pushing the trust boundary 
 
 ## Assumptions
 
-- TLS is present and correctly configured (Isogeny runs above it).
+- TLS is present and correctly configured (Nen runs above it).
 - The Wasm crypto core is built from the audited RustCrypto crates and untampered.
 - The server session store preserves `{ sharedSecret, hmacKey }` confidentiality and enforces its TTL.
 - Client and server clocks are within ~30 seconds; larger skew surfaces as `ISO-3003`, not a silent failure.

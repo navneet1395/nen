@@ -1,6 +1,6 @@
 # Cryptography Specifications
 
-Isogeny is built upon the following cryptographic primitives, carefully selected for their security, performance, and resistance to quantum attacks.
+Nen is built upon the following cryptographic primitives, carefully selected for their security, performance, and resistance to quantum attacks.
 
 ## Key Encapsulation: ML-KEM (Kyber)
 - **Standard**: FIPS 203
@@ -14,7 +14,7 @@ Isogeny is built upon the following cryptographic primitives, carefully selected
 
 ## Session keys
 
-Isogeny does not run a separate KDF over the shared secret. The 32-byte secret produced by ML-KEM encapsulation is used directly as the **ChaCha20-Poly1305 key**. The server independently generates a **separate random 32-byte HMAC key** at handshake and returns it to the client alongside the ciphertext, so the encryption and authentication keys are distinct.
+Nen does not run a separate KDF over the shared secret. The 32-byte secret produced by ML-KEM encapsulation is used directly as the **ChaCha20-Poly1305 key**. The server independently generates a **separate random 32-byte HMAC key** at handshake and returns it to the client alongside the ciphertext, so the encryption and authentication keys are distinct.
 
 ## Symmetric Encryption: ChaCha20Poly1305
 - **Standard**: RFC 8439

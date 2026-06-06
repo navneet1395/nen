@@ -19,12 +19,12 @@ export default function DocsLayout({
           >
             <Image
               src="/Logo.svg"
-              alt="Isogeny Logo"
+              alt="Nen Logo"
               width={24}
               height={24}
               className="h-6 w-auto"
             />
-            <span className="text-foreground">Isogeny</span>
+            <span className="text-foreground">Nen</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm font-medium">
             <Link
@@ -34,7 +34,7 @@ export default function DocsLayout({
               Documentation
             </Link>
             <Link
-              href="https://github.com/your-org/isogeny"
+              href="https://github.com/your-org/nen"
               className="text-muted-foreground transition-colors hover:text-primary"
             >
               GitHub

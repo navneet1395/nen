@@ -1,20 +1,20 @@
-# Introduction to Isogeny
+# Introduction to Nen
 
-**Isogeny** is application-layer, end-to-end payload encryption for modern web APIs. It runs *on top of* TLS — not instead of it.
+**Nen** is application-layer, end-to-end payload encryption for modern web APIs. It runs *on top of* TLS — not instead of it.
 
-TLS encrypts the channel and stops the moment it terminates at your load balancer, CDN edge, or serverless runtime. From there the JSON body lives as plaintext across your logs, databases, proxies, and any third-party hop. That surface is what Isogeny encrypts, using post-quantum key exchange so payloads stay safe even against harvest-now-decrypt-later attacks.
+TLS encrypts the channel and stops the moment it terminates at your load balancer, CDN edge, or serverless runtime. From there the JSON body lives as plaintext across your logs, databases, proxies, and any third-party hop. That surface is what Nen encrypts, using post-quantum key exchange so payloads stay safe even against harvest-now-decrypt-later attacks.
 
-**TLS + Isogeny.** Not a replacement — an extension past where TLS ends.
+**TLS + Nen.** Not a replacement — an extension past where TLS ends.
 
-## Why Isogeny?
+## Why Nen?
 
-Isogeny gives you payload E2EE in about ten lines:
+Nen gives you payload E2EE in about ten lines:
 
 - **FIPS 203 & 204 Compliant**: Uses NIST-standardized **ML-KEM-768** for key encapsulation and optional **ML-DSA-65** for identity signatures.
 - **WebAssembly Powered**: Core cryptography is written in Rust and compiled to WebAssembly for near-native execution across environments.
 - **Hybrid Security Model**: Combines ML-KEM with ChaCha20-Poly1305 and a **mandatory per-request HMAC-SHA256** for defense in depth — the auth-downgrade bypass is closed by default.
 - **Compact Wire Format**: All binary travels as **base64** (`{ ct, n }`), under ~1.4× of raw — never JSON number arrays.
-- **Encrypted Streaming**: `pqcstream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
+- **Encrypted Streaming**: `nenstream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
 - **Edge-Ready Sessions**: A pluggable session store — in-memory, **Redis**, or **Upstash** (REST, no TCP) — for stateless horizontal scaling, including Edge runtimes.
 - **Diagnosable by Design**: Every failure carries a stable [`ISO-xxxx` code](/docs/error-codes) — paste the code, get the exact cause and fix.
 
