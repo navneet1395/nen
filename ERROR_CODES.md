@@ -66,6 +66,7 @@ ISO - 3   001
 | ISO-3002 | 401 | `AUTH_SIGNATURE_INVALID` | HMAC over `METHOD\nPATH\nTIMESTAMP\nNONCE` didn't match. Tampered request, wrong key, or a canonical-string mismatch (commonly path-vs-full-URL). |
 | ISO-3003 | 401 | `AUTH_TIMESTAMP_OUT_OF_WINDOW` | `X-Nen-Timestamp` is >30s from server time. Clock skew or a replayed/delayed request. |
 | ISO-3004 | 401 | `AUTH_IDENTITY_SIGNATURE_INVALID` | Optional ML-DSA identity signature over the ephemeral key didn't verify. Wrong identity key or a MITM at handshake. |
+| ISO-3005 | 401 | `AUTH_NONCE_MISSING` | No `X-Nen-Nonce` header. Under NEN-PROTOCOL-V2 every request — including bodyless GET/HEAD/DELETE — must carry a per-request nonce in `X-Nen-Nonce` (it feeds the HMAC canonical string and replay tracking). Not an Nen client, an out-of-date v0.2 client, or a proxy stripped the header. |
 
 ### 4xxx — Cryptography
 

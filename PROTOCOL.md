@@ -1,9 +1,16 @@
-# NEN-PROTOCOL-V1
+# NEN-PROTOCOL-V2
 
 The wire protocol spoken between `@withnen/client` and `@withnen/server`. This
 document describes the protocol **as implemented today** — it is the artifact a
 security reviewer or auditor reads. Where a value is hardcoded in the code, it is
 stated here exactly.
+
+> **V2 (v0.3.0) — bidirectional & method-agnostic.** The per-request nonce moved
+> from the body into the `X-Nen-Nonce` header, so **every** method is
+> authenticated (including bodyless `GET`/`HEAD`/`DELETE`) and the response is
+> **always** encrypted. Encryption is symmetric: if a payload goes encrypted, the
+> payload that comes back is encrypted too. A request body, when present, is now
+> just `{ ct }`. This is a wire-breaking change from V1 (§8).
 
 - **Layer:** application (Layer 7), on top of TLS. Nen assumes TLS is present
   and does not replace it (see [THREAT_MODEL.md](./THREAT_MODEL.md)).
@@ -81,18 +88,32 @@ Client                                              Server
 
 ## 4. Encrypted request / response
 
-Every call to a `withNen`-wrapped route:
+Every call to a `withNen`-wrapped route, for **any** HTTP method.
+
+**Method matrix**
+
+| Method | Authenticated | Request body encrypted | Response body encrypted |
+| :-- | :-: | :-: | :-: |
+| `GET` | ✅ | — (no body) | ✅ |
+| `HEAD` | ✅ | — | n/a — no body per HTTP spec; metadata headers only |
+| `DELETE` | ✅ | optional | ✅ |
+| `POST` / `PUT` / `PATCH` | ✅ | ✅ | ✅ |
 
 **Request**
 
 ```
-Headers:
+Headers (ALL methods):
   X-Nen-Session:    <sid>
   X-Nen-Timestamp:  <unix_ms>
+  X-Nen-Nonce:      base64(n)          // per-request nonce — ALWAYS present
   X-Nen-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
-Body (if any):
-  { "ct": base64( AEAD.encrypt(ss, n, plaintext) ), "n": base64(n) }
+Body (only when the method carries one):
+  { "ct": base64( AEAD.encrypt(ss, n, plaintext) ) }
 ```
+
+The per-request nonce `n` lives in the `X-Nen-Nonce` header (not the body), so it
+exists for bodyless methods too. When a body is present it is sealed under that
+same `n`; the body therefore carries only `{ ct }`.
 
 **Canonical string** (exact bytes that are HMAC'd):
 
@@ -102,39 +123,55 @@ METHOD \n PATH \n TIMESTAMP \n NONCE
 
 - `PATH` is the URL pathname only (no host, no query). Client and server **must**
   derive it identically — a path-vs-full-URL mismatch is the most common cause of
-  `ISO-3002`.
-- `NONCE` is the base64 nonce string `n` (the same string sent in the body). For a
-  request with no body, `NONCE` is the empty string.
+  `ISO-3002`. (The client uses `new URL(endpoint).pathname`; the server uses
+  `new URL(req.url).pathname`.)
+- `NONCE` is the base64 `X-Nen-Nonce` value — **never** empty (V1 used `""` for
+  bodyless requests, which made bodyless replay protection impossible; V2 fixes
+  this).
 
-**Server verification order** (in `decryptPayload`):
+**Server verification order** (in `verifyRequest`, runs for **every** method):
 
 1. Session lookup. Missing → `ISO-2002`.
-2. Payload shape: requires a `(ct,n)` pair. Missing → `ISO-6001`.
+2. `X-Nen-Nonce` present. Missing → `ISO-3005`.
 3. **HMAC is mandatory** whenever the session has an `hmacKey` (it always does):
    - no signature → `ISO-3001` (this is the auth-downgrade guard),
    - bad signature → `ISO-3002`,
    - `|now − timestamp| > 30_000 ms` → `ISO-3003`.
    `strict: false` on `withNen` disables this for explicitly opted-in legacy
    clients only.
-4. Nonce replay: the nonce string must be unseen for this session (when the store
-   implements `hasNonce`/`trackNonce`). Reused → `ISO-5001`.
-5. AEAD decrypt. Tag failure → response `ISO-4001`. Decrypted non-JSON → `ISO-4003`.
+4. Nonce replay: the `X-Nen-Nonce` value must be unseen for this session (when the
+   store implements `hasNonce`/`trackNonce`). Reused → `ISO-5001`.
+5. **Only if a body is present** (`decryptBody`): AEAD-decrypt `{ ct }` under the
+   header nonce. Tag failure → `ISO-4001`. Decrypted non-JSON → `ISO-4003`.
 
-**Response**
+**Response** (always encrypted)
 
 ```
 Body: { "ct": base64( AEAD.encrypt(ss, n', response) ), "n": base64(n') }
 ```
 
-with a fresh random nonce `n'`. The client decrypts; an AEAD failure on the
-response surfaces as `ISO-4001` client-side.
+with a fresh random server nonce `n'` (independent of the request nonce). The
+client decrypts; an AEAD failure on the response surfaces as `ISO-4001`
+client-side. `HEAD` is the one exception — it is authenticated and the handler
+runs, but the response carries no body (per HTTP spec); a `Content-Length` header
+reflects the size the encrypted body would have had.
+
+**A note on `GET` query strings.** A `GET`'s URL is request-line metadata — logged
+by proxies, CDNs, and access logs — so query *values* cannot be confidential while
+the request stays a real `GET`. The pathname is integrity-protected (it is in the
+canonical string) and the **response** is encrypted, but for **secret selectors**
+use `POST` with an encrypted body (this is why the demo's search is
+`POST /api/notes/search`).
 
 ---
 
 ## 5. Encrypted streaming (SSE)
 
-`withNenStream` returns a `text/event-stream`. The request leg is identical to
-§4. The response:
+`withNenStream` returns a `text/event-stream`. The request leg is identical to §4
+and is authenticated for **every** method — a bodyless **streaming `GET`**
+(subscribe-style encrypted SSE) is supported. (Pre-V2, the stream wrapper only
+verified HMAC inside its `POST`/`PUT`/`PATCH` branch, so a streaming `GET` skipped
+authentication entirely — that gap is closed.) The response:
 
 ```
 Headers:
@@ -200,6 +237,20 @@ path stays small and fast.
 
 ## 8. Versioning
 
-This is `NEN-PROTOCOL-V1`. Wire-breaking changes (new canonical string, new
-field names, dropping the legacy number-array fallback) require a major protocol
-bump. Error codes are a **stable contract** and are never reused or renumbered.
+This is `NEN-PROTOCOL-V2` (packages `v0.3.0`). Wire-breaking changes require a
+major protocol bump and a lockstep client+server release; both packages are
+first-party, so there is no third-party straddling a version boundary.
+
+**V1 → V2 (the breaking delta):**
+
+- The per-request nonce moved from the request body into the `X-Nen-Nonce` header.
+  It is now present on **every** request and is the value used in the canonical
+  string and for replay tracking.
+- The request body shrank from `{ ct, n }` to `{ ct }` (the nonce is in the header).
+- Authentication now runs for **all** methods, including bodyless `GET`/`HEAD`/
+  `DELETE` and streaming `GET`. New code `ISO-3005` (`AUTH_NONCE_MISSING`) covers a
+  request that arrives without `X-Nen-Nonce`.
+- A `v0.2.x` client against a `v0.3.0` server (or vice-versa) fails cleanly at the
+  nonce/HMAC checks — there is no silent downgrade.
+
+Error codes are a **stable contract** and are never reused or renumbered.

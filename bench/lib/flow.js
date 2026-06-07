@@ -1,13 +1,13 @@
 // Shared driver: exercises the Isogeny SDK exactly the way the docs prescribe
 // (handshake -> pqcfetch), plus a few raw-crypto helpers used by the negative
 // regression tests (tampered HMAC, replay, dead session).
-const { IsogenyClient } = require('../../packages/isogeny-client/dist/index.js');
+const { NenClient } = require('../../packages/nen-client/dist/index.js');
 const crypto = require('core-crypto');
 
 const TARGET = process.env.TARGET_URL || 'http://localhost:3005';
 
 function newClient(target = TARGET) {
-  return new IsogenyClient(target);
+  return new NenClient(target);
 }
 
 const enc = (o) => new TextEncoder().encode(JSON.stringify(o));

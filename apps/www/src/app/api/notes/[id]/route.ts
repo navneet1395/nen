@@ -7,26 +7,26 @@ import {
 } from '@/lib/notesStore';
 
 /**
- * POST /api/notes/:id — read a single note.
+ * GET /api/notes/:id — read a single note (NEN-PROTOCOL-V2).
  *
- * Reads go over POST (not GET) because withNen needs an encrypted body and
- * GET requests cannot carry one. The id is taken from the URL path so it is
- * covered by the HMAC canonical string (METHOD\nPATH\nTS\nNONCE).
+ * A real, semantically-correct GET: no request body, still authenticated, and
+ * the response is encrypted. The id is taken from the URL path, which is covered
+ * by the HMAC canonical string (METHOD\nPATH\nTIMESTAMP\nNONCE).
  */
-export const POST = withNen(async (req) => {
+export const GET = withNen(async (req) => {
   const note = getNote(noteIdFromUrl(req.url));
   if (!note) return { ok: false, error: 'not_found' };
   return { ok: true, note };
 });
 
-/** PUT /api/notes/:id — update an existing note. */
+/** PUT /api/notes/:id — update an existing note (encrypted body + response). */
 export const PUT = withNen(async (req, body) => {
   const note = updateNote(noteIdFromUrl(req.url), body ?? {});
   if (!note) return { ok: false, error: 'not_found' };
   return { ok: true, note };
 });
 
-/** DELETE /api/notes/:id — remove a note (body may be empty `{}`). */
+/** DELETE /api/notes/:id — remove a note. Bodyless, authenticated, encrypted response. */
 export const DELETE = withNen(async (req) => {
   const removed = deleteNote(noteIdFromUrl(req.url));
   return { ok: removed, deleted: removed };

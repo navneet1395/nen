@@ -14,6 +14,9 @@ export function SiteHeader() {
           <span>Nen</span>
         </Link>
         <nav className="flex items-center gap-4 sm:gap-5 text-sm font-medium">
+          <Link href="/performance" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
+            Performance
+          </Link>
           <Link href="/why-not-cloudflare" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
             Why not Cloudflare?
           </Link>
@@ -64,6 +67,7 @@ export function SiteFooter() {
           </div>
           <div className="flex flex-col gap-2">
             <span className="font-semibold text-foreground">Product</span>
+            <Link href="/performance" className="hover:text-primary">Performance</Link>
             <Link href="/why-not-cloudflare" className="hover:text-primary">Why not Cloudflare?</Link>
             <Link href="/ai" className="hover:text-primary">Secure AI</Link>
             <Link href="/faq" className="hover:text-primary">FAQ</Link>

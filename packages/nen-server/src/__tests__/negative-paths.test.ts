@@ -1,6 +1,6 @@
 import * as nenCrypto from 'core-crypto';
 import { storeSession } from '../store';
-import { decryptPayload, handleHandshake } from '../middleware';
+import { verifyRequest, decryptBody, handleHandshake } from '../middleware';
 import { withNen } from '../wrapper';
 
 // Ensure a Web Crypto implementation exists in the Node test environment
@@ -13,7 +13,11 @@ const url = 'http://localhost/api/test';
 const path = '/api/test';
 const method = 'POST';
 
-/** Build a fully valid, signed encrypted request for a given session. */
+/**
+ * Build a fully valid, signed encrypted request for a given session
+ * (NEN-PROTOCOL-V2: the nonce is the per-request nonce, carried in X-Nen-Nonce;
+ * the request body is `{ ct }`).
+ */
 function makeSignedRequest(sharedSecret: Uint8Array, hmacKey: Uint8Array, plaintext: string) {
   const nonce = nenCrypto.nen_generate_nonce();
   const ctBytes = nenCrypto.nen_encrypt(
@@ -40,20 +44,20 @@ describe('Replay protection', () => {
 
     const req = makeSignedRequest(sharedSecret, hmacKey, '{"hello":"world"}');
 
-    // First delivery succeeds and decrypts.
-    const first = await decryptPayload(sessionId, { ct: req.ct, n: req.n }, req.requestMeta);
-    expect(first).not.toBeNull();
-    expect(new TextDecoder().decode(first!)).toBe('{"hello":"world"}');
+    // First delivery authenticates and decrypts.
+    const session = await verifyRequest(sessionId, req.n, req.requestMeta);
+    const first = decryptBody(session, req.ct, req.n);
+    expect(new TextDecoder().decode(first)).toBe('{"hello":"world"}');
 
-    // Exact replay of the same signed request → rejected.
+    // Exact replay of the same signed request (same nonce) → rejected at verify.
     await expect(
-      decryptPayload(sessionId, { ct: req.ct, n: req.n }, req.requestMeta)
+      verifyRequest(sessionId, req.n, req.requestMeta)
     ).rejects.toMatchObject({ code: 'ISO-5001' });
   });
 });
 
 describe('AEAD tamper detection at the HTTP layer', () => {
-  test('tampered ciphertext decrypts to null (ISO-4001), never garbage', async () => {
+  test('tampered ciphertext throws ISO-4001, never returns garbage', async () => {
     const sessionId = 'tamper-session';
     const sharedSecret = new Uint8Array(32).fill(5);
     const hmacKey = new Uint8Array(32).fill(9);
@@ -68,12 +72,10 @@ describe('AEAD tamper detection at the HTTP layer', () => {
     ctBytes[0] ^= 0xff;
     const tamperedCt = nenCrypto.nen_to_base64(ctBytes);
 
-    const result = await decryptPayload(
-      sessionId,
-      { ct: tamperedCt, n: req.n },
-      req.requestMeta
+    const session = await verifyRequest(sessionId, req.n, req.requestMeta);
+    expect(() => decryptBody(session, tamperedCt, req.n)).toThrow(
+      expect.objectContaining({ code: 'ISO-4001' })
     );
-    expect(result).toBeNull();
   });
 
   test('withNen returns 400 ISO-4001 for tampered ciphertext', async () => {
@@ -94,9 +96,10 @@ describe('AEAD tamper detection at the HTTP layer', () => {
         'Content-Type': 'application/json',
         'X-Nen-Session': sessionId,
         'X-Nen-Timestamp': req.requestMeta.timestamp,
+        'X-Nen-Nonce': req.n,
         'X-Nen-Signature': req.requestMeta.signature,
       },
-      body: JSON.stringify({ ct: tamperedCt, n: req.n }),
+      body: JSON.stringify({ ct: tamperedCt }),
     });
 
     const res = await handler(httpReq);

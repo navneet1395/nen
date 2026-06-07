@@ -11,5 +11,10 @@
     "url": "git+https://github.com/navneet1395/nen.git"
   },
   "homepage": "https://withnen.com",
-  "author": "Nen <hello@withnen.com>"
+  "author": "Nen <hello@withnen.com>",
+  "scripts": {
+    "build": "npm run build --workspace @withnen/server && npm run build --workspace @withnen/client && npm run build --workspace @withnen/ai",
+    "dev": "npm run dev --workspace website",
+    "build:www": "npm run build --workspace website"
+  }
 }

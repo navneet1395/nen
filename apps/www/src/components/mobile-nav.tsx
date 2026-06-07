@@ -45,6 +45,13 @@ export function MobileNav() {
         <div className="absolute top-full left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-lg">
           <nav className="flex flex-col p-6 gap-6 text-base font-medium max-h-[calc(100vh-65px)] overflow-y-auto">
             <Link
+              href="/performance"
+              className="text-foreground/80 hover:text-primary transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Performance
+            </Link>
+            <Link
               href="/why-not-cloudflare"
               className="text-foreground/80 hover:text-primary transition-colors"
               onClick={() => setIsOpen(false)}

@@ -96,39 +96,39 @@ export class NenClient {
       fail('SESSION_NOT_INITIALIZED');
     }
 
-    let requestBody = undefined;
-    let nonceBase64 = "";
-    
+    const method = (options.method || 'GET').toUpperCase();
+    const timestamp = Date.now().toString();
+
+    // Always generate a per-request nonce. It travels in the X-Nen-Nonce header
+    // — so bodyless GET/HEAD/DELETE are authenticated too — and, when there is a
+    // body, doubles as that body's AEAD nonce (NEN-PROTOCOL-V2).
+    const nonce = nenCrypto.nen_generate_nonce();
+    const nonceBase64 = nenCrypto.nen_to_base64(nonce);
+
+    let requestBody: string | undefined = undefined;
     if (options.body) {
-      // Encrypt the body
       const plaintext = new TextEncoder().encode(options.body as string);
-      const nonce = nenCrypto.nen_generate_nonce();
       const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
-      
-      nonceBase64 = nenCrypto.nen_to_base64(nonce);
-      requestBody = JSON.stringify({
-        sessionId: this.sessionId,
-        ct: nenCrypto.nen_to_base64(ciphertext),
-        n: nonceBase64
-      });
+      requestBody = JSON.stringify({ ct: nenCrypto.nen_to_base64(ciphertext) });
     }
 
-    const method = options.method || 'GET';
-    const timestamp = Date.now().toString();
-    
-    // Construct canonical string and compute HMAC
-    const canonical = `${method}\n${endpoint}\n${timestamp}\n${nonceBase64}`;
+    // Canonical string: METHOD\nPATH\nTIMESTAMP\nNONCE. PATH is the pathname only
+    // (no query) — it must match the server's `new URL(req.url).pathname` exactly.
+    const path = canonicalPath(endpoint);
+    const canonical = `${method}\n${path}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
     const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
     const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
       ...options,
+      method,
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
         'X-Nen-Session': this.sessionId,
         'X-Nen-Timestamp': timestamp,
+        'X-Nen-Nonce': nonceBase64,
         'X-Nen-Signature': signatureBase64
       },
       body: requestBody
@@ -183,37 +183,36 @@ export class NenClient {
       fail('SESSION_NOT_INITIALIZED');
     }
 
-    let requestBody = undefined;
-    let nonceBase64 = "";
-    
+    const method = (options.method || 'GET').toUpperCase();
+    const timestamp = Date.now().toString();
+
+    // Always generate a per-request nonce in the X-Nen-Nonce header (so a
+    // subscribe-style streaming GET is authenticated with no request body).
+    const nonce = nenCrypto.nen_generate_nonce();
+    const nonceBase64 = nenCrypto.nen_to_base64(nonce);
+
+    let requestBody: string | undefined = undefined;
     if (options.body) {
       const plaintext = new TextEncoder().encode(options.body as string);
-      const nonce = nenCrypto.nen_generate_nonce();
       const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
-      
-      nonceBase64 = nenCrypto.nen_to_base64(nonce);
-      requestBody = JSON.stringify({
-        sessionId: this.sessionId,
-        ct: nenCrypto.nen_to_base64(ciphertext),
-        n: nonceBase64
-      });
+      requestBody = JSON.stringify({ ct: nenCrypto.nen_to_base64(ciphertext) });
     }
 
-    const method = options.method || 'GET';
-    const timestamp = Date.now().toString();
-    
-    const canonical = `${method}\n${endpoint}\n${timestamp}\n${nonceBase64}`;
+    const path = canonicalPath(endpoint);
+    const canonical = `${method}\n${path}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
     const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
     const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
       ...options,
+      method,
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
         'X-Nen-Session': this.sessionId,
         'X-Nen-Timestamp': timestamp,
+        'X-Nen-Nonce': nonceBase64,
         'X-Nen-Signature': signatureBase64
       },
       body: requestBody
@@ -331,6 +330,20 @@ function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
   const current = dataView.getUint32(8, true);
   dataView.setUint32(8, current ^ index, true);
   return nonce;
+}
+
+/**
+ * Derive the canonical PATH for the HMAC string: pathname only, no query/hash.
+ * Must match the server's `new URL(req.url).pathname` exactly. `endpoint` may be
+ * relative (e.g. "/api/notes?id=5"); resolve it against a throwaway origin to
+ * extract the pathname.
+ */
+function canonicalPath(endpoint: string): string {
+  try {
+    return new URL(endpoint, 'http://nen.local').pathname;
+  } catch {
+    return endpoint.split('?')[0].split('#')[0];
+  }
 }
 
 /**

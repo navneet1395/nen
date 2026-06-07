@@ -1,11 +1,14 @@
-export { 
-  handleHandshake, 
-  handleTerminate, 
+export {
+  handleHandshake,
+  handleTerminate,
   handleStatus,
   handleRotate,
-  decryptPayload, 
-  encryptPayload 
+  verifyRequest,
+  decryptBody,
+  encryptResponse,
+  encryptPayload
 } from './middleware';
+export type { Session, RequestMeta } from './middleware';
 
 export { withNen } from './wrapper';
 export { withNenStream } from './stream-wrapper';

@@ -117,6 +117,12 @@ export const NEN_ERRORS = {
     message: 'Identity verification failed.',
     hint: 'Optional ML-DSA identity signature over the ephemeral public key did not verify. Wrong identity key, or a MITM at handshake.',
   },
+  AUTH_NONCE_MISSING: {
+    code: 'ISO-3005',
+    status: 401,
+    message: 'Request nonce is missing.',
+    hint: 'No X-Nen-Nonce header. Under NEN-PROTOCOL-V2 every authenticated request — including bodyless GET/HEAD/DELETE — must carry a per-request nonce in the X-Nen-Nonce header (it feeds both the HMAC canonical string and replay tracking). Cause: not an Nen client, an out-of-date v0.2 client that put the nonce in the body, or a proxy stripped the header.',
+  },
 
   // 4xxx — Cryptography
   CRYPTO_DECRYPT_FAILED: {

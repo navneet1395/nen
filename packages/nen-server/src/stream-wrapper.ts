@@ -1,6 +1,5 @@
-import { decryptPayload } from './middleware';
+import { verifyRequest, decryptBody } from './middleware';
 import * as nenCrypto from 'core-crypto';
-import { getSession } from './store';
 import { NenError } from './errors';
 
 function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
@@ -28,31 +27,47 @@ export function withNenStream(handler: (req: Request, body: any) => Promise<Read
         return new NenError('SESSION_HEADER_MISSING').toResponse();
       }
 
-      // Read encrypted body if present
-      let decryptedBody = null;
-      if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-        const encryptedData = await req.json();
-        if (!encryptedData.ct || !encryptedData.n) {
-          return new NenError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
-        }
+      const method = req.method.toUpperCase();
+      const nonceB64 = req.headers.get('X-Nen-Nonce');
 
-        const requestMeta = {
-          method: req.method,
+      // Authenticate the request for ALL methods. Pre-V2 this verification only
+      // ran inside the POST/PUT/PATCH branch, so a streaming GET skipped HMAC
+      // entirely — that hole is now closed. Returns the session so the chunk
+      // encryptor below reuses it (single store fetch).
+      const session = await verifyRequest(
+        sessionId,
+        nonceB64,
+        {
+          method,
           url: req.url,
           timestamp: req.headers.get('X-Nen-Timestamp') || '',
           signature: req.headers.get('X-Nen-Signature') || ''
-        };
+        },
+        true
+      );
 
-        const decryptedBytes = await decryptPayload(sessionId, encryptedData, requestMeta);
-        if (!decryptedBytes) {
-          return new NenError('CRYPTO_DECRYPT_FAILED').toResponse();
-        }
-
-        const plaintextString = new TextDecoder().decode(decryptedBytes);
-        try {
-          decryptedBody = JSON.parse(plaintextString);
-        } catch (e) {
-          decryptedBody = plaintextString; // fallback to string
+      // Decrypt the request body only when present. A streaming GET (subscribe-
+      // style encrypted SSE) carries no request body.
+      let decryptedBody: any = null;
+      if (method !== 'GET' && method !== 'HEAD') {
+        const raw = await req.text();
+        if (raw && raw.length > 0) {
+          let parsed: { ct?: string };
+          try {
+            parsed = JSON.parse(raw);
+          } catch {
+            return new NenError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
+          }
+          if (!parsed.ct) {
+            return new NenError('WIRE_INVALID_PAYLOAD_FORMAT').toResponse();
+          }
+          const decryptedBytes = decryptBody(session, parsed.ct, nonceB64 as string);
+          const plaintextString = new TextDecoder().decode(decryptedBytes);
+          try {
+            decryptedBody = JSON.parse(plaintextString);
+          } catch {
+            decryptedBody = plaintextString; // fallback to string
+          }
         }
       }
 
@@ -81,11 +96,6 @@ export function withNenStream(handler: (req: Request, body: any) => Promise<Read
         });
       } else {
         return new NenError('INTERNAL', 'Stream handler returned a non-streamable value').toResponse();
-      }
-
-      const session = await getSession(sessionId);
-      if (!session) {
-        return new NenError('SESSION_INVALID_OR_EXPIRED').toResponse();
       }
 
       const baseNonce = nenCrypto.nen_generate_nonce();

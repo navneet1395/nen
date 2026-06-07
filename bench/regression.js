@@ -68,34 +68,36 @@ async function run() {
   try {
     const dead = newClient();
     await dead.handshake();
-    const sid = dead.sessionId;
+    // Snapshot crypto material BEFORE terminate() wipes it from the client.
+    const staleSid        = dead.sessionId;
+    const staleShared     = dead.sharedSecret;
+    const staleHmac       = dead.hmacKey;
     await dead.terminate();
-    // Use stale keys/session id via raw request (avoids client auto-rotation).
-    const res = await rawRequest(dead, '/api/notes/search', { query: 'x' }, { sessionId: sid });
+    // Inject stale keys back so rawRequest can sign & encrypt, but the server
+    // should reject because the session no longer exists in its store.
+    dead.sharedSecret = staleShared;
+    dead.hmacKey      = staleHmac;
+    const res = await rawRequest(dead, '/api/notes/search', { query: 'x' }, { sessionId: staleSid });
     record('terminated session rejected', res.status !== 200, `HTTP ${res.status}`);
   } catch (e) {
     record('terminated session rejected', false, e.message);
   }
 
-  // 7. LIMITATION: encrypted GET cannot complete (no body allowed on GET).
-  // Documented behaviour, asserted so a future regression surfaces if it changes.
-  let getBodyThrows = false;
+  // 7. NEN-PROTOCOL-V2: an encrypted GET round-trips (no request body, the
+  // request is still authenticated, and the response is decrypted). This used to
+  // be impossible in V1 (the nonce lived in the body); the nonce now travels in
+  // the X-Nen-Nonce header, so bodyless methods work.
+  let getRoundTrips = false;
   try {
-    await fetch(`${TARGET}/api/notes`, { method: 'GET', body: '{}' });
-  } catch (e) {
-    getBodyThrows = /body/i.test(e.message) || /GET/i.test(e.message);
-  }
-  let getNoBodyRejected = false;
-  try {
-    const r = await client.pqcfetch('/api/notes', { method: 'GET' });
-    // pqcfetch returns the raw Response on non-OK; a wrapped GET with no body
-    // yields an Isogeny wire-format error (non-200).
-    getNoBodyRejected = r && typeof r.status === 'number' ? r.status !== 200 : false;
+    const r = await client.nenFetch('/api/notes', { method: 'GET' });
+    // nenFetch returns the decrypted object on success, or a raw Response on a
+    // non-OK status. A successful encrypted GET yields a decrypted `{ ok: true }`.
+    getRoundTrips = !!(r && r.ok === true && Array.isArray(r.notes));
   } catch {
-    getNoBodyRejected = true;
+    getRoundTrips = false;
   }
-  record('GET-with-body limitation documented', getBodyThrows || getNoBodyRejected,
-    `fetch rejects GET body=${getBodyThrows}; server rejects body-less encrypted GET=${getNoBodyRejected}`);
+  record('encrypted GET round-trips (V2 bidirectional)', getRoundTrips,
+    `decrypted GET response ok=${getRoundTrips}`);
 
   await client.terminate().catch(() => {});
   return finalize(tests);

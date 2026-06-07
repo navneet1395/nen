@@ -34,11 +34,15 @@ The secondary threat: nation-state adversaries are recording encrypted traffic t
 4. Client decapsulates `ct` to recover the shared secret
 5. Both sides now share a ChaCha20-Poly1305 session key and an HMAC-SHA256 auth key
 
-### Per-request encryption
-- Client encrypts body with ChaCha20-Poly1305 → base64 `{ ct, n }`
-- Client signs `METHOD\nPATH\nTIMESTAMP\nNONCE` with HMAC-SHA256 → `X-Nen-Signature`
-- Server verifies HMAC, enforces 30s timestamp window, checks nonce for replay, decrypts body
-- Server encrypts response with same session key → base64 `{ ct, n }`
+### Per-request encryption (NEN-PROTOCOL-V2 — bidirectional, method-agnostic)
+Encryption is symmetric: every method is authenticated, a request body is encrypted when present, and the response is ALWAYS encrypted — bodyless GET/HEAD/DELETE included.
+- Client always sends a per-request nonce in the `X-Nen-Nonce` header (all methods)
+- Client signs `METHOD\nPATH\nTIMESTAMP\nNONCE` with HMAC-SHA256 → `X-Nen-Signature` (PATH = pathname only; NONCE = X-Nen-Nonce value)
+- When a body exists, client encrypts it under that nonce → base64 `{ ct }`
+- Server verifies HMAC, enforces 30s timestamp window, checks nonce for replay (missing nonce → ISO-3005), decrypts body if present
+- Server encrypts the response with a fresh nonce → base64 `{ ct, n }`
+- Method matrix: GET (auth, no req body, encrypted response) · HEAD (auth, no body, metadata headers) · DELETE (auth, optional body, encrypted response) · POST/PUT/PATCH (encrypted both ways)
+- GET query strings are URL metadata (not confidential) — put secret selectors in a POST body
 
 ### Streaming (SSE / LLM tokens)
 - `withNenStream` on the server yields an `AsyncIterable<string>`; each chunk is encrypted independently
@@ -93,6 +97,7 @@ Every failure carries a stable `ISO-xxxx` code. Key codes:
 - `ISO-3001` — HMAC signature missing (auth-downgrade guard)
 - `ISO-3002` — HMAC signature invalid (request tampered)
 - `ISO-3003` — timestamp outside 30s window (replay or clock skew)
+- `ISO-3005` — X-Nen-Nonce header missing (per-request nonce mandatory in V2)
 - `ISO-4001` — AEAD decryption failed (ciphertext tampered)
 - `ISO-5001` — nonce reused (replay attack)
 

@@ -47,6 +47,7 @@ const CATEGORIES: ErrorCategory[] = [
       { code: "ISO-3002", http: 401, name: "AUTH_SIGNATURE_INVALID", detail: "HMAC over METHOD\\nPATH\\nTIMESTAMP\\nNONCE didn't match. Tampered request, wrong key, or a canonical-string mismatch (commonly path-vs-full-URL)." },
       { code: "ISO-3003", http: 401, name: "AUTH_TIMESTAMP_OUT_OF_WINDOW", detail: "X-Nen-Timestamp is >30s from server time. Clock skew or a replayed/delayed request." },
       { code: "ISO-3004", http: 401, name: "AUTH_IDENTITY_SIGNATURE_INVALID", detail: "Optional ML-DSA identity signature over the ephemeral key didn't verify. Wrong identity key or a MITM at handshake." },
+      { code: "ISO-3005", http: 401, name: "AUTH_NONCE_MISSING", detail: "No X-Nen-Nonce header. Under NEN-PROTOCOL-V2 every request — including bodyless GET/HEAD/DELETE — carries a per-request nonce in X-Nen-Nonce (it feeds the HMAC canonical string and replay tracking). Not an Nen client, an out-of-date v0.2 client, or a proxy stripped the header." },
     ],
   },
   {

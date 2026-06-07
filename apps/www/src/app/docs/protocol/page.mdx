@@ -1,13 +1,15 @@
 import { SequenceDiagram } from "@/components/sequence-diagram";
 
 export const metadata = {
-  title: "Protocol Spec — NEN-PROTOCOL-V1 | Nen Docs",
-  description: "The exact wire format: ML-KEM handshake, base64 { ct, n } payloads, HMAC-SHA256 canonical string, 30s replay window, SSE stream framing, and session lifecycle. NEN-PROTOCOL-V1.",
+  title: "Protocol Spec — NEN-PROTOCOL-V2 | Nen Docs",
+  description: "The exact wire format: ML-KEM handshake, per-request X-Nen-Nonce header, base64 { ct } payloads, HMAC-SHA256 canonical string, 30s replay window, bidirectional encryption for every HTTP method, SSE stream framing, and session lifecycle. NEN-PROTOCOL-V2.",
 };
 
-# Protocol — NEN-PROTOCOL-V1
+# Protocol — NEN-PROTOCOL-V2
 
 The wire protocol spoken between `@withnen/client` and `@withnen/server`, as implemented. It runs at the application layer, **on top of TLS** — Nen assumes TLS is present and does not replace it.
+
+> **V2 (v0.3.0):** the per-request nonce moved into the `X-Nen-Nonce` header, so every method is authenticated (including bodyless `GET`/`HEAD`/`DELETE`) and the response is always encrypted. Wire-breaking from V1.
 
 ## Cryptographic parameters
 
@@ -67,15 +69,31 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
 
 ## Encrypted request / response
 
-Headers:
+Encryption is **symmetric and method-agnostic**: every method is authenticated, a
+request body is encrypted when present, and the response is **always** encrypted —
+bodyless `GET` / `HEAD` / `DELETE` included.
+
+| Method | Authenticated | Request body | Response body |
+| :-- | :-: | :-: | :-: |
+| `GET` | ✅ | — | encrypted |
+| `HEAD` | ✅ | — | none (metadata headers only) |
+| `DELETE` | ✅ | optional | encrypted |
+| `POST` / `PUT` / `PATCH` | ✅ | encrypted | encrypted |
+
+Headers (on **every** request):
 
 ```
 X-Nen-Session:    <sid>
 X-Nen-Timestamp:  <unix_ms>
+X-Nen-Nonce:      base64(n)          // per-request nonce — always present
 X-Nen-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
 ```
 
-Body: `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)), "n": base64(n) }`
+Body (only when the method carries one): `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)) }`
+
+The per-request nonce travels in the `X-Nen-Nonce` header (not the body), so it
+exists for bodyless methods too. When a body is present it is sealed under that
+same nonce, so the body is just `{ ct }`.
 
 The canonical string that is HMAC'd is exactly:
 
@@ -83,9 +101,11 @@ The canonical string that is HMAC'd is exactly:
 METHOD \n PATH \n TIMESTAMP \n NONCE
 ```
 
-`PATH` is the URL pathname only. A path-vs-full-URL mismatch is the most common cause of [`ISO-3002`](/docs/error-codes#iso-3002).
+`PATH` is the URL pathname only and `NONCE` is the `X-Nen-Nonce` value. A path-vs-full-URL mismatch is the most common cause of [`ISO-3002`](/docs/error-codes#iso-3002).
 
-Server verification order: session lookup → payload shape → **mandatory HMAC** (missing → [`ISO-3001`](/docs/error-codes#iso-3001), bad → `ISO-3002`, timestamp >30s → `ISO-3003`) → nonce replay (`ISO-5001`) → AEAD decrypt (`ISO-4001`).
+Server verification order (all methods): session lookup → **nonce present** (missing → [`ISO-3005`](/docs/error-codes#iso-3005)) → **mandatory HMAC** (missing → [`ISO-3001`](/docs/error-codes#iso-3001), bad → `ISO-3002`, timestamp >30s → `ISO-3003`) → nonce replay (`ISO-5001`) → AEAD decrypt of the body if present (`ISO-4001`). The response is then encrypted back as `{ ct, n }` with a fresh server nonce.
+
+> **GET query strings** are request-line metadata (logged by proxies, CDNs, access logs) and cannot be confidential while the request stays a real GET. The pathname is integrity-protected and the response is encrypted, but put **secret selectors** in a `POST` body, not a query string.
 
 <SequenceDiagram
   participants={[
@@ -101,7 +121,7 @@ Server verification order: session lookup → payload shape → **mandatory HMAC
     { 
       id: "2", from: "client", to: "server", animated: true, color: "primary",
       label: "3. Encrypted Request",
-      body: "Headers: Session, Timestamp, Signature\nBody: { ct, n }" 
+      body: "Headers: Session, Timestamp, Nonce, Signature\nBody: { ct }  (omitted on GET/HEAD)" 
     },
     { 
       id: "3", from: "server", to: "server", 

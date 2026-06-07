@@ -1,5 +1,5 @@
 import { storeSession, getSession } from '../store';
-import { handleHandshake, encryptPayload, decryptPayload } from '../middleware';
+import { handleHandshake, encryptPayload, verifyRequest } from '../middleware';
 
 // Mock Web Crypto for Node environment
 if (!globalThis.crypto) {
@@ -28,10 +28,10 @@ describe('Server Middleware Edge Cases', () => {
     expect(retrieved).toBeNull();
   });
 
-  test('decryptPayload with invalid session throws error', async () => {
-    // ISO-2002 SESSION_INVALID_OR_EXPIRED
+  test('verifyRequest with invalid session throws error', async () => {
+    // ISO-2002 SESSION_INVALID_OR_EXPIRED — session lookup runs first.
     await expect(
-      decryptPayload('fake-session', { ct: 'AAAA', n: 'AAAA' })
+      verifyRequest('fake-session', 'AAAA', undefined)
     ).rejects.toMatchObject({ code: 'ISO-2002' });
   });
 

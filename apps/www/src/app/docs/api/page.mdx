@@ -110,11 +110,18 @@ describeNenCode('ISO-2001');
 
 ### `withNen`
 
-Middleware wrapper for a Next.js App Router route handler. Verifies the per-request HMAC, enforces the 30s replay window, decrypts the body, and encrypts the return value.
+Middleware wrapper for a Next.js App Router route handler. Works for **every** HTTP method: it verifies the per-request HMAC, enforces the 30s replay window, decrypts the body **when one is present**, and **always** encrypts the return value. Encryption is symmetric — if a payload goes encrypted, the payload that comes back is encrypted too.
 
 ```typescript
 import { withNen } from '@withnen/server';
 
+// Reads are real GETs — no request body, response still encrypted.
+export const GET = withNen(async (req, _body) => {
+  // `_body` is null for GET/HEAD; read query/path params from `req`.
+  return { ok: true, data: 'encrypted on the way back' };
+});
+
+// Writes encrypt both ways.
 export const POST = withNen(
   async (req: Request, body: unknown) => {
     // `body` is already decrypted and authenticated.
@@ -122,7 +129,12 @@ export const POST = withNen(
   },
   { strict: true } // default — set false ONLY for legacy clients that cannot sign
 );
+
+// Bodyless DELETE: authenticated, encrypted response.
+export const DELETE = withNen(async (req) => ({ ok: true }));
 ```
+
+`body` is the decrypted JSON for body-carrying requests, or `null` for bodyless ones (`GET`/`HEAD`, and `DELETE` without a body). `HEAD` is authenticated and the handler runs, but the response carries no body (per HTTP spec).
 
 | Option | Type | Default | Description |
 | :-- | :-- | :-- | :-- |

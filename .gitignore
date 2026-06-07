@@ -66,3 +66,4 @@ isolate-*.v8.log
 *.v8.log
 .env.local
 .env.production
+marketing-scraper/*

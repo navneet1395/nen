@@ -1,6 +1,6 @@
 import * as nenCrypto from 'core-crypto';
 import { storeSession } from '../store';
-import { decryptPayload } from '../middleware';
+import { verifyRequest } from '../middleware';
 import { withNen } from '../wrapper';
 
 // Mock Web Crypto for the Node environment (only randomUUID is needed here)
@@ -12,25 +12,26 @@ if (!globalThis.crypto) {
 }
 
 /**
- * Regression tests for the authentication-downgrade bypass described in
- * `Ideation Notes/implementation_plan_1.0.0.md` §1.1.
+ * Regression tests for the authentication-downgrade bypass.
  *
  * Every session is issued an hmacKey at handshake, so the server must always
  * require a valid signature + in-window timestamp. An attacker holding a valid
  * session ID must NOT be able to skip HMAC auth (and the replay window) by
  * simply omitting the X-Nen-Signature / X-Nen-Timestamp headers.
+ *
+ * Under NEN-PROTOCOL-V2 this is enforced by `verifyRequest`, which runs for every
+ * method — the per-request nonce travels in the X-Nen-Nonce header.
  */
 describe('Per-request authentication is mandatory (downgrade bypass)', () => {
   const sessionId = 'auth-sig-session';
   const hmacKey = new Uint8Array(32).fill(7);
   const sharedSecret = new Uint8Array(32).fill(1);
 
-  // A parseable (but cryptographically meaningless) payload. The signature and
-  // timestamp checks run before decryption is ever attempted, so the actual
-  // ciphertext content is irrelevant for these tests.
-  const n = nenCrypto.nen_to_base64(new Uint8Array([1, 2, 3, 4]));
-  const ct = nenCrypto.nen_to_base64(new Uint8Array([5, 6, 7, 8]));
+  // A per-request nonce (base64). verifyRequest never decrypts, so its value just
+  // has to be a stable, unique-per-test string for the signature + replay checks.
+  const n = nenCrypto.nen_to_base64(nenCrypto.nen_generate_nonce());
   const url = 'http://localhost/api/test';
+  const path = '/api/test';
   const method = 'POST';
 
   beforeEach(() => {
@@ -40,30 +41,33 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
   test('rejects a request with a valid session but no signature header', async () => {
     // ISO-3001 AUTH_SIGNATURE_MISSING — the downgrade-bypass guard.
     await expect(
-      decryptPayload(
-        sessionId,
-        { ct, n },
-        { method, url, timestamp: String(Date.now()), signature: '' }
-      )
+      verifyRequest(sessionId, n, { method, url, timestamp: String(Date.now()), signature: '' })
     ).rejects.toMatchObject({ code: 'ISO-3001' });
   });
 
   test('rejects a request with no request metadata at all', async () => {
-    await expect(decryptPayload(sessionId, { ct, n })).rejects.toMatchObject({
+    await expect(verifyRequest(sessionId, n, undefined)).rejects.toMatchObject({
       code: 'ISO-3001',
     });
   });
 
+  test('rejects a request missing the X-Nen-Nonce value', async () => {
+    // ISO-3005 AUTH_NONCE_MISSING — the per-request nonce is mandatory.
+    await expect(
+      verifyRequest(sessionId, null, { method, url, timestamp: String(Date.now()), signature: 'x' })
+    ).rejects.toMatchObject({ code: 'ISO-3005' });
+  });
+
   test('rejects a request with a stale (>30s) timestamp', async () => {
     const timestamp = String(Date.now() - 60_000); // 60s in the past
-    const canonical = `${method}\n/api/test\n${timestamp}\n${n}`;
+    const canonical = `${method}\n${path}\n${timestamp}\n${n}`;
     const signature = nenCrypto.nen_to_base64(
       nenCrypto.nen_hmac_sign(hmacKey, new TextEncoder().encode(canonical))
     );
 
     // ISO-3003 AUTH_TIMESTAMP_OUT_OF_WINDOW
     await expect(
-      decryptPayload(sessionId, { ct, n }, { method, url, timestamp, signature })
+      verifyRequest(sessionId, n, { method, url, timestamp, signature })
     ).rejects.toMatchObject({ code: 'ISO-3003' });
   });
 
@@ -73,32 +77,48 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
 
     // ISO-3002 AUTH_SIGNATURE_INVALID
     await expect(
-      decryptPayload(sessionId, { ct, n }, { method, url, timestamp, signature })
+      verifyRequest(sessionId, n, { method, url, timestamp, signature })
     ).rejects.toMatchObject({ code: 'ISO-3002' });
   });
 
+  test('accepts a correctly signed request', async () => {
+    const nonce = nenCrypto.nen_to_base64(nenCrypto.nen_generate_nonce());
+    const timestamp = String(Date.now());
+    const canonical = `${method}\n${path}\n${timestamp}\n${nonce}`;
+    const signature = nenCrypto.nen_to_base64(
+      nenCrypto.nen_hmac_sign(hmacKey, new TextEncoder().encode(canonical))
+    );
+
+    const session = await verifyRequest(sessionId, nonce, { method, url, timestamp, signature });
+    expect(session.sharedSecret).toEqual(sharedSecret);
+  });
+
   test('legacy strict=false mode skips the signature requirement', async () => {
-    // Decryption still fails on the bogus ciphertext (returns null), but the
-    // call must NOT throw an authentication error when strict mode is disabled.
+    // No signature, but strict=false → must NOT throw an auth error; returns the
+    // session. (Decryption of any body happens separately, in decryptBody.)
+    const nonce = nenCrypto.nen_to_base64(nenCrypto.nen_generate_nonce());
     await expect(
-      decryptPayload(
+      verifyRequest(
         sessionId,
-        { ct, n },
+        nonce,
         { method, url, timestamp: String(Date.now()), signature: '' },
         false
       )
-    ).resolves.toBeNull();
+    ).resolves.toMatchObject({ hmacKey });
   });
 
   test('withNen returns 401 for a valid session with no signature header', async () => {
     const handler = withNen(async () => ({ ok: true }));
+    const nonce = nenCrypto.nen_to_base64(nenCrypto.nen_generate_nonce());
+    const ct = nenCrypto.nen_to_base64(new Uint8Array([5, 6, 7, 8]));
     const req = new Request(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
         'X-Nen-Session': sessionId,
+        'X-Nen-Nonce': nonce,
       },
-      body: JSON.stringify({ ct, n }),
+      body: JSON.stringify({ ct }),
     });
 
     const res = await handler(req);

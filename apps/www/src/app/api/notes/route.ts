@@ -1,12 +1,11 @@
 import { withNen } from '@withnen/server';
-import { createNote } from '@/lib/notesStore';
+import { createNote, listNotes } from '@/lib/notesStore';
 
 /**
- * POST /api/notes  — create a note (encrypted end-to-end).
+ * POST /api/notes — create a note (encrypted end-to-end).
  *
- * Used exactly the way the docs prescribe: the handler receives the already
- * decrypted + authenticated `body`, and whatever object it returns is
- * encrypted before it goes back on the wire.
+ * The handler receives the already decrypted + authenticated `body`, and
+ * whatever object it returns is encrypted before it goes back on the wire.
  */
 export const POST = withNen(async (_req, body) => {
   const note = createNote(body ?? {});
@@ -14,14 +13,13 @@ export const POST = withNen(async (_req, body) => {
 });
 
 /**
- * GET /api/notes — intentionally wrapped with withNen.
+ * GET /api/notes — list notes (NEN-PROTOCOL-V2).
  *
- * This documents a real SDK limitation that the regression suite asserts:
- * withNen requires an encrypted `{ ct, n }` body on every request, but the
- * Fetch standard forbids a body on GET. So an encrypted GET cannot complete —
- * read paths must use POST/PUT/DELETE (which allow bodies). See
- * /bench/regression.js → "GET-with-body limitation".
+ * A real GET: no request body, the request is still authenticated (HMAC +
+ * timestamp + nonce via the X-Nen-Nonce header), and the response is encrypted.
+ * This is the "vice-versa" property — if the payload goes encrypted, the payload
+ * that comes back is encrypted too, for every method.
  */
 export const GET = withNen(async () => {
-  return { ok: true, note: 'unreachable: GET cannot carry an encrypted body' };
+  return { ok: true, notes: listNotes() };
 });
