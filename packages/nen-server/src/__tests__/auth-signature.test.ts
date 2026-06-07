@@ -1,4 +1,4 @@
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 import { storeSession } from '../store';
 import { verifyRequest } from '../middleware';
 import { withNen } from '../wrapper';

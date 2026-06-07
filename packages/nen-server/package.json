@@ -1,6 +1,6 @@
 {
   "name": "@withnen/server",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "MIT licensed server middleware for end-to-end encrypted API payloads. withNen, withNenStream, session stores, HMAC auth.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -12,7 +12,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "core-crypto": "file:../../pkg/bundler"
+    "@withnen/core-crypto": "^0.1.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

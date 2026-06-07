@@ -1,4 +1,4 @@
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 import { storeSession, getSession, deleteSession, sessionExists, getSessionStore } from './store';
 import { NenError } from './errors';
 

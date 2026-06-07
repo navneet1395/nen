@@ -1,5 +1,5 @@
 import { verifyRequest, decryptBody } from './middleware';
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 import { NenError } from './errors';
 
 function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {

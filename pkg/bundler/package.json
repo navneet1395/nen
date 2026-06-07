@@ -1,0 +1,29 @@
+{
+  "name": "@withnen/core-crypto",
+  "type": "module",
+  "description": "Nen core cryptographic engine (ML-KEM + ChaCha20)",
+  "version": "0.1.0",
+  "files": [
+    "core_crypto_bg.wasm",
+    "core_crypto.js",
+    "core_crypto_bg.js",
+    "core_crypto.d.ts"
+  ],
+  "main": "core_crypto.js",
+  "types": "core_crypto.d.ts",
+  "sideEffects": [
+    "./core_crypto.js",
+    "./snippets/*"
+  ],
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/core-crypto"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

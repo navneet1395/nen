@@ -48,8 +48,13 @@ core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @withnen/{client,server
 
 - **`packages/core-crypto`** — all primitives (ML-KEM-768, ML-DSA-65, ChaCha20-Poly1305, HMAC-SHA256,
   base64) from the RustCrypto crates, exposed via `#[wasm_bindgen]`. Compiles to **two** Wasm targets:
-  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). Both `@withnen/client` and
-  `@withnen/server` depend on `"core-crypto": "file:../../pkg/bundler"`.
+  `pkg/node` (Node/serverless) and `pkg/bundler` (browser ESM). `pkg/bundler` is published to npm as
+  **`@withnen/core-crypto`** and is registered as a workspace, so `@withnen/client` and
+  `@withnen/server` depend on `"@withnen/core-crypto": "^0.1.0"` — the local workspace satisfies it in
+  the monorepo, the registry satisfies it for external installs. `build.sh` names it via
+  `wasm-pack --scope withnen` and patches in license/repo/publishConfig. `pkg/node` stays local-only
+  (name `core-crypto`), referenced by the jest `moduleNameMapper` (`^@withnen/core-crypto$` → pkg/node)
+  because jest can't load the bundler-target ESM Wasm.
 - **`@withnen/server`** — `handleHandshake/Rotate/Terminate/Status` (mounted via a single
   `/api/nen/[action]` route), `decryptPayload`/`encryptPayload`, and the `withNen` /
   `withNenStream` DX wrappers. Pluggable `SessionStore`: `InMemorySessionStore` (default, bound to
@@ -87,7 +92,7 @@ are a permanent contract: never reuse or renumber, and update all three together
 ## Gotchas
 
 - **jest cannot load the bundler Wasm (ESM).** Both client and server `jest.config.js` map
-  `^core-crypto$` → `<rootDir>/../../pkg/node/core_crypto.js`, and the `test` script sets
+  `^@withnen/core-crypto$` → `<rootDir>/../../pkg/node/core_crypto.js`, and the `test` script sets
   `NODE_OPTIONS=--localstorage-file=.jest-localstorage`. Preserve both when touching test config.
 - **`dist/` is gitignored build output** — never commit it (Phase 1 did by mistake; it was untracked).
   Run `npm run build` to regenerate.

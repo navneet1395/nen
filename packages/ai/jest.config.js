@@ -12,6 +12,6 @@ module.exports = {
   // package, whose published `bundler` build is ESM and cannot load in jest.
   // Map it to the equivalent Node/CommonJS wasm build for tests only.
   moduleNameMapper: {
-    "^core-crypto$": "<rootDir>/../../pkg/node/core_crypto.js",
+    "^@withnen/core-crypto$": "<rootDir>/../../pkg/node/core_crypto.js",
   },
 };

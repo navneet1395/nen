@@ -12,6 +12,6 @@ module.exports = {
   // whose ESM `import * as wasm from "*.wasm"` syntax cannot be loaded by jest.
   // Map it to the equivalent Node/CommonJS wasm build for tests only.
   moduleNameMapper: {
-    "^core-crypto$": "<rootDir>/../../pkg/node/core_crypto.js",
+    "^@withnen/core-crypto$": "<rootDir>/../../pkg/node/core_crypto.js",
   },
 };

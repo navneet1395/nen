@@ -1,5 +1,5 @@
 import { SessionStore } from '../store';
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 
 /**
  * Interface representing a minimal Redis client (like Upstash Redis)

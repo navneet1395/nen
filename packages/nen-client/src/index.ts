@@ -1,4 +1,4 @@
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 import { NenError } from './errors';
 
 export { NenError, NEN_ERRORS, describeNenCode } from './errors';

@@ -1,5 +1,5 @@
 import { SessionStore } from '../store';
-import * as nenCrypto from 'core-crypto';
+import * as nenCrypto from '@withnen/core-crypto';
 
 /**
  * Upstash REST session store.
