@@ -1,7 +1,8 @@
 # Proposal 001 — Bidirectional, method-agnostic payload encryption
 
-> **Status:** Draft — planned for `NEN-PROTOCOL-V2` / packages `v0.3.0`.
-> Not yet implemented. `PROTOCOL.md` still describes V1 (as-shipped).
+> **Status:** ✅ Implemented and shipped — `NEN-PROTOCOL-V2`, `@withnen/client`
+> & `@withnen/server` `v0.3.0`, `@withnen/ai` `v0.2.0`. `PROTOCOL.md` now describes
+> V2. This document is kept as the design record.
 
 ## 1. The problem
 

@@ -62,11 +62,16 @@ core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @withnen/{client,server
 
 ### The protocol (must stay in sync with PROTOCOL.md)
 
-- Wire is **base64-only**: `{ ct, n }`. The legacy number-array format was removed in v0.2.0 — do not
-  reintroduce array-vs-base64 branches.
+- Wire is **base64-only**. **NEN-PROTOCOL-V2 (v0.3.0):** the per-request nonce travels in the
+  `X-Nen-Nonce` header (all methods), so the request body is `{ ct }` and the response is `{ ct, n }`.
+  Encryption is symmetric and method-agnostic — every method is authenticated, a request body is
+  encrypted when present, the response is **always** encrypted. Bodyless `GET`/`HEAD`/`DELETE` work.
+  Do not reintroduce the body-nonce (`{ ct, n }` request) or array-vs-base64 branches.
 - Per-request **HMAC is mandatory** (`strict: true` default). The signature covers the canonical
-  string `METHOD\nPATH\nTIMESTAMP\nNONCE` — **not** the ciphertext (the AEAD tag catches body
-  tampering). `withNen(handler, { strict: false })` is legacy-only.
+  string `METHOD\nPATH\nTIMESTAMP\nNONCE` where `PATH` is the pathname only and `NONCE` is the
+  `X-Nen-Nonce` value — **not** the ciphertext (the AEAD tag catches body tampering). A missing
+  `X-Nen-Nonce` is `ISO-3005`. `withNen(handler, { strict: false })` is legacy-only. The server splits
+  this into `verifyRequest()` (auth, all methods) + `decryptBody()` (AEAD, when a body is present).
 - The ML-KEM shared secret is used **directly** as the ChaCha20 key; the HMAC key is a *separate*
   random 32-byte key issued at handshake. **There is no HKDF** — don't add docs/code claiming one.
 - Replay defense: 30s timestamp window + per-session nonce tracking in the store.
