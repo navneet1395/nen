@@ -4,7 +4,9 @@
 //! server authentication and no channel binding. V3 makes the signed message a
 //! full transcript:
 //!
-//!     transcript = SHA-256( client_pk_kem || client_pk_x || server_nonce || sid )
+//! ```text
+//! transcript = SHA-256( client_pk_kem || client_pk_x || server_nonce || sid )
+//! ```
 //!
 //! The session id is bound to this hash (channel binding), so a stolen `sid`
 //! cannot be replayed against a different transcript, and an opt-in server

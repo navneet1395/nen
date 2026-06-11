@@ -53,8 +53,8 @@ export async function handleHandshake(req: Request): Promise<Response> {
     // Hybrid (default): also run X25519 and combine. Defense-in-depth — the
     // session stays secure if EITHER algorithm is broken.
     let combinedSs: Uint8Array;
-    let clientPkX = new Uint8Array(0);
-    let serverPkX = new Uint8Array(0);
+    let clientPkX: Uint8Array = new Uint8Array(0);
+    let serverPkX: Uint8Array = new Uint8Array(0);
     if (securityMode === 'hybrid') {
       if (!body.pk_x) {
         return new NenError('HANDSHAKE_MISSING_PUBLIC_KEY', 'hybrid mode requires pk_x').toResponse();

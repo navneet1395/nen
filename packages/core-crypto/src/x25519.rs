@@ -4,7 +4,9 @@
 //! is broken. We combine the two shared secrets per NIST SP 800-56C / the IETF
 //! hybrid-KEM drafts (and the pattern TLS 1.3 hybrid, AWS, and Cloudflare ship):
 //!
-//!     ss = HKDF-SHA256( x25519_shared || mlkem_shared , info = "nen/v3 hybrid" )
+//! ```text
+//! ss = HKDF-SHA256( x25519_shared || mlkem_shared , info = "nen/v3 hybrid" )
+//! ```
 //!
 //! Concatenation order is fixed (classical first, then PQC) and MUST match on
 //! both sides.
