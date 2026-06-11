@@ -14,7 +14,7 @@ interface DataPoint {
   [key: string]: any;
 }
 
-const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as DataPoint;
     const questionObj = QUESTIONS.find((q) => q.id === data.question_id);
