@@ -15,12 +15,12 @@ describe('Server Middleware Edge Cases', () => {
   });
 
   test('storeSession and getSession lifecycle', () => {
-    const dummySecret = new Uint8Array([1, 2, 3, 4]);
-    const dummyHmac = new Uint8Array([5, 6, 7, 8]);
-    storeSession('session-1', dummySecret, dummyHmac);
+    const encKey = new Uint8Array([1, 2, 3, 4]);
+    const macKey = new Uint8Array([5, 6, 7, 8]);
+    storeSession('session-1', encKey, macKey);
 
     const retrieved = getSession('session-1');
-    expect(retrieved).toEqual({ sharedSecret: dummySecret, hmacKey: dummyHmac });
+    expect(retrieved).toEqual({ encKey, macKey });
   });
 
   test('getSession with invalid ID returns null', () => {
