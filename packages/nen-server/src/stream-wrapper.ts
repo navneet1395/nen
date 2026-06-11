@@ -121,7 +121,7 @@ export function withNenStream(handler: (req: Request, body: any) => Promise<Read
             }
 
             const nonce = xorNonce(baseNonce, chunkIndex);
-            const ciphertext = nenCrypto.nen_encrypt(session.sharedSecret, nonce, chunkBytes);
+            const ciphertext = nenCrypto.nen_encrypt(session.encKey, nonce, chunkBytes);
             const base64Ct = nenCrypto.nen_to_base64(ciphertext);
             
             // Format as SSE (Server-Sent Events)
@@ -135,7 +135,7 @@ export function withNenStream(handler: (req: Request, body: any) => Promise<Read
         flush(controller) {
           try {
             const nonce = xorNonce(baseNonce, chunkIndex);
-            const ciphertext = nenCrypto.nen_encrypt(session.sharedSecret, nonce, new TextEncoder().encode('__FIN__'));
+            const ciphertext = nenCrypto.nen_encrypt(session.encKey, nonce, new TextEncoder().encode('__FIN__'));
             const base64Ct = nenCrypto.nen_to_base64(ciphertext);
             controller.enqueue(new TextEncoder().encode(`data: ${base64Ct}\n\n`));
           } catch (e) {

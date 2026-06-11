@@ -6,9 +6,10 @@ export {
   verifyRequest,
   decryptBody,
   encryptResponse,
-  encryptPayload
+  encryptPayload,
+  setServerIdentity
 } from './middleware';
-export type { Session, RequestMeta } from './middleware';
+export type { Session, RequestMeta, SecurityMode } from './middleware';
 
 export { withNen } from './wrapper';
 export { withNenStream } from './stream-wrapper';
