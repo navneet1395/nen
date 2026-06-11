@@ -3,9 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { createNenFetch } from "@withnen/client";
 import { WebNenGuardian } from "./ui/web-nen-guardian";
 import { X, MessageCircle, Play, BookOpen, Mail, RotateCcw } from "lucide-react";
 import { Button, buttonVariants } from "./ui/button";
+
+const nenFetch = createNenFetch('');
 
 interface FeedbackQuestion {
   id: string;
@@ -14,7 +17,7 @@ interface FeedbackQuestion {
   options: string[];
 }
 
-const QUESTIONS: FeedbackQuestion[] = [
+export const QUESTIONS: FeedbackQuestion[] = [
   {
     id: "home",
     route: "/",
@@ -156,8 +159,8 @@ export function NenFeedbackWidget() {
   }, [pathname]);
 
   const handleAnswer = (questionId: string, optionIndex: number) => {
-    // Fire-and-forget anonymous telemetry — never blocks the UI.
-    void fetch("/api/feedback", {
+    // Fire-and-forget encrypted telemetry — never blocks the UI.
+    void nenFetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ questionId, optionIndex, path: pathname }),

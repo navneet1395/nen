@@ -1,10 +1,10 @@
+import { withNen } from '@withnen/server';
+import { createClient } from 'redis';
+
 /**
- * POST /api/feedback — capture an anonymous answer from the Nen feedback widget.
- *
- * Deliberately NOT wrapped in `withNen`: this is anonymous, no-PII product
- * telemetry (which question, which answer, which page) — there is no session
- * and nothing sensitive to encrypt. We only accept a known question id +
- * an option index, so a client can't smuggle free-text PII through here.
+ * POST /api/feedback — capture an answer from the Nen feedback widget.
+ * Now wrapped in `withNen` to dogfood our own product and securely transmit
+ * the telemetry, saving the results to Redis.
  */
 
 interface FeedbackPayload {
@@ -13,20 +13,30 @@ interface FeedbackPayload {
   path?: unknown;
 }
 
-export async function POST(req: Request) {
-  let body: FeedbackPayload;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ ok: false, error: "invalid json" }, { status: 400 });
-  }
+export const POST = withNen(async (req, body) => {
+  const payload = body as FeedbackPayload;
 
-  const questionId = typeof body.questionId === "string" ? body.questionId.slice(0, 32) : null;
-  const optionIndex = typeof body.optionIndex === "number" ? body.optionIndex : null;
-  const path = typeof body.path === "string" ? body.path.slice(0, 128) : null;
+  const questionId = typeof payload.questionId === "string" ? payload.questionId.slice(0, 32) : null;
+  const optionIndex = typeof payload.optionIndex === "number" ? payload.optionIndex : null;
+  const path = typeof payload.path === "string" ? payload.path.slice(0, 128) : null;
 
   if (!questionId || optionIndex === null) {
     return Response.json({ ok: false, error: "missing fields" }, { status: 400 });
+  }
+
+  try {
+    if (process.env.REDIS_URL) {
+      const redis = await createClient({ url: process.env.REDIS_URL }).connect();
+      // Use an atomic increment in a Redis Hash.
+      // Hash key: 'feedback_metrics', Field: questionId:optionIndex, Increment by: 1
+      await redis.hIncrBy('feedback_metrics', `${questionId}:${optionIndex}`, 1);
+      await redis.disconnect(); // clean up connection in serverless
+    } else {
+      console.warn("REDIS_URL is not set. Feedback was not saved.");
+    }
+  } catch (error) {
+    console.error("Failed to insert feedback to Vercel KV:", error);
+    // Continue execution to return ok: true and structured log even if DB fails
   }
 
   // Structured log — picked up by Vercel log drains / analytics without a DB.
@@ -41,4 +51,4 @@ export async function POST(req: Request) {
   );
 
   return Response.json({ ok: true });
-}
+});

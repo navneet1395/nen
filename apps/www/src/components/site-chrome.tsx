@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { MobileNav } from "@/components/mobile-nav";
+import { FeedbackMetrics } from "@/components/feedback-metrics";
 
 export function SiteHeader() {
   return (
@@ -63,6 +64,7 @@ export function SiteFooter() {
             <p className="text-xs leading-relaxed">
               End-to-end encrypted APIs for modern web apps. Powered by post-quantum cryptography.
             </p>
+            <FeedbackMetrics />
           </div>
           <div className="flex flex-col gap-2">
             <span className="font-semibold text-foreground">Product</span>
