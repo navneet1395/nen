@@ -57,23 +57,29 @@ export function PayloadDemo() {
       {/* premium segmented control toggle */}
       <div className="flex items-center gap-1 p-1.5 bg-muted/50 border-b border-border relative">
         <button
+          type="button"
           onClick={() => setSecure(false)}
+          onTouchEnd={(e) => { e.preventDefault(); setSecure(false); }}
           className={`cursor-pointer flex-1 relative z-10 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
             !secure ? "text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
+          style={{ touchAction: 'manipulation' }}
         >
-          {!secure && <div className="absolute inset-0 bg-background rounded-lg shadow-sm -z-10" />}
+          {!secure && <div className="absolute inset-0 bg-background rounded-lg shadow-sm -z-10 pointer-events-none" />}
           <EyeOff className="w-4 h-4" /> Standard <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">fetch()</code>
         </button>
         <button
+          type="button"
           onClick={() => setSecure(true)}
+          onTouchEnd={(e) => { e.preventDefault(); setSecure(true); }}
           className={`cursor-pointer flex-1 relative z-10 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
             secure ? "text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
+          style={{ touchAction: 'manipulation' }}
         >
-          {secure && <div className="absolute inset-0 bg-primary rounded-lg shadow-md -z-10" />}
+          {secure && <div className="absolute inset-0 bg-primary rounded-lg shadow-md -z-10 pointer-events-none" />}
           {!secure && (
-            <span className="absolute -top-1 right-0 flex h-3 w-3">
+            <span className="absolute -top-1 right-0 flex h-3 w-3 pointer-events-none">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
             </span>

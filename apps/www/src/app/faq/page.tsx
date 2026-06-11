@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "FAQ | Nen",
     description:
       "Honest answers to the hardest questions about Nen: what it protects, why not Cloudflare, compliance, performance, and more.",
-    url: "https://nen.dev/faq",
+    url: "https://withnen.com/faq",
   },
 };
 
@@ -296,8 +296,8 @@ const SECTIONS: FAQSection[] = [
           <>
             <p>
               Session state per request is a single key-value lookup in your store — the same
-              cost as reading a JWT signing key or session cookie from Redis. If you're running
-              10,000 RPS, you're already doing this.
+              cost as reading a JWT signing key or session cookie from Redis. If you&apos;re running
+              10,000 RPS, you&apos;re already doing this.
             </p>
             <p className="mt-3">
               The nonce cache (for replay prevention) is the only unbounded structure, and it is

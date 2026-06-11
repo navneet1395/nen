@@ -11,6 +11,7 @@ export function ThemeToggle() {
 
   // Avoid hydration mismatch by waiting until mounted
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -34,6 +35,7 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       className="w-8 h-8 rounded-lg hover:bg-muted transition-colors relative flex items-center justify-center cursor-pointer"
+      style={{ touchAction: 'manipulation' }}
       aria-label="Toggle theme"
     >
       <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-500 pointer-events-none" />

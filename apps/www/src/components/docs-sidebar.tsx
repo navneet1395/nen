@@ -184,6 +184,7 @@ export function DocsSidebar() {
 
   // Keep active index bounded when results change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(0);
   }, [searchResults]);
 
@@ -219,7 +220,7 @@ export function DocsSidebar() {
             
             {searchResults.length === 0 ? (
               <div className="p-4 text-center text-xs text-muted-foreground">
-                No docs match "{searchQuery}"
+                No docs match &quot;{searchQuery}&quot;
               </div>
             ) : (
               <div className="p-1.5 space-y-1">

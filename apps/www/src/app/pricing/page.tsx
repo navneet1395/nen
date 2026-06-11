@@ -58,7 +58,7 @@ const TIERS: Tier[] = [
     price: "Custom",
     tagline: "The proof your auditor signs off on.",
     cta: "Talk to us",
-    href: "mailto:sales@nen.dev",
+    href: "mailto:sales@withnen.com",
     features: [
       "Everything in Cloud",
       "Exportable compliance evidence (ML-KEM-768 per endpoint, timestamped)",

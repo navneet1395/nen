@@ -5,7 +5,7 @@ function sleep(ms: number) {
 }
 
 // Example: An encrypted streaming route returning server sent events
-export const POST = withNenStream(async (req, body) => {
+export const POST = withNenStream(async () => {
   // Return a ReadableStream that generates SSE chunks
   const stream = new ReadableStream({
     async start(controller) {

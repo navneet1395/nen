@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { WebNenGuardian } from "./ui/web-nen-guardian";
 import {
   Card,
   CardContent,
@@ -13,7 +14,6 @@ import {
   Lock,
   Unlock,
   Zap,
-  ShieldCheck,
   Server,
   MonitorSmartphone,
   TerminalSquare,
@@ -29,19 +29,10 @@ export function InteractiveDemo() {
     '{"balance": 1500.00, "user_id": "usr_99X"}',
   );
   const [kemLevel, setKemLevel] = useState("768");
-  const [symmetricAlgo, setSymmetricAlgo] = useState("ChaCha20-Poly1305");
+  const [symmetricAlgo] = useState("ChaCha20-Poly1305");
   const demoRef = useRef<HTMLDivElement>(null);
 
-  const steps = [
-    { label: "Initialize", desc: "Client generates ML-KEM & ML-DSA keypairs" },
-    { label: "Handshake", desc: "Transmit PK & Signature to Server" },
-    { label: "Encapsulate", desc: "Server creates Shared Secret & ciphertext" },
-    {
-      label: "Derive Keys",
-      desc: "Derive AEAD Session Keys on Client & Server",
-    },
-    { label: "Secure Send", desc: "Encrypt and send custom payload" },
-  ];
+
 
   const resetDemo = () => {
     setStep(0);
@@ -146,6 +137,7 @@ export function InteractiveDemo() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLogs([
       `[SYSTEM] Configured: ML-KEM-${kemLevel} + ${symmetricAlgo}. Ready to initiate handshake.`,
     ]);
@@ -158,14 +150,17 @@ export function InteractiveDemo() {
     >
       <CardHeader className="border-b bg-muted/10 pb-4">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-              <Zap className="h-5 w-5 text-primary" />
-              Cryptographic Dashboard
-            </CardTitle>
-            <CardDescription className="mt-1.5">
-              Interactive Post-Quantum Key Exchange & Payload Encryption
-            </CardDescription>
+          <div className="flex items-center gap-4">
+            <WebNenGuardian pixel={4} state={isPlaying ? 'alert' : 'idle'} aura={false} />
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+                <Zap className="h-5 w-5 text-primary" />
+                Cryptographic Dashboard
+              </CardTitle>
+              <CardDescription className="mt-1.5">
+                Interactive Post-Quantum Key Exchange & Payload Encryption
+              </CardDescription>
+            </div>
           </div>
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
@@ -220,6 +215,7 @@ export function InteractiveDemo() {
             disabled={isPlaying}
             size="sm"
             className={`flex-1 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md ${!isPlaying && step === 0 ? "animate-pulse ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+            style={{ touchAction: 'manipulation' }}
           >
             <Play className="w-3.5 h-3.5" /> Start
           </Button>
@@ -229,6 +225,7 @@ export function InteractiveDemo() {
             disabled={isPlaying}
             size="sm"
             className="px-2 text-xs"
+            style={{ touchAction: 'manipulation' }}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </Button>

@@ -153,6 +153,23 @@
   body {
     @apply bg-background text-foreground font-sans relative min-h-screen overflow-x-hidden;
   }
+
+  /* Ensure all interactive elements respond to touch on mobile */
+  button,
+  [role="button"],
+  a,
+  select,
+  input,
+  textarea,
+  [tabindex]:not([tabindex="-1"]) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
   
   /* Grainy Mesh Background applied to body before pseudo element */
   body::before {

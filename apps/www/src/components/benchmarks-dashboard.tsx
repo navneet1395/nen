@@ -7,8 +7,6 @@ import {
   Clock,
   Users,
   ArrowRightLeft,
-  Shield,
-  Zap,
   RefreshCw,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -93,6 +91,7 @@ function StatCard({
 }
 
 function ThroughputChart() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const levels = data.loadtest.levels.map((l: any) => ({
     concurrency: l.concurrency,
     throughput: l.throughputReqPerSec,
@@ -130,6 +129,7 @@ function ThroughputChart() {
             contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
             itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
             labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             formatter={(value: any, name: any) => [value, name === 'throughput' ? 'Requests / sec' : 'p99 Latency (ms)']}
             labelFormatter={(label) => `Concurrency: ${label}`}
           />
@@ -177,6 +177,7 @@ function OverheadTable() {
           </tr>
         </thead>
         <tbody>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {scaling.map((s: any, i: number) => (
             <tr
               key={i}
@@ -220,6 +221,7 @@ function OverheadTable() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ScenarioCard({ icon: Icon, title, metric, unit, desc, delay }: any) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -358,7 +360,7 @@ export function BenchmarksDashboard() {
                 Real-World Scenarios
               </h3>
               <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                We don't just benchmark simple loops. We evaluate Nen against demanding application patterns like session churn, connection bursts, and extended lifetime sessions to ensure stability.
+                We don&apos;t just benchmark simple loops. We evaluate Nen against demanding application patterns like session churn, connection bursts, and extended lifetime sessions to ensure stability.
               </p>
             </div>
 

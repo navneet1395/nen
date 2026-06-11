@@ -12,6 +12,22 @@ TLS replacement, and does not do homomorphic compute.
 npm-workspaces monorepo. Source of truth for behavior lives in `PROTOCOL.md`, `THREAT_MODEL.md`, and
 `ERROR_CODES.md` at the repo root — read those before changing crypto, wire format, or error handling.
 
+## Workflow rules (read first)
+
+- **Explore before you build.** Read the relevant files (and `PROTOCOL.md`/`ERROR_CODES.md`) before
+  writing code. Never re-ask for context the user already gave — if a path or goal was stated, use it.
+- **After any rename/refactor, rebuild generated artifacts before deploying.** The Wasm `pkg/` and the
+  package `dist/` are build outputs that go stale. Run `packages/core-crypto/build.sh` + the per-workspace
+  `tsup` builds, then **grep for stale identifiers** before any deploy/publish:
+  `grep -rIn -E 'isogeny|withIsogeny|pqcfetch|@isogeny' --exclude-dir=node_modules --exclude-dir=.git .`
+  (should return nothing). A Vercel deploy once failed for exactly this reason.
+- **Green tests gate every publish/deploy.** Run the full suite (`@withnen/{server,client,ai}`) to green
+  before considering a release done. Jest maps `^@withnen/core-crypto$` → `pkg/node` (Node target) because
+  it can't load the bundler-target ESM Wasm — keep that mapper and `NODE_OPTIONS=--localstorage-file=...`
+  intact when touching jest config (this is the Node-25/jest gotcha).
+- **One command does the release:** `scripts/release.sh` (or the `/release` skill) runs wasm → build →
+  test → stale-name guard → publish → commit → push → deploy. Prefer it over ad-hoc steps.
+
 ## Build & test commands
 
 There is **no** root build/test script; everything runs per workspace.

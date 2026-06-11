@@ -106,7 +106,7 @@ export function ArchitectureVisualizer() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
          <div className="bg-background/40 backdrop-blur-sm border rounded-xl p-5 shadow-sm">
            <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2"><Lock className="w-4 h-4 text-primary"/> End-to-End</h4>
-           <p className="text-xs text-muted-foreground">Encryption starts at the user's device and doesn't decrypt until it hits your runtime.</p>
+           <p className="text-xs text-muted-foreground">Encryption starts at the user&apos;s device and doesn&apos;t decrypt until it hits your runtime.</p>
          </div>
          <div className="bg-background/40 backdrop-blur-sm border rounded-xl p-5 shadow-sm">
            <h4 className="font-semibold text-sm mb-2 text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-primary"/> Bypass Vulnerabilities</h4>

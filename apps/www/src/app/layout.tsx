@@ -4,10 +4,11 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { NenFeedbackWidget } from "@/components/nen-feedback-widget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
-const SITE_URL = "https://nen.dev";
+const SITE_URL = "https://withnen.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -93,6 +94,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <NenFeedbackWidget />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

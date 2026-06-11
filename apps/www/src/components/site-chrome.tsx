@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { MobileNav } from "@/components/mobile-nav";

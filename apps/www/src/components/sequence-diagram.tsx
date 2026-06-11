@@ -6,8 +6,6 @@ import {
   Server,
   Database,
   User,
-  ArrowRight,
-  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -70,12 +68,11 @@ export function SequenceDiagram({
 
         {/* Steps */}
         <div className="relative z-10 flex flex-col gap-6">
-          {steps.map((step, idx) => (
+          {steps.map((step) => (
             <StepRow
               key={step.id}
               step={step}
               participants={participants}
-              index={idx}
             />
           ))}
         </div>
@@ -87,11 +84,9 @@ export function SequenceDiagram({
 function StepRow({
   step,
   participants,
-  index,
 }: {
   step: Step;
   participants: Participant[];
-  index: number;
 }) {
   const fromIdx = participants.findIndex((p) => p.id === step.from);
   const toIdx = participants.findIndex((p) => p.id === step.to);
@@ -103,7 +98,6 @@ function StepRow({
 
   const isSelf = fromIdx === toIdx;
   const isRight = toIdx > fromIdx;
-  const isLeft = toIdx < fromIdx;
 
   const widthPct = Math.abs(toPct - fromPct);
   const leftPct = Math.min(fromPct, toPct);
@@ -117,7 +111,6 @@ function StepRow({
   };
   const colorClass = colorMap[step.color || "primary"];
   const lineClass = colorClass.split(" ")[0]; // just the border color
-  const textClass = colorClass.split(" ")[2]; // just the text color
 
   if (isSelf) {
     return (

@@ -22,6 +22,7 @@ import {
   Check,
 } from "lucide-react";
 import { SequenceDiagram } from "@/components/sequence-diagram";
+import { HeroAnalogies, MobileAnalogiesTicker } from "@/components/hero-analogies";
 import Link from "next/link";
 
 export const metadata = {
@@ -47,32 +48,43 @@ export default function Home() {
       <main className="flex-1 flex flex-col w-full overflow-x-hidden items-center max-w-6xl mx-auto">
         {/* ───────────────────────── Hero ───────────────────────── */}
         <section className="w-full py-20 md:py-28 flex flex-col items-center text-center px-4 relative overflow-hidden">
-          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-8 shadow-sm">
-            <Zap className="w-3.5 h-3.5 mr-1" /> Post-quantum key exchange
-            (ML-KEM-768, FIPS 203)
+          
+          <div className="relative w-full max-w-6xl flex flex-col items-center justify-center mx-auto">
+            <HeroAnalogies />
+            
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-8 shadow-sm relative ">
+              <Zap className="w-3.5 h-3.5 mr-1" /> Post-quantum key exchange
+              (ML-KEM-768, FIPS 203)
+            </div>
+
+            {/* Desktop H1 (static) */}
+            <h1 className="hidden md:block text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mb-6 leading-tight relative ">
+              Your API data is naked the{" "}
+              <span className="text-primary">moment TLS ends</span>
+            </h1>
+
+            {/* Mobile H1 (animated ticker) */}
+            <div className="block md:hidden w-full relative z-10">
+              <MobileAnalogiesTicker />
+            </div>
+
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed relative z-10">
+              HTTPS protects your data in transit — and does it perfectly. But the
+              instant TLS terminates, the JSON body lies in plaintext across your
+              logs, databases, CDN, proxies, and every third-party hop.{" "}
+              <strong className="text-foreground">
+                Nen keeps it encrypted the whole way.
+              </strong>{" "}
+              One line of code. Same TLS you already trust.
+            </p>
           </div>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mb-6 leading-tight">
-            Your API data is naked the{" "}
-            <span className="text-primary">moment TLS ends</span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed">
-            HTTPS protects your data in transit — and does it perfectly. But the
-            instant TLS terminates, the JSON body lies in plaintext across your
-            logs, databases, CDN, proxies, and every third-party hop.{" "}
-            <strong className="text-foreground">
-              Nen keeps it encrypted the whole way.
-            </strong>{" "}
-            One line of code. Same TLS you already trust.
-          </p>
 
           {/* The gut-punch: before/after on the same request */}
           <div className="w-full mb-10 z-10 relative">
             <PayloadDemo />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-8 relative z-10">
             <Link
               href="/docs/quickstart"
               className={buttonVariants({
@@ -96,7 +108,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="flex items-center justify-center h-12 px-6 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 font-mono text-sm shadow-xl">
+          <div className="flex items-center justify-center h-12 px-6 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 font-mono text-sm shadow-xl relative z-10">
             <span className="text-zinc-600 mr-2">$</span>
             <span className="text-blue-400 mr-1.5">npx</span>
             <span>create-nen-app</span>
@@ -323,7 +335,7 @@ export const POST = withNen(async (req, body) => {
         </section>
 
         {/* ─────────────── Under the hood: the dashboard (reflective) ─────────────── */}
-        <section className="w-full py-24 relative">
+        <section id="demo" className="w-full py-24 relative">
           <div className="  px-6">
             <div className="text-center mb-12">
               <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-muted text-muted-foreground mb-4">

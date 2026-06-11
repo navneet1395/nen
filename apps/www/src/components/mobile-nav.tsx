@@ -34,8 +34,17 @@ export function MobileNav() {
   return (
     <div className="md:hidden flex items-center">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+        type="button"
+        onClick={() => {
+          console.log("MobileNav toggle clicked, state changing to:", !isOpen);
+          setIsOpen(!isOpen);
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
+        className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer relative z-50 flex items-center justify-center"
+        style={{ touchAction: 'manipulation' }}
         aria-label="Toggle Menu"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -95,11 +104,15 @@ export function MobileNav() {
             >
               GitHub
             </a>
-            
+
             <div className="mt-2 pt-6 border-t border-border/60 flex flex-col gap-4">
               <Link
                 href="/docs/quickstart"
-                className={buttonVariants({ variant: "default", size: "lg", className: "w-full" })}
+                className={buttonVariants({
+                  variant: "default",
+                  size: "lg",
+                  className: "w-full",
+                })}
                 onClick={() => setIsOpen(false)}
               >
                 Get Started

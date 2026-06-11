@@ -86,6 +86,21 @@ npm test --workspace @withnen/client
 npm test --workspace @withnen/ai
 ok "All tests passed"
 
+# ── 3b. Stale-identifier guard ───────────────────────────────────────────────
+# A Vercel deploy once failed because old names lingered in the GENERATED build
+# outputs (dist/, pkg/) after a rename — while source was already clean. We grep
+# the build outputs specifically, so legit history mentions in source/docs don't
+# trip it.
+c "Checking build outputs for stale identifiers (isogeny / withIsogeny / pqcfetch)"
+stale_targets=( packages/*/dist pkg )
+if grep -rIn -E 'isogeny|withIsogeny|pqcfetch|@isogeny' "${stale_targets[@]}" \
+     >/tmp/nen-stale.txt 2>/dev/null; then
+  echo "  ⚠ stale references in build outputs (rebuild before releasing):"
+  cut -c1-100 /tmp/nen-stale.txt | sed 's/^/    /' | head -12
+  die "stale identifiers in dist/pkg — rebuild the affected package(s) and retry"
+fi
+ok "Build outputs clean"
+
 # ── 4. Publish to npm ────────────────────────────────────────────────────────
 if [[ "$SKIP_PUBLISH" == "0" ]]; then
   if [[ -n "${NPM_TOKEN:-}" ]]; then
