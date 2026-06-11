@@ -14,18 +14,18 @@ if (!globalThis.crypto) {
 /**
  * Regression tests for the authentication-downgrade bypass.
  *
- * Every session is issued an hmacKey at handshake, so the server must always
- * require a valid signature + in-window timestamp. An attacker holding a valid
- * session ID must NOT be able to skip HMAC auth (and the replay window) by
- * simply omitting the X-Nen-Signature / X-Nen-Timestamp headers.
+ * Every session has a derived macKey, so the server must always require a valid
+ * signature + in-window timestamp. An attacker holding a valid session ID must
+ * NOT be able to skip HMAC auth (and the replay window) by simply omitting the
+ * X-Nen-Signature / X-Nen-Timestamp headers.
  *
- * Under NEN-PROTOCOL-V2 this is enforced by `verifyRequest`, which runs for every
+ * Under NEN-PROTOCOL-V2+ this is enforced by `verifyRequest`, which runs for every
  * method — the per-request nonce travels in the X-Nen-Nonce header.
  */
 describe('Per-request authentication is mandatory (downgrade bypass)', () => {
   const sessionId = 'auth-sig-session';
-  const hmacKey = new Uint8Array(32).fill(7);
-  const sharedSecret = new Uint8Array(32).fill(1);
+  const macKey = new Uint8Array(32).fill(7);
+  const encKey = new Uint8Array(32).fill(1);
 
   // A per-request nonce (base64). verifyRequest never decrypts, so its value just
   // has to be a stable, unique-per-test string for the signature + replay checks.
@@ -35,7 +35,7 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
   const method = 'POST';
 
   beforeEach(() => {
-    storeSession(sessionId, sharedSecret, hmacKey);
+    storeSession(sessionId, encKey, macKey);
   });
 
   test('rejects a request with a valid session but no signature header', async () => {
@@ -62,7 +62,7 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
     const timestamp = String(Date.now() - 60_000); // 60s in the past
     const canonical = `${method}\n${path}\n${timestamp}\n${n}`;
     const signature = nenCrypto.nen_to_base64(
-      nenCrypto.nen_hmac_sign(hmacKey, new TextEncoder().encode(canonical))
+      nenCrypto.nen_hmac_sign(macKey, new TextEncoder().encode(canonical))
     );
 
     // ISO-3003 AUTH_TIMESTAMP_OUT_OF_WINDOW
@@ -86,11 +86,11 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
     const timestamp = String(Date.now());
     const canonical = `${method}\n${path}\n${timestamp}\n${nonce}`;
     const signature = nenCrypto.nen_to_base64(
-      nenCrypto.nen_hmac_sign(hmacKey, new TextEncoder().encode(canonical))
+      nenCrypto.nen_hmac_sign(macKey, new TextEncoder().encode(canonical))
     );
 
     const session = await verifyRequest(sessionId, nonce, { method, url, timestamp, signature });
-    expect(session.sharedSecret).toEqual(sharedSecret);
+    expect(session.encKey).toEqual(encKey);
   });
 
   test('legacy strict=false mode skips the signature requirement', async () => {
@@ -104,7 +104,7 @@ describe('Per-request authentication is mandatory (downgrade bypass)', () => {
         { method, url, timestamp: String(Date.now()), signature: '' },
         false
       )
-    ).resolves.toMatchObject({ hmacKey });
+    ).resolves.toMatchObject({ macKey });
   });
 
   test('withNen returns 401 for a valid session with no signature header', async () => {
