@@ -67,6 +67,8 @@ ISO - 3   001
 | ISO-3003 | 401 | `AUTH_TIMESTAMP_OUT_OF_WINDOW` | `X-Nen-Timestamp` is >30s from server time. Clock skew or a replayed/delayed request. |
 | ISO-3004 | 401 | `AUTH_IDENTITY_SIGNATURE_INVALID` | Optional ML-DSA identity signature over the ephemeral key didn't verify. Wrong identity key or a MITM at handshake. |
 | ISO-3005 | 401 | `AUTH_NONCE_MISSING` | No `X-Nen-Nonce` header. Under NEN-PROTOCOL-V2 every request — including bodyless GET/HEAD/DELETE — must carry a per-request nonce in `X-Nen-Nonce` (it feeds the HMAC canonical string and replay tracking). Not an Nen client, an out-of-date v0.2 client, or a proxy stripped the header. |
+| ISO-3006 | 401 | `AUTH_SERVER_IDENTITY_INVALID` | NEN-PROTOCOL-V3 `identityMode:'pqc'` — the server's ML-DSA signature over the handshake transcript did not verify against the pinned server identity key. Possible MITM, or the wrong server identity public key is pinned on the client. |
+| ISO-3007 | 401 | `AUTH_TRANSCRIPT_MISMATCH` | NEN-PROTOCOL-V3 channel binding — the transcript hash `H(client_pk_kem ‖ client_pk_x ‖ server_nonce ‖ sid)` did not match (substituted server nonce, swapped public key, a `sid` bound to a different transcript, or a client/server canonicalization mismatch). |
 
 ### 4xxx — Cryptography
 

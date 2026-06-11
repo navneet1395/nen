@@ -93,8 +93,14 @@ core-crypto (Rust)  →  pkg/{node,bundler} (Wasm)  →  @withnen/{client,server
   `X-Nen-Nonce` value — **not** the ciphertext (the AEAD tag catches body tampering). A missing
   `X-Nen-Nonce` is `ISO-3005`. `withNen(handler, { strict: false })` is legacy-only. The server splits
   this into `verifyRequest()` (auth, all methods) + `decryptBody()` (AEAD, when a body is present).
-- The ML-KEM shared secret is used **directly** as the ChaCha20 key; the HMAC key is a *separate*
-  random 32-byte key issued at handshake. **There is no HKDF** — don't add docs/code claiming one.
+- The ML-KEM shared secret is **never** used directly and the HMAC key is **never**
+  transmitted. **NEN-PROTOCOL-V3 (v0.4.0)** runs an HKDF-SHA256 key schedule: both
+  the ChaCha20 key (`k_enc = HKDF(ss, "nen/v3 enc")`) and the HMAC key
+  (`k_mac = HKDF(ss, "nen/v3 mac")`) are derived locally on each side from the
+  (hybrid) shared secret. Nothing secret crosses the wire — the handshake response
+  is `{ sid, ct[, pk_x_server] }` with **no** `hmac` field. The session store holds
+  the two derived keys (`{ encKey, macKey }`), not a shared secret + random MAC key.
+  Hybrid mode (default) combines X25519 + ML-KEM-768; see KEY_SCHEDULE.md.
 - Replay defense: 30s timestamp window + per-session nonce tracking in the store.
 
 ### Error-code system (keep three catalogs in lockstep)

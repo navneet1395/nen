@@ -1,6 +1,6 @@
 {
   "name": "@withnen/ai",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "MIT licensed Secure AI SDK \u2014 E2EE prompts and streamed tokens between browser and your backend. Wraps OpenAI and Anthropic.",
   "exports": {
     "./client": {
@@ -24,8 +24,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@withnen/client": "^0.3.1",
-    "@withnen/server": "^0.3.1"
+    "@withnen/client": "^0.4.0",
+    "@withnen/server": "^0.4.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
