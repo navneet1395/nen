@@ -4,9 +4,14 @@ pub mod utils;
 pub mod encoding;
 pub mod hmac_auth;
 pub mod sig;
+pub mod kdf;
+pub mod x25519;
+pub mod transcript;
 
 #[cfg(test)]
 mod test_api;
+#[cfg(test)]
+mod kat;
 
 use wasm_bindgen::prelude::*;
 
