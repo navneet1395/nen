@@ -6,6 +6,18 @@ export type { NenErrorSpec, NenErrorName } from './errors';
 
 export interface NenClientOptions {
   identityMode?: 'none' | 'pqc';
+  /**
+   * V3 key-exchange mode. 'hybrid' (default) runs X25519 alongside ML-KEM-768
+   * so the session is safe if either is broken; 'pqc-only' uses ML-KEM alone.
+   */
+  securityMode?: 'hybrid' | 'pqc-only';
+  /**
+   * For identityMode:'pqc' — the base64 ML-DSA public key the client pins for
+   * the server, used to verify the signed handshake transcript (TLS-independent
+   * server authentication). If omitted, the server signature is verified but
+   * trust-on-first-use applies (no pin).
+   */
+  serverIdentityKey?: string;
 }
 
 /** Throw a coded NenError, logging the diagnosis first. */
@@ -16,8 +28,8 @@ function fail(name: import('./errors').NenErrorName, detail?: string): never {
 }
 
 export class NenClient {
-  private sharedSecret: Uint8Array | null = null;
-  private hmacKey: Uint8Array | null = null;
+  private encKey: Uint8Array | null = null;
+  private macKey: Uint8Array | null = null;
   sessionId: string | null = null;
   private serverUrl: string;
   private options: NenClientOptions;
@@ -26,36 +38,40 @@ export class NenClient {
 
   constructor(serverUrl: string, options: NenClientOptions = {}) {
     this.serverUrl = serverUrl;
-    this.options = { identityMode: 'none', ...options };
+    this.options = { identityMode: 'none', securityMode: 'hybrid', ...options };
   }
 
   /**
-   * Performs the ML-KEM handshake with the server.
+   * Performs the NEN-PROTOCOL-V3 handshake with the server.
+   *
+   * Nothing secret is received from the wire: the client derives encKey/macKey
+   * locally via HKDF from the (hybrid) shared secret. In hybrid mode it also
+   * runs X25519; in identityMode:'pqc' it verifies the server's ML-DSA signature
+   * over the handshake transcript before trusting the session.
    */
   async handshake(): Promise<void> {
+    const hybrid = this.options.securityMode !== 'pqc-only';
+
     // Generate keypair for ML-KEM
     const keypair = nenCrypto.nen_generate_keypair();
     const publicKey = keypair.public_key;
     const secretKey = keypair.secret_key;
 
     const payload: any = {
-      pk: nenCrypto.nen_to_base64(publicKey),
+      pk_kem: nenCrypto.nen_to_base64(publicKey),
+      securityMode: hybrid ? 'hybrid' : 'pqc-only',
     };
 
-    // If PQC identity mode is enabled, attach signature
-    if (this.options.identityMode === 'pqc') {
-      if (!this.signingKeypair) {
-        this.signingKeypair = nenCrypto.nen_generate_signing_keypair();
-      }
-      
-      const sigPk = this.signingKeypair.public_key;
-      const sigOfPk = nenCrypto.nen_sign(this.signingKeypair.secret_key, publicKey);
-      
-      payload.sigPk = nenCrypto.nen_to_base64(sigPk);
-      payload.sigOfPk = nenCrypto.nen_to_base64(sigOfPk);
+    // Hybrid: generate an ephemeral X25519 keypair too.
+    let xKeypair: any = null;
+    let clientPkX = new Uint8Array(0);
+    if (hybrid) {
+      xKeypair = nenCrypto.nen_x25519_keypair();
+      clientPkX = xKeypair.public_key;
+      payload.pk_x = nenCrypto.nen_to_base64(clientPkX);
     }
 
-    // Send public key (and optional signature) to server
+    // Send public key(s) to server
     let response: Response;
     try {
       response = await fetch(`${this.serverUrl}/api/nen/handshake`, {
@@ -72,19 +88,60 @@ export class NenClient {
     }
 
     const data = await response.json();
-    this.sessionId = data.sid;
-
-    if (data.hmac) {
-      this.hmacKey = nenCrypto.nen_from_base64(data.hmac);
+    if (!data.sid || !data.ct) {
+      fail('HANDSHAKE_BAD_RESPONSE', 'response missing sid/ct');
     }
+    this.sessionId = data.sid;
 
     const ciphertext = nenCrypto.nen_from_base64(data.ct);
 
-    // Decapsulate the shared secret
-    this.sharedSecret = nenCrypto.nen_decapsulate(ciphertext, secretKey);
-
-    // SECURITY: Immediately wipe the secret key from memory
+    // Decapsulate the ML-KEM shared secret.
+    const mlkemSs = nenCrypto.nen_decapsulate(ciphertext, secretKey);
+    // SECURITY: Immediately wipe the KEM secret key from memory.
     secretKey.fill(0);
+
+    // Combine with X25519 in hybrid mode.
+    let combinedSs: Uint8Array;
+    if (hybrid) {
+      if (!data.pk_x_server) {
+        fail('HANDSHAKE_BAD_RESPONSE', 'hybrid handshake missing pk_x_server');
+      }
+      const serverPkX = nenCrypto.nen_from_base64(data.pk_x_server);
+      const x25519Ss = nenCrypto.nen_x25519_dh(xKeypair.secret_key, serverPkX);
+      combinedSs = nenCrypto.nen_hybrid_combine(x25519Ss, mlkemSs);
+      xKeypair.secret_key.fill(0);
+    } else {
+      combinedSs = mlkemSs;
+    }
+
+    // Transcript-bound server authentication (identityMode:'pqc').
+    if (this.options.identityMode === 'pqc') {
+      if (!data.server_sig || !data.server_nonce || !data.server_id_pk) {
+        fail('AUTH_SERVER_IDENTITY_INVALID', 'server did not provide a signed transcript');
+      }
+      const serverNonce = nenCrypto.nen_from_base64(data.server_nonce);
+      const sidBytes = new TextEncoder().encode(this.sessionId as string);
+      const transcript = nenCrypto.nen_transcript_hash(publicKey, clientPkX, serverNonce, sidBytes);
+
+      // Pin the server identity key if one was supplied.
+      const serverIdPk = nenCrypto.nen_from_base64(data.server_id_pk);
+      if (this.options.serverIdentityKey) {
+        const pinned = nenCrypto.nen_from_base64(this.options.serverIdentityKey);
+        if (pinned.length !== serverIdPk.length || !pinned.every((b, i) => b === serverIdPk[i])) {
+          fail('AUTH_SERVER_IDENTITY_INVALID', 'server identity key does not match the pinned key');
+        }
+      }
+
+      const sig = nenCrypto.nen_from_base64(data.server_sig);
+      if (!nenCrypto.nen_verify_signature(serverIdPk, transcript, sig)) {
+        // Distinguish a transcript/channel-binding mismatch from a bad signature.
+        fail('AUTH_TRANSCRIPT_MISMATCH', 'server transcript signature did not verify');
+      }
+    }
+
+    // Derive the two session keys locally — nothing secret came off the wire.
+    this.encKey = nenCrypto.nen_derive_enc_key(combinedSs);
+    this.macKey = nenCrypto.nen_derive_mac_key(combinedSs);
   }
 
   /**
@@ -92,7 +149,7 @@ export class NenClient {
    * Encrypts the request body and decrypts the response.
    */
   async nenFetch(endpoint: string, options: RequestInit = {}): Promise<any> {
-    if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
+    if (!this.encKey || !this.sessionId || !this.macKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
 
@@ -108,7 +165,7 @@ export class NenClient {
     let requestBody: string | undefined = undefined;
     if (options.body) {
       const plaintext = new TextEncoder().encode(options.body as string);
-      const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
+      const ciphertext = nenCrypto.nen_encrypt(this.encKey, nonce, plaintext);
       requestBody = JSON.stringify({ ct: nenCrypto.nen_to_base64(ciphertext) });
     }
 
@@ -117,7 +174,7 @@ export class NenClient {
     const path = canonicalPath(endpoint);
     const canonical = `${method}\n${path}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
-    const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
+    const signatureBytes = nenCrypto.nen_hmac_sign(this.macKey, canonicalBytes);
     const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
@@ -161,7 +218,7 @@ export class NenClient {
 
         let decrypted: Uint8Array;
         try {
-          decrypted = nenCrypto.nen_decrypt(this.sharedSecret, nonce, ct);
+          decrypted = nenCrypto.nen_decrypt(this.encKey, nonce, ct);
         } catch (e) {
           fail('CRYPTO_DECRYPT_FAILED', e instanceof Error ? e.message : String(e));
         }
@@ -179,7 +236,7 @@ export class NenClient {
    * Encrypts the request body and returns an AsyncGenerator that yields decrypted chunks.
    */
   async *nenStream(endpoint: string, options: RequestInit = {}): AsyncGenerator<string> {
-    if (!this.sharedSecret || !this.sessionId || !this.hmacKey) {
+    if (!this.encKey || !this.sessionId || !this.macKey) {
       fail('SESSION_NOT_INITIALIZED');
     }
 
@@ -194,14 +251,14 @@ export class NenClient {
     let requestBody: string | undefined = undefined;
     if (options.body) {
       const plaintext = new TextEncoder().encode(options.body as string);
-      const ciphertext = nenCrypto.nen_encrypt(this.sharedSecret, nonce, plaintext);
+      const ciphertext = nenCrypto.nen_encrypt(this.encKey, nonce, plaintext);
       requestBody = JSON.stringify({ ct: nenCrypto.nen_to_base64(ciphertext) });
     }
 
     const path = canonicalPath(endpoint);
     const canonical = `${method}\n${path}\n${timestamp}\n${nonceBase64}`;
     const canonicalBytes = new TextEncoder().encode(canonical);
-    const signatureBytes = nenCrypto.nen_hmac_sign(this.hmacKey, canonicalBytes);
+    const signatureBytes = nenCrypto.nen_hmac_sign(this.macKey, canonicalBytes);
     const signatureBase64 = nenCrypto.nen_to_base64(signatureBytes);
 
     const fetchOptions: RequestInit = {
@@ -266,7 +323,7 @@ export class NenClient {
             const ciphertext = nenCrypto.nen_from_base64(base64Ct);
             const nonce = xorNonce(baseNonce, chunkIndex);
             
-            const decrypted = nenCrypto.nen_decrypt(this.sharedSecret, nonce, ciphertext);
+            const decrypted = nenCrypto.nen_decrypt(this.encKey, nonce, ciphertext);
             const decryptedStr = new TextDecoder().decode(decrypted);
 
             if (decryptedStr === '__FIN__') {
@@ -297,7 +354,8 @@ export class NenClient {
       console.warn('Failed to cleanly terminate Nen session on server');
     }
     this.sessionId = null;
-    this.sharedSecret = null;
+    this.encKey = null;
+    this.macKey = null;
   }
 
   /**
