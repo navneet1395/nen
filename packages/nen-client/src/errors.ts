@@ -54,6 +54,20 @@ export const NEN_ERRORS = {
     hint: 'ChaCha20-Poly1305 AEAD tag verification failed on the response. Tampered/truncated ciphertext or a desynced shared secret (try rotate()).',
   },
 
+  // 3xxx — Authentication (V3 server-identity / transcript binding)
+  AUTH_SERVER_IDENTITY_INVALID: {
+    code: 'ISO-3006',
+    status: 401,
+    message: 'Server identity verification failed.',
+    hint: 'identityMode:\'pqc\' — the server\'s ML-DSA signature over the handshake transcript did not verify against the pinned server identity key. Possible MITM, or the wrong server identity public key is pinned on the client.',
+  },
+  AUTH_TRANSCRIPT_MISMATCH: {
+    code: 'ISO-3007',
+    status: 401,
+    message: 'Handshake transcript did not match.',
+    hint: 'V3 channel binding — the transcript hash the client recomputed does not match what the server signed (substituted server nonce/pk, or canonicalization mismatch).',
+  },
+
   // 7xxx — Streaming
   STREAM_MISSING_NONCE_HEADER: {
     code: 'ISO-7001',
