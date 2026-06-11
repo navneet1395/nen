@@ -3,10 +3,16 @@
  * The default implementation uses an in-memory Map with globalThis binding
  * to survive Next.js HMR. Users can implement this interface to plug in
  * Redis, Cloudflare KV, Upstash, or any other backend.
+ *
+ * NEN-PROTOCOL-V3: the store holds the two DERIVED keys — `encKey` (ChaCha20)
+ * and `macKey` (HMAC) — both produced locally via HKDF from the ML-KEM shared
+ * secret at handshake. Neither key is ever transmitted (see PROTOCOL.md §3,
+ * KEY_SCHEDULE.md). This replaces the V2 shape `{ sharedSecret, hmacKey }`
+ * where the MAC key was a random value shipped in plaintext.
  */
 export interface SessionStore {
-  get(sessionId: string): { sharedSecret: Uint8Array; hmacKey: Uint8Array } | null | Promise<{ sharedSecret: Uint8Array; hmacKey: Uint8Array } | null>;
-  set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array, ttlMs?: number): void | Promise<void>;
+  get(sessionId: string): { encKey: Uint8Array; macKey: Uint8Array } | null | Promise<{ encKey: Uint8Array; macKey: Uint8Array } | null>;
+  set(sessionId: string, encKey: Uint8Array, macKey: Uint8Array, ttlMs?: number): void | Promise<void>;
   delete(sessionId: string): boolean | Promise<boolean>;
   exists(sessionId: string): boolean | Promise<boolean>;
   hasNonce?(sessionId: string, nonce: string): boolean | Promise<boolean>;
@@ -18,8 +24,8 @@ export interface SessionStore {
 // ---------------------------------------------------------------------------
 
 interface SessionEntry {
-  sharedSecret: Uint8Array;
-  hmacKey: Uint8Array;
+  encKey: Uint8Array;
+  macKey: Uint8Array;
   createdAt: number;
   usedNonces: Set<string>;
 }
@@ -43,23 +49,23 @@ export class InMemorySessionStore implements SessionStore {
     this.expiryMs = expiryMs;
   }
 
-  set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): void {
+  set(sessionId: string, encKey: Uint8Array, macKey: Uint8Array): void {
     sessionStore.set(sessionId, {
-      sharedSecret,
-      hmacKey,
+      encKey,
+      macKey,
       createdAt: Date.now(),
       usedNonces: new Set(),
     });
   }
 
-  get(sessionId: string): { sharedSecret: Uint8Array; hmacKey: Uint8Array } | null {
+  get(sessionId: string): { encKey: Uint8Array; macKey: Uint8Array } | null {
     const session = sessionStore.get(sessionId);
     if (!session) return null;
     if (Date.now() - session.createdAt > this.expiryMs) {
       sessionStore.delete(sessionId);
       return null;
     }
-    return { sharedSecret: session.sharedSecret, hmacKey: session.hmacKey };
+    return { encKey: session.encKey, macKey: session.macKey };
   }
 
   delete(sessionId: string): boolean {
@@ -110,8 +116,8 @@ export function getSessionStore(): SessionStore {
 // Convenience helpers (delegate to active store)
 // ---------------------------------------------------------------------------
 
-export function storeSession(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array) {
-  return _activeStore.set(sessionId, sharedSecret, hmacKey);
+export function storeSession(sessionId: string, encKey: Uint8Array, macKey: Uint8Array) {
+  return _activeStore.set(sessionId, encKey, macKey);
 }
 
 export function getSession(sessionId: string) {
