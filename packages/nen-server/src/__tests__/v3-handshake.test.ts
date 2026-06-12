@@ -42,7 +42,9 @@ describe('NEN-PROTOCOL-V3 handshake', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
 
-    expect(Object.keys(json).sort()).toEqual(['ct', 'pk_x_server', 'sid'].sort());
+    // `ticket` (T4) is an AEAD-sealed resumption ticket — opaque to the client,
+    // not key material. The crucial invariant is that no raw key ever appears.
+    expect(Object.keys(json).sort()).toEqual(['ct', 'pk_x_server', 'sid', 'ticket'].sort());
     // The dropped V2 field must never reappear.
     expect(json.hmac).toBeUndefined();
     expect(json.encKey).toBeUndefined();

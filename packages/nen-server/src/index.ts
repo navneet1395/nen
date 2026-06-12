@@ -9,6 +9,7 @@ export {
   encryptResponse,
   encryptPayload,
   setServerIdentity,
+  setTicketKey,
   issueAttestation,
   verifyAttestation
 } from './middleware';

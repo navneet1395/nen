@@ -1,6 +1,9 @@
 import * as nenCrypto from '@withnen/core-crypto';
 import { storeSession, getSession, deleteSession, sessionExists, getSessionStore } from './store';
 import { NenError } from './errors';
+import { deriveResumptionPsk, deriveResumeSs, sealTicket, openTicket } from './resumption';
+
+export { setTicketKey } from './resumption';
 
 /**
  * Optional server identity (NEN-PROTOCOL-V3, T3).
@@ -32,6 +35,11 @@ export type SecurityMode = 'hybrid' | 'pqc-only';
 export async function handleHandshake(req: Request): Promise<Response> {
   try {
     const body = await req.json();
+
+    // Resumption (T4): a ticket short-circuits the full ML-KEM handshake.
+    if (body.resume) {
+      return handleResume(body);
+    }
 
     // Wire format is base64-only.
     let pkBytes: Uint8Array;
@@ -79,6 +87,9 @@ export async function handleHandshake(req: Request): Promise<Response> {
     const response: Record<string, string> = {
       sid: sessionId,
       ct: nenCrypto.nen_to_base64(encap.ciphertext),
+      // Resumption ticket (T4): seals the psk so a reconnect can skip the KEM.
+      // The client also derives the psk locally; nothing secret is on the wire.
+      ticket: sealTicket(deriveResumptionPsk(combinedSs)),
     };
     if (securityMode === 'hybrid') {
       response.pk_x_server = nenCrypto.nen_to_base64(serverPkX);
@@ -103,6 +114,40 @@ export async function handleHandshake(req: Request): Promise<Response> {
   } catch (err: any) {
     return NenError.from(err instanceof NenError ? err : new NenError('HANDSHAKE_FAILED', err?.message)).toResponse();
   }
+}
+
+/**
+ * Resume a session from a ticket (NEN-PROTOCOL-V3, T4). Opens the sealed ticket
+ * to recover the psk, mixes fresh client+server nonces into a new per-resume
+ * secret, derives a brand-new key pair, and issues a fresh ticket. No ML-KEM, no
+ * key material on the wire. An invalid/expired ticket returns 409 so the client
+ * falls back to a full handshake.
+ */
+async function handleResume(body: any): Promise<Response> {
+  const psk = body.resume ? openTicket(body.resume) : null;
+  if (!psk || !body.rn) {
+    return new Response(JSON.stringify({ resumed: false }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const clientRn = nenCrypto.nen_from_base64(body.rn);
+  const serverRn = crypto.getRandomValues(new Uint8Array(32));
+  const ss2 = deriveResumeSs(psk, clientRn, serverRn);
+  const encKey = nenCrypto.nen_derive_enc_key(ss2);
+  const macKey = nenCrypto.nen_derive_mac_key(ss2);
+  const sessionId = crypto.randomUUID();
+  storeSession(sessionId, encKey, macKey);
+
+  return new Response(
+    JSON.stringify({
+      sid: sessionId,
+      srn: nenCrypto.nen_to_base64(serverRn),
+      ticket: sealTicket(psk), // fresh ticket (re-seals the same psk, new expiry)
+      resumed: true,
+    }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  );
 }
 
 /**

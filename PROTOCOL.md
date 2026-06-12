@@ -270,6 +270,16 @@ path stays small and fast.
   advances identically — no KEM round trip and **no key material on the wire**.
   This gives forward secrecy *within* a session: a compromised key epoch cannot
   read a later epoch's requests. A failed/desynced rekey falls back to `rotate()`.
+- **Resumption (V3, T4):** a reconnect can skip the ML-KEM handshake. At handshake
+  both sides derive `psk = HKDF(ss, "nen/v3 resume")` (never transmitted); the
+  server also returns an opaque, AEAD-sealed **ticket** containing `psk`. To
+  resume, the client `POST /api/nen/handshake` with `{ resume: ticket, rn }`; the
+  server opens the ticket and both mix fresh nonces into
+  `ss' = HKDF(psk || client_rn || server_rn, "nen/v3 resume-ss")` → brand-new keys.
+  An expired/invalid ticket → `409` and the client falls back to a full handshake.
+  *Trade-off:* resumption from a long-lived `psk` weakens forward secrecy, bounded
+  by a short ticket TTL (10 min default) + per-resume nonces. Multi-instance: share
+  the ticket key via `setTicketKey` so any node can open another's ticket.
 - **Termination:** `terminate()` deletes the server session (forward secrecy) and
   clears client state.
 

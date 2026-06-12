@@ -35,6 +35,9 @@ export class NenClient {
   private options: NenClientOptions;
   private _rotationInProgress = false;
   private signingKeypair: any = null; // Holds the ML-DSA keypair if identityMode is 'pqc'
+  // Resumption (T4): the locally-derived psk + the server's opaque ticket.
+  private psk: Uint8Array | null = null;
+  private ticket: string | null = null;
 
   constructor(serverUrl: string, options: NenClientOptions = {}) {
     this.serverUrl = serverUrl;
@@ -142,6 +145,53 @@ export class NenClient {
     // Derive the two session keys locally — nothing secret came off the wire.
     this.encKey = nenCrypto.nen_derive_enc_key(combinedSs);
     this.macKey = nenCrypto.nen_derive_mac_key(combinedSs);
+
+    // Resumption (T4): derive the psk locally and keep the server's opaque ticket
+    // so a later reconnect can skip the ML-KEM handshake.
+    this.psk = nenCrypto.nen_hkdf(combinedSs, 'nen/v3 resume', 32);
+    this.ticket = typeof data.ticket === 'string' ? data.ticket : null;
+  }
+
+  /**
+   * Resume a prior session from the stored ticket (NEN-PROTOCOL-V3, T4) — skips
+   * the ML-KEM handshake. Returns `true` on success; `false` if there's nothing
+   * to resume or the server declined (expired/invalid ticket), in which case the
+   * caller should fall back to `handshake()`. No key material crosses the wire:
+   * both sides re-derive fresh keys from the psk + new client/server nonces.
+   */
+  async resume(): Promise<boolean> {
+    if (!this.psk || !this.ticket) return false;
+    const clientRn = crypto.getRandomValues(new Uint8Array(32));
+    let response: Response;
+    try {
+      response = await fetch(`${this.serverUrl}/api/nen/handshake`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resume: this.ticket,
+          rn: nenCrypto.nen_to_base64(clientRn),
+          securityMode: this.options.securityMode,
+        }),
+      });
+    } catch {
+      return false;
+    }
+    if (!response.ok) return false; // 409 → ticket expired/invalid; caller does a full handshake
+    const data = await response.json();
+    if (!data.resumed || !data.sid || !data.srn) return false;
+
+    const serverRn = nenCrypto.nen_from_base64(data.srn);
+    const ikm = new Uint8Array(this.psk.length + clientRn.length + serverRn.length);
+    ikm.set(this.psk, 0);
+    ikm.set(clientRn, this.psk.length);
+    ikm.set(serverRn, this.psk.length + clientRn.length);
+    const ss2 = nenCrypto.nen_hkdf(ikm, 'nen/v3 resume-ss', 32);
+
+    this.encKey = nenCrypto.nen_derive_enc_key(ss2);
+    this.macKey = nenCrypto.nen_derive_mac_key(ss2);
+    this.sessionId = data.sid;
+    if (typeof data.ticket === 'string') this.ticket = data.ticket;
+    return true;
   }
 
   /**
