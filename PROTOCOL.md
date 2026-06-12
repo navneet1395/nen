@@ -63,6 +63,7 @@ All binary artifacts travel as **base64** strings (encoded/decoded inside Wasm v
 | :-- | :-- | :-- | :-- |
 | POST | `/api/nen/handshake` | Establish a session (§3) | `handleHandshake` |
 | POST | `/api/nen/rotate` | Destroy old session, establish a new one | `handleRotate` |
+| POST | `/api/nen/rekey` | In-session key ratchet (no KEM) — §7 | `handleRekey` |
 | POST | `/api/nen/terminate` | Destroy a session (logout / PFS) | `handleTerminate` |
 | GET  | `/api/nen/status` | Liveness check for a session id | `handleStatus` |
 | *any* | developer routes | Encrypted request/response (§4) or stream (§5) | `withNen` / `withNenStream` |
@@ -263,8 +264,24 @@ path stays small and fast.
 - **Rotation:** `rotate()` performs a fresh handshake and swaps keys. On a `401`,
   the client auto-rotates once and retries (`_rotationInProgress` guards against
   loops).
+- **Rekey ratchet (V3, T5):** `client.rekey()` → `POST /api/nen/rekey`, an
+  **authenticated** request signed with the current `macKey`. The server advances
+  both keys via a one-way ratchet `k' = HKDF(k, "nen/v3 ratchet")` and the client
+  advances identically — no KEM round trip and **no key material on the wire**.
+  This gives forward secrecy *within* a session: a compromised key epoch cannot
+  read a later epoch's requests. A failed/desynced rekey falls back to `rotate()`.
 - **Termination:** `terminate()` deletes the server session (forward secrecy) and
   clears client state.
+
+### Compliance attestation (V3, T7)
+
+`issueAttestation({ endpoint, securityMode?, from?, to? })` emits signed,
+timestamped evidence that an endpoint negotiated the V3 post-quantum suite —
+`{ v: "NEN-ATTESTATION-1", endpoint, protocol: "NEN-PROTOCOL-V3", suite,
+securityMode, from?, to?, issuedAt }`, signed with the opt-in ML-DSA server
+identity (`setServerIdentity`). `verifyAttestation(att, sig, pk)` checks it
+offline against the signer's public key — no third-party CA involved. This is the
+artifact an auditor asks for; it never exposes session keys.
 
 ---
 

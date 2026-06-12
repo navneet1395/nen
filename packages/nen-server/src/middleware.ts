@@ -141,6 +141,114 @@ export async function handleRotate(req: Request): Promise<Response> {
   return handleHandshake(req);
 }
 
+/**
+ * In-session rekey (NEN-PROTOCOL-V3, T5). Advances BOTH session keys via a
+ * one-way HKDF ratchet — `k' = HKDF(k, "nen/v3 ratchet")` — with no KEM round
+ * trip and no key material on the wire. The request MUST be authenticated with
+ * the CURRENT macKey; the client then advances its keys identically, so both
+ * sides stay in lockstep. This gives forward secrecy WITHIN a session: a single
+ * compromised key epoch cannot read requests from a later epoch.
+ *
+ * (Cheaper than `handleRotate`, which runs a full new ML-KEM handshake.)
+ */
+export async function handleRekey(req: Request): Promise<Response> {
+  try {
+    const sessionId = req.headers.get('X-Nen-Session');
+    if (!sessionId) {
+      return new NenError('SESSION_HEADER_MISSING').toResponse();
+    }
+    // Authenticate the rekey with the current keys before advancing them.
+    const session = await verifyRequest(
+      sessionId,
+      req.headers.get('X-Nen-Nonce'),
+      {
+        method: req.method,
+        url: req.url,
+        timestamp: req.headers.get('X-Nen-Timestamp') || '',
+        signature: req.headers.get('X-Nen-Signature') || '',
+      },
+    );
+    const nextEnc = nenCrypto.nen_ratchet_key(session.encKey);
+    const nextMac = nenCrypto.nen_ratchet_key(session.macKey);
+    await storeSession(sessionId, nextEnc, nextMac);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err: any) {
+    return NenError.from(err).toResponse();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Compliance attestation (NEN-PROTOCOL-V3, T7) — signed, timestamped evidence
+// that an endpoint negotiated the V3 post-quantum suite. The artifact an auditor
+// asks for; no third-party CA involved. Signed with the opt-in ML-DSA server
+// identity (setServerIdentity).
+// -----------------------------------------------------------------------------
+
+const ATTESTATION_SUITE =
+  'ML-KEM-768 + X25519 / HKDF-SHA256 / ChaCha20-Poly1305 / HMAC-SHA256 / ML-DSA-65';
+
+export interface NenAttestation {
+  v: 'NEN-ATTESTATION-1';
+  endpoint: string;
+  protocol: 'NEN-PROTOCOL-V3';
+  suite: string;
+  securityMode: SecurityMode;
+  /** Optional coverage window (ISO-8601) the evidence asserts. */
+  from?: string;
+  to?: string;
+  issuedAt: string;
+}
+
+/**
+ * Issue a signed attestation. Requires a server identity (`setServerIdentity`).
+ * Returns the attestation object, its ML-DSA signature, and the public key so a
+ * recipient can verify it offline with `verifyAttestation`.
+ */
+export function issueAttestation(opts: {
+  endpoint: string;
+  securityMode?: SecurityMode;
+  from?: string;
+  to?: string;
+}): { attestation: NenAttestation; signature: string; publicKey: string } {
+  if (!_serverIdentity || _serverIdentity.secretKey.length === 0) {
+    throw new NenError('INTERNAL', 'issueAttestation requires a server identity (setServerIdentity)');
+  }
+  const attestation: NenAttestation = {
+    v: 'NEN-ATTESTATION-1',
+    endpoint: opts.endpoint,
+    protocol: 'NEN-PROTOCOL-V3',
+    suite: ATTESTATION_SUITE,
+    securityMode: opts.securityMode ?? 'hybrid',
+    ...(opts.from ? { from: opts.from } : {}),
+    ...(opts.to ? { to: opts.to } : {}),
+    issuedAt: new Date().toISOString(),
+  };
+  const msg = new TextEncoder().encode(JSON.stringify(attestation));
+  const sig = nenCrypto.nen_sign(_serverIdentity.secretKey, msg);
+  return {
+    attestation,
+    signature: nenCrypto.nen_to_base64(sig),
+    publicKey: nenCrypto.nen_to_base64(_serverIdentity.publicKey),
+  };
+}
+
+/** Offline verification of an attestation against the signer's public key. */
+export function verifyAttestation(att: NenAttestation, signature: string, publicKey: string): boolean {
+  try {
+    const msg = new TextEncoder().encode(JSON.stringify(att));
+    return nenCrypto.nen_verify_signature(
+      nenCrypto.nen_from_base64(publicKey),
+      msg,
+      nenCrypto.nen_from_base64(signature),
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** The minimal session material the crypto helpers operate on (NEN-PROTOCOL-V3). */
 export interface Session {
   /** ChaCha20 key, HKDF-derived from the shared secret. */

@@ -380,6 +380,48 @@ export class NenClient {
   async rotate(): Promise<void> {
     await this.handshake();
   }
+
+  /**
+   * In-session rekey (NEN-PROTOCOL-V3, T5). Advances both keys via a one-way
+   * HKDF ratchet without a new ML-KEM handshake. Sends an authenticated request
+   * to `/api/nen/rekey`; on success both sides advance identically
+   * (`k' = HKDF(k, "nen/v3 ratchet")`), giving forward secrecy within a session.
+   * Cheaper than `rotate()`. No-op if there is no live session.
+   */
+  async rekey(): Promise<void> {
+    if (!this.encKey || !this.sessionId || !this.macKey) {
+      fail('SESSION_NOT_INITIALIZED');
+    }
+    const endpoint = '/api/nen/rekey';
+    const timestamp = Date.now().toString();
+    const nonce = nenCrypto.nen_generate_nonce();
+    const nonceBase64 = nenCrypto.nen_to_base64(nonce);
+    const canonical = `POST\n${canonicalPath(endpoint)}\n${timestamp}\n${nonceBase64}`;
+    const signatureBase64 = nenCrypto.nen_to_base64(
+      nenCrypto.nen_hmac_sign(this.macKey, new TextEncoder().encode(canonical)),
+    );
+
+    const response = await fetch(`${this.serverUrl}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Nen-Session': this.sessionId,
+        'X-Nen-Timestamp': timestamp,
+        'X-Nen-Nonce': nonceBase64,
+        'X-Nen-Signature': signatureBase64,
+      },
+    });
+
+    if (!response.ok) {
+      // Desynced or rejected — fall back to a full rotation to re-sync keys.
+      await this.rotate();
+      return;
+    }
+
+    // Advance local keys to match the server's ratchet.
+    this.encKey = nenCrypto.nen_ratchet_key(this.encKey);
+    this.macKey = nenCrypto.nen_ratchet_key(this.macKey);
+  }
 }
 
 function xorNonce(baseNonce: Uint8Array, index: number): Uint8Array {
