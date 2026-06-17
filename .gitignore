@@ -69,3 +69,4 @@ isolate-*.v8.log
 marketing-scraper/*
 video/*
 package-lock.json
+package-lock.json

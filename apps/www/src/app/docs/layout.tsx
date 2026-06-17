@@ -34,7 +34,7 @@ export default function DocsLayout({
               Documentation
             </Link>
             <Link
-              href="https://github.com/your-org/nen"
+              href="https://github.com/navneet1395/nen"
               className="text-muted-foreground transition-colors hover:text-primary"
             >
               GitHub
