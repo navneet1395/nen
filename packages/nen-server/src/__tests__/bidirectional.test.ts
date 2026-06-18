@@ -18,17 +18,17 @@ if (!globalThis.crypto || !(globalThis.crypto as any).getRandomValues) {
 
 interface SessionMaterial {
   sessionId: string;
-  sharedSecret: Uint8Array;
-  hmacKey: Uint8Array;
+  encKey: Uint8Array;
+  macKey: Uint8Array;
 }
 
 function newSession(id: string): SessionMaterial {
-  const sharedSecret = new Uint8Array(32);
-  crypto.getRandomValues(sharedSecret);
-  const hmacKey = new Uint8Array(32);
-  crypto.getRandomValues(hmacKey);
-  storeSession(id, sharedSecret, hmacKey);
-  return { sessionId: id, sharedSecret, hmacKey };
+  const encKey = new Uint8Array(32);
+  crypto.getRandomValues(encKey);
+  const macKey = new Uint8Array(32);
+  crypto.getRandomValues(macKey);
+  storeSession(id, encKey, macKey);
+  return { sessionId: id, encKey, macKey };
 }
 
 /** Build a signed V2 request. Body is encrypted under the header nonce when given. */
@@ -45,7 +45,7 @@ function buildRequest(
   const timestamp = String(Date.now());
   const canonical = `${method}\n${path}\n${timestamp}\n${nonceB64}`;
   const signature = nenCrypto.nen_to_base64(
-    nenCrypto.nen_hmac_sign(s.hmacKey, new TextEncoder().encode(canonical))
+    nenCrypto.nen_hmac_sign(s.macKey, new TextEncoder().encode(canonical))
   );
 
   const headers: Record<string, string> = {
@@ -58,7 +58,7 @@ function buildRequest(
 
   let body: string | undefined;
   if (plaintext !== undefined && method !== 'GET' && method !== 'HEAD') {
-    const ct = nenCrypto.nen_encrypt(s.sharedSecret, nonce, new TextEncoder().encode(plaintext));
+    const ct = nenCrypto.nen_encrypt(s.encKey, nonce, new TextEncoder().encode(plaintext));
     body = JSON.stringify({ ct: nenCrypto.nen_to_base64(ct) });
   }
   return new Request(url, { method, headers, body });
@@ -68,7 +68,7 @@ function buildRequest(
 function decryptResponse(s: SessionMaterial, json: { ct: string; n: string }) {
   const ct = nenCrypto.nen_from_base64(json.ct);
   const n = nenCrypto.nen_from_base64(json.n);
-  return JSON.parse(new TextDecoder().decode(nenCrypto.nen_decrypt(s.sharedSecret, n, ct)));
+  return JSON.parse(new TextDecoder().decode(nenCrypto.nen_decrypt(s.encKey, n, ct)));
 }
 
 describe('Bidirectional encryption — non-stream', () => {

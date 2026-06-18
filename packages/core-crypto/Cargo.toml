@@ -1,6 +1,6 @@
 [package]
 name = "core-crypto"
-version = "0.1.0"
+version = "0.4.0"
 edition = "2021"
 description = "Nen core cryptographic engine (ML-KEM + ChaCha20)"
 
@@ -17,6 +17,8 @@ getrandom_v04 = { package = "getrandom", version = "0.4", features = ["wasm_js"]
 base64 = "0.22"
 hmac = "0.12"
 sha2 = "0.10"
+hkdf = "0.12"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
 ml-dsa = { version = "0.1", features = ["pkcs8"] }
 
 [profile.release]

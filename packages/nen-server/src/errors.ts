@@ -123,6 +123,18 @@ export const NEN_ERRORS = {
     message: 'Request nonce is missing.',
     hint: 'No X-Nen-Nonce header. Under NEN-PROTOCOL-V2 every authenticated request — including bodyless GET/HEAD/DELETE — must carry a per-request nonce in the X-Nen-Nonce header (it feeds both the HMAC canonical string and replay tracking). Cause: not an Nen client, an out-of-date v0.2 client that put the nonce in the body, or a proxy stripped the header.',
   },
+  AUTH_SERVER_IDENTITY_INVALID: {
+    code: 'ISO-3006',
+    status: 401,
+    message: 'Server identity verification failed.',
+    hint: 'NEN-PROTOCOL-V3 identityMode:\'pqc\' — the server\'s ML-DSA signature over the handshake transcript (H(client_pk_kem || client_pk_x || server_nonce || sid)) did not verify against the pinned server identity key. A MITM is presenting a different transcript/key, or the client is pinning the wrong server identity public key.',
+  },
+  AUTH_TRANSCRIPT_MISMATCH: {
+    code: 'ISO-3007',
+    status: 401,
+    message: 'Handshake transcript did not match.',
+    hint: 'NEN-PROTOCOL-V3 channel binding — the transcript hash recomputed by one side does not match the other (substituted server nonce, swapped public key, or a sid bound to a different transcript). Indicates tampering/MITM on the handshake leg or a client/server canonicalization mismatch in the transcript field order/length-prefixing.',
+  },
 
   // 4xxx — Cryptography
   CRYPTO_DECRYPT_FAILED: {

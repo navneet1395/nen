@@ -1,54 +1,153 @@
 import * as nenCrypto from '@withnen/core-crypto';
 import { storeSession, getSession, deleteSession, sessionExists, getSessionStore } from './store';
 import { NenError } from './errors';
+import { deriveResumptionPsk, deriveResumeSs, sealTicket, openTicket } from './resumption';
+
+export { setTicketKey } from './resumption';
 
 /**
- * Handles incoming POST requests to /api/nen/handshake.
- * Generates a shared secret, stores it, and returns the ciphertext to the client.
+ * Optional server identity (NEN-PROTOCOL-V3, T3).
+ *
+ * When configured, the server signs the handshake transcript with an ML-DSA
+ * secret key so a client in identityMode:'pqc' can authenticate the server
+ * WITHOUT trusting the web PKI. The matching public key is pinned by the client
+ * out-of-band. Set via setServerIdentity(); unset = no server signature emitted.
+ */
+let _serverIdentity: { secretKey: Uint8Array; publicKey: Uint8Array } | null = null;
+
+/** Configure the opt-in ML-DSA server identity used to sign handshake transcripts. */
+export function setServerIdentity(secretKey: Uint8Array, publicKey: Uint8Array): void {
+  _serverIdentity = { secretKey, publicKey };
+}
+
+export type SecurityMode = 'hybrid' | 'pqc-only';
+
+/**
+ * Handles incoming POST requests to /api/nen/handshake (NEN-PROTOCOL-V3).
+ *
+ * V3 key schedule: NOTHING secret crosses the wire. The server derives the
+ * ChaCha20 key (k_enc) and the HMAC key (k_mac) locally via HKDF from the
+ * (hybrid) shared secret and stores ONLY those. The response carries
+ * `{ sid, ct }` (+ `pk_x_server` in hybrid mode, + transcript auth fields in
+ * identityMode:'pqc') and never any key material — a direct fix for the High
+ * finding that V2 shipped the MAC key in plaintext.
  */
 export async function handleHandshake(req: Request): Promise<Response> {
   try {
     const body = await req.json();
 
-    // Wire format is base64-only (NEN-PROTOCOL-V1).
+    // Resumption (T4): a ticket short-circuits the full ML-KEM handshake.
+    if (body.resume) {
+      return handleResume(body);
+    }
+
+    // Wire format is base64-only.
     let pkBytes: Uint8Array;
-    if (body.pk) {
+    if (body.pk_kem) {
+      pkBytes = nenCrypto.nen_from_base64(body.pk_kem);
+    } else if (body.pk) {
+      // Back-compat field name for the KEM public key.
       pkBytes = nenCrypto.nen_from_base64(body.pk);
     } else {
       return new NenError('HANDSHAKE_MISSING_PUBLIC_KEY').toResponse();
     }
 
-    // Optional PQC Identity verification (ML-DSA)
-    if (body.sigPk && body.sigOfPk) {
-      const sigPk = nenCrypto.nen_from_base64(body.sigPk);
-      const sigOfPk = nenCrypto.nen_from_base64(body.sigOfPk);
+    const securityMode: SecurityMode = body.securityMode === 'pqc-only' ? 'pqc-only' : 'hybrid';
 
-      const isValid = nenCrypto.nen_verify_signature(sigPk, pkBytes, sigOfPk);
-      if (!isValid) {
-        return new NenError('AUTH_IDENTITY_SIGNATURE_INVALID').toResponse();
+    // ML-KEM-768 encapsulation — the post-quantum half of the secret.
+    const encap = nenCrypto.nen_encapsulate(pkBytes);
+    const mlkemSs = encap.shared_secret;
+
+    // Hybrid (default): also run X25519 and combine. Defense-in-depth — the
+    // session stays secure if EITHER algorithm is broken.
+    let combinedSs: Uint8Array;
+    let clientPkX: Uint8Array = new Uint8Array(0);
+    let serverPkX: Uint8Array = new Uint8Array(0);
+    if (securityMode === 'hybrid') {
+      if (!body.pk_x) {
+        return new NenError('HANDSHAKE_MISSING_PUBLIC_KEY', 'hybrid mode requires pk_x').toResponse();
       }
+      clientPkX = nenCrypto.nen_from_base64(body.pk_x);
+      const serverX = nenCrypto.nen_x25519_keypair();
+      serverPkX = serverX.public_key;
+      const x25519Ss = nenCrypto.nen_x25519_dh(serverX.secret_key, clientPkX);
+      combinedSs = nenCrypto.nen_hybrid_combine(x25519Ss, mlkemSs);
+      serverX.secret_key.fill(0);
+    } else {
+      combinedSs = mlkemSs;
     }
 
-    const encap = nenCrypto.nen_encapsulate(pkBytes);
-    
-    // Generate a 32-byte HMAC key for per-request authentication
-    const hmacKey = crypto.getRandomValues(new Uint8Array(32));
+    // Derive the two session keys locally — NEVER transmitted.
+    const encKey = nenCrypto.nen_derive_enc_key(combinedSs);
+    const macKey = nenCrypto.nen_derive_mac_key(combinedSs);
 
-    // Generate unique session ID
     const sessionId = crypto.randomUUID();
-    storeSession(sessionId, encap.shared_secret, hmacKey);
+    storeSession(sessionId, encKey, macKey);
 
-    return new Response(JSON.stringify({
+    const response: Record<string, string> = {
       sid: sessionId,
       ct: nenCrypto.nen_to_base64(encap.ciphertext),
-      hmac: nenCrypto.nen_to_base64(hmacKey)
-    }), {
+      // Resumption ticket (T4): seals the psk so a reconnect can skip the KEM.
+      // The client also derives the psk locally; nothing secret is on the wire.
+      ticket: sealTicket(deriveResumptionPsk(combinedSs)),
+    };
+    if (securityMode === 'hybrid') {
+      response.pk_x_server = nenCrypto.nen_to_base64(serverPkX);
+    }
+
+    // Transcript-bound server authentication (T3, opt-in). The signed message is
+    // the full transcript, not just the client pk, and it binds the sid.
+    if (_serverIdentity) {
+      const sidBytes = new TextEncoder().encode(sessionId);
+      const serverNonce = crypto.getRandomValues(new Uint8Array(32));
+      const transcript = nenCrypto.nen_transcript_hash(pkBytes, clientPkX, serverNonce, sidBytes);
+      const sig = nenCrypto.nen_sign(_serverIdentity.secretKey, transcript);
+      response.server_nonce = nenCrypto.nen_to_base64(serverNonce);
+      response.server_sig = nenCrypto.nen_to_base64(sig);
+      response.server_id_pk = nenCrypto.nen_to_base64(_serverIdentity.publicKey);
+    }
+
+    return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (err: any) {
     return NenError.from(err instanceof NenError ? err : new NenError('HANDSHAKE_FAILED', err?.message)).toResponse();
   }
+}
+
+/**
+ * Resume a session from a ticket (NEN-PROTOCOL-V3, T4). Opens the sealed ticket
+ * to recover the psk, mixes fresh client+server nonces into a new per-resume
+ * secret, derives a brand-new key pair, and issues a fresh ticket. No ML-KEM, no
+ * key material on the wire. An invalid/expired ticket returns 409 so the client
+ * falls back to a full handshake.
+ */
+async function handleResume(body: any): Promise<Response> {
+  const psk = body.resume ? openTicket(body.resume) : null;
+  if (!psk || !body.rn) {
+    return new Response(JSON.stringify({ resumed: false }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const clientRn = nenCrypto.nen_from_base64(body.rn);
+  const serverRn = crypto.getRandomValues(new Uint8Array(32));
+  const ss2 = deriveResumeSs(psk, clientRn, serverRn);
+  const encKey = nenCrypto.nen_derive_enc_key(ss2);
+  const macKey = nenCrypto.nen_derive_mac_key(ss2);
+  const sessionId = crypto.randomUUID();
+  storeSession(sessionId, encKey, macKey);
+
+  return new Response(
+    JSON.stringify({
+      sid: sessionId,
+      srn: nenCrypto.nen_to_base64(serverRn),
+      ticket: sealTicket(psk), // fresh ticket (re-seals the same psk, new expiry)
+      resumed: true,
+    }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  );
 }
 
 /**
@@ -87,10 +186,120 @@ export async function handleRotate(req: Request): Promise<Response> {
   return handleHandshake(req);
 }
 
-/** The minimal session material the crypto helpers operate on. */
+/**
+ * In-session rekey (NEN-PROTOCOL-V3, T5). Advances BOTH session keys via a
+ * one-way HKDF ratchet — `k' = HKDF(k, "nen/v3 ratchet")` — with no KEM round
+ * trip and no key material on the wire. The request MUST be authenticated with
+ * the CURRENT macKey; the client then advances its keys identically, so both
+ * sides stay in lockstep. This gives forward secrecy WITHIN a session: a single
+ * compromised key epoch cannot read requests from a later epoch.
+ *
+ * (Cheaper than `handleRotate`, which runs a full new ML-KEM handshake.)
+ */
+export async function handleRekey(req: Request): Promise<Response> {
+  try {
+    const sessionId = req.headers.get('X-Nen-Session');
+    if (!sessionId) {
+      return new NenError('SESSION_HEADER_MISSING').toResponse();
+    }
+    // Authenticate the rekey with the current keys before advancing them.
+    const session = await verifyRequest(
+      sessionId,
+      req.headers.get('X-Nen-Nonce'),
+      {
+        method: req.method,
+        url: req.url,
+        timestamp: req.headers.get('X-Nen-Timestamp') || '',
+        signature: req.headers.get('X-Nen-Signature') || '',
+      },
+    );
+    const nextEnc = nenCrypto.nen_ratchet_key(session.encKey);
+    const nextMac = nenCrypto.nen_ratchet_key(session.macKey);
+    await storeSession(sessionId, nextEnc, nextMac);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err: any) {
+    return NenError.from(err).toResponse();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Compliance attestation (NEN-PROTOCOL-V3, T7) — signed, timestamped evidence
+// that an endpoint negotiated the V3 post-quantum suite. The artifact an auditor
+// asks for; no third-party CA involved. Signed with the opt-in ML-DSA server
+// identity (setServerIdentity).
+// -----------------------------------------------------------------------------
+
+const ATTESTATION_SUITE =
+  'ML-KEM-768 + X25519 / HKDF-SHA256 / ChaCha20-Poly1305 / HMAC-SHA256 / ML-DSA-65';
+
+export interface NenAttestation {
+  v: 'NEN-ATTESTATION-1';
+  endpoint: string;
+  protocol: 'NEN-PROTOCOL-V3';
+  suite: string;
+  securityMode: SecurityMode;
+  /** Optional coverage window (ISO-8601) the evidence asserts. */
+  from?: string;
+  to?: string;
+  issuedAt: string;
+}
+
+/**
+ * Issue a signed attestation. Requires a server identity (`setServerIdentity`).
+ * Returns the attestation object, its ML-DSA signature, and the public key so a
+ * recipient can verify it offline with `verifyAttestation`.
+ */
+export function issueAttestation(opts: {
+  endpoint: string;
+  securityMode?: SecurityMode;
+  from?: string;
+  to?: string;
+}): { attestation: NenAttestation; signature: string; publicKey: string } {
+  if (!_serverIdentity || _serverIdentity.secretKey.length === 0) {
+    throw new NenError('INTERNAL', 'issueAttestation requires a server identity (setServerIdentity)');
+  }
+  const attestation: NenAttestation = {
+    v: 'NEN-ATTESTATION-1',
+    endpoint: opts.endpoint,
+    protocol: 'NEN-PROTOCOL-V3',
+    suite: ATTESTATION_SUITE,
+    securityMode: opts.securityMode ?? 'hybrid',
+    ...(opts.from ? { from: opts.from } : {}),
+    ...(opts.to ? { to: opts.to } : {}),
+    issuedAt: new Date().toISOString(),
+  };
+  const msg = new TextEncoder().encode(JSON.stringify(attestation));
+  const sig = nenCrypto.nen_sign(_serverIdentity.secretKey, msg);
+  return {
+    attestation,
+    signature: nenCrypto.nen_to_base64(sig),
+    publicKey: nenCrypto.nen_to_base64(_serverIdentity.publicKey),
+  };
+}
+
+/** Offline verification of an attestation against the signer's public key. */
+export function verifyAttestation(att: NenAttestation, signature: string, publicKey: string): boolean {
+  try {
+    const msg = new TextEncoder().encode(JSON.stringify(att));
+    return nenCrypto.nen_verify_signature(
+      nenCrypto.nen_from_base64(publicKey),
+      msg,
+      nenCrypto.nen_from_base64(signature),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** The minimal session material the crypto helpers operate on (NEN-PROTOCOL-V3). */
 export interface Session {
-  sharedSecret: Uint8Array;
-  hmacKey: Uint8Array;
+  /** ChaCha20 key, HKDF-derived from the shared secret. */
+  encKey: Uint8Array;
+  /** HMAC-SHA256 key, HKDF-derived from the shared secret. */
+  macKey: Uint8Array;
 }
 
 export interface RequestMeta {
@@ -134,13 +343,14 @@ export async function verifyRequest(
 
   // HMAC Authentication.
   //
-  // Every session is issued an hmacKey at handshake, so when one is present we
-  // MUST require a valid signature. Treating the signature as optional would be
-  // an authentication-downgrade bypass: an attacker holding a session ID could
+  // Every session has a derived macKey (HKDF from the post-quantum shared
+  // secret — NEN-PROTOCOL-V3, never transmitted), so when one is present we MUST
+  // require a valid signature. Treating the signature as optional would be an
+  // authentication-downgrade bypass: an attacker holding a session ID could
   // simply omit the X-Nen-Signature / X-Nen-Timestamp headers to skip both HMAC
   // verification and the timestamp replay window. `strict` defaults to true and
   // should only be disabled for explicitly opted-in legacy clients.
-  const signatureRequired = strict && !!session.hmacKey && session.hmacKey.length > 0;
+  const signatureRequired = strict && !!session.macKey && session.macKey.length > 0;
 
   if (requestMeta && requestMeta.signature) {
     const urlObj = new URL(requestMeta.url);
@@ -148,7 +358,7 @@ export async function verifyRequest(
     const canonicalBytes = new TextEncoder().encode(canonical);
     const signatureBytes = nenCrypto.nen_from_base64(requestMeta.signature);
 
-    if (!nenCrypto.nen_hmac_verify(session.hmacKey, canonicalBytes, signatureBytes)) {
+    if (!nenCrypto.nen_hmac_verify(session.macKey, canonicalBytes, signatureBytes)) {
       throw new NenError('AUTH_SIGNATURE_INVALID');
     }
 
@@ -181,7 +391,7 @@ export function decryptBody(session: Session, ctB64: string, nonceB64: string): 
   const ctBytes = nenCrypto.nen_from_base64(ctB64);
   const nonceBytes = nenCrypto.nen_from_base64(nonceB64);
   try {
-    return nenCrypto.nen_decrypt(session.sharedSecret, nonceBytes, ctBytes);
+    return nenCrypto.nen_decrypt(session.encKey, nonceBytes, ctBytes);
   } catch (e) {
     throw new NenError('CRYPTO_DECRYPT_FAILED', e instanceof Error ? e.message : String(e));
   }
@@ -194,7 +404,7 @@ export function decryptBody(session: Session, ctB64: string, nonceB64: string): 
  */
 export function encryptResponse(session: Session, plaintext: Uint8Array): { ct: string; n: string } {
   const nonce = nenCrypto.nen_generate_nonce();
-  const ciphertext = nenCrypto.nen_encrypt(session.sharedSecret, nonce, plaintext);
+  const ciphertext = nenCrypto.nen_encrypt(session.encKey, nonce, plaintext);
   return {
     ct: nenCrypto.nen_to_base64(ciphertext),
     n: nenCrypto.nen_to_base64(nonce),

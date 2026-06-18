@@ -25,18 +25,18 @@ export class RedisSessionStore implements SessionStore {
     this.expiryMs = expiryMs;
   }
 
-  async set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): Promise<void> {
+  async set(sessionId: string, encKey: Uint8Array, macKey: Uint8Array): Promise<void> {
     const key = `${this.prefix}${sessionId}`;
     const sessionData = {
-      sharedSecret: nenCrypto.nen_to_base64(sharedSecret),
-      hmacKey: nenCrypto.nen_to_base64(hmacKey),
+      encKey: nenCrypto.nen_to_base64(encKey),
+      macKey: nenCrypto.nen_to_base64(macKey),
       createdAt: Date.now()
     };
     
     await this.redis.set(key, JSON.stringify(sessionData), { ex: Math.floor(this.expiryMs / 1000) });
   }
 
-  async get(sessionId: string): Promise<{ sharedSecret: Uint8Array; hmacKey: Uint8Array } | null> {
+  async get(sessionId: string): Promise<{ encKey: Uint8Array; macKey: Uint8Array } | null> {
     const key = `${this.prefix}${sessionId}`;
     const dataStr = await this.redis.get(key);
     
@@ -45,8 +45,8 @@ export class RedisSessionStore implements SessionStore {
     try {
       const session = JSON.parse(dataStr);
       return {
-        sharedSecret: nenCrypto.nen_from_base64(session.sharedSecret),
-        hmacKey: nenCrypto.nen_from_base64(session.hmacKey)
+        encKey: nenCrypto.nen_from_base64(session.encKey),
+        macKey: nenCrypto.nen_from_base64(session.macKey)
       };
     } catch (e) {
       console.error('Failed to parse Nen session from Redis', e);

@@ -51,25 +51,25 @@ export class UpstashSessionStore implements SessionStore {
     return json.result as T;
   }
 
-  async set(sessionId: string, sharedSecret: Uint8Array, hmacKey: Uint8Array): Promise<void> {
+  async set(sessionId: string, encKey: Uint8Array, macKey: Uint8Array): Promise<void> {
     const key = `${this.prefix}${sessionId}`;
     const sessionData = JSON.stringify({
-      sharedSecret: nenCrypto.nen_to_base64(sharedSecret),
-      hmacKey: nenCrypto.nen_to_base64(hmacKey),
+      encKey: nenCrypto.nen_to_base64(encKey),
+      macKey: nenCrypto.nen_to_base64(macKey),
       createdAt: Date.now(),
     });
     await this.cmd(['SET', key, sessionData, 'EX', this.ttlSeconds]);
   }
 
-  async get(sessionId: string): Promise<{ sharedSecret: Uint8Array; hmacKey: Uint8Array } | null> {
+  async get(sessionId: string): Promise<{ encKey: Uint8Array; macKey: Uint8Array } | null> {
     const key = `${this.prefix}${sessionId}`;
     const dataStr = await this.cmd<string | null>(['GET', key]);
     if (!dataStr) return null;
     try {
       const session = JSON.parse(dataStr);
       return {
-        sharedSecret: nenCrypto.nen_from_base64(session.sharedSecret),
-        hmacKey: nenCrypto.nen_from_base64(session.hmacKey),
+        encKey: nenCrypto.nen_from_base64(session.encKey),
+        macKey: nenCrypto.nen_from_base64(session.macKey),
       };
     } catch (e) {
       console.error('Failed to parse Nen session from Upstash', e);

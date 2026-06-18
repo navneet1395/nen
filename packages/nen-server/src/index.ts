@@ -3,12 +3,17 @@ export {
   handleTerminate,
   handleStatus,
   handleRotate,
+  handleRekey,
   verifyRequest,
   decryptBody,
   encryptResponse,
-  encryptPayload
+  encryptPayload,
+  setServerIdentity,
+  setTicketKey,
+  issueAttestation,
+  verifyAttestation
 } from './middleware';
-export type { Session, RequestMeta } from './middleware';
+export type { Session, RequestMeta, SecurityMode, NenAttestation } from './middleware';
 
 export { withNen } from './wrapper';
 export { withNenStream } from './stream-wrapper';

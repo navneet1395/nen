@@ -176,6 +176,78 @@ if (Symbol.dispose) NenSigningKeypair.prototype[Symbol.dispose] = NenSigningKeyp
 exports.NenSigningKeypair = NenSigningKeypair;
 
 /**
+ * An X25519 keypair (raw 32-byte public + secret).
+ */
+class NenX25519Keypair {
+    static __wrap(ptr) {
+        const obj = Object.create(NenX25519Keypair.prototype);
+        obj.__wbg_ptr = ptr;
+        NenX25519KeypairFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        NenX25519KeypairFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_nenx25519keypair_free(ptr, 0);
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get public_key() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.__wbg_get_nenx25519keypair_public_key(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v1 = getArrayU8FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_export2(r0, r1 * 1, 1);
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get secret_key() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.__wbg_get_nenx25519keypair_secret_key(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v1 = getArrayU8FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_export2(r0, r1 * 1, 1);
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set public_key(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_nenx25519keypair_public_key(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set secret_key(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_nenx25519keypair_secret_key(this.__wbg_ptr, ptr0, len0);
+    }
+}
+if (Symbol.dispose) NenX25519Keypair.prototype[Symbol.dispose] = NenX25519Keypair.prototype.free;
+exports.NenX25519Keypair = NenX25519Keypair;
+
+/**
  * @param {Uint8Array} ciphertext
  * @param {Uint8Array} secret_key
  * @returns {Uint8Array}
@@ -235,6 +307,60 @@ function nen_decrypt(key, nonce, ciphertext) {
     }
 }
 exports.nen_decrypt = nen_decrypt;
+
+/**
+ * k_enc = HKDF-SHA256(ss, "nen/v3 enc") → 32-byte ChaCha20 key.
+ * @param {Uint8Array} ss
+ * @returns {Uint8Array}
+ */
+function nen_derive_enc_key(ss) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(ss, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.nen_derive_enc_key(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_derive_enc_key = nen_derive_enc_key;
+
+/**
+ * k_mac = HKDF-SHA256(ss, "nen/v3 mac") → 32-byte HMAC key.
+ * @param {Uint8Array} ss
+ * @returns {Uint8Array}
+ */
+function nen_derive_mac_key(ss) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(ss, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.nen_derive_mac_key(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_derive_mac_key = nen_derive_mac_key;
 
 /**
  * @param {Uint8Array} public_key
@@ -365,6 +491,37 @@ function nen_generate_signing_keypair() {
 exports.nen_generate_signing_keypair = nen_generate_signing_keypair;
 
 /**
+ * Generic HKDF-SHA256 expand. `info` is the domain-separation label.
+ * @param {Uint8Array} ss
+ * @param {string} info
+ * @param {number} len
+ * @returns {Uint8Array}
+ */
+function nen_hkdf(ss, info, len) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(ss, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(info, wasm.__wbindgen_export3, wasm.__wbindgen_export4);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.nen_hkdf(retptr, ptr0, len0, ptr1, len1, len);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v3 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v3;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_hkdf = nen_hkdf;
+
+/**
  * @param {Uint8Array} key
  * @param {Uint8Array} message
  * @returns {Uint8Array}
@@ -410,6 +567,65 @@ function nen_hmac_verify(key, message, signature) {
     return ret !== 0;
 }
 exports.nen_hmac_verify = nen_hmac_verify;
+
+/**
+ * Combine the classical and post-quantum shared secrets into the V3 session
+ * secret: HKDF-SHA256(x25519_ss || mlkem_ss, "nen/v3 hybrid"). 32-byte output.
+ * @param {Uint8Array} x25519_ss
+ * @param {Uint8Array} mlkem_ss
+ * @returns {Uint8Array}
+ */
+function nen_hybrid_combine(x25519_ss, mlkem_ss) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(x25519_ss, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(mlkem_ss, wasm.__wbindgen_export3);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.nen_hybrid_combine(retptr, ptr0, len0, ptr1, len1);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v3 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v3;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_hybrid_combine = nen_hybrid_combine;
+
+/**
+ * One-way ratchet: k' = HKDF(k, "nen/v3 ratchet"). (Reserved for T5; exposed now
+ * so the label is pinned alongside the rest of the schedule.)
+ * @param {Uint8Array} key
+ * @returns {Uint8Array}
+ */
+function nen_ratchet_key(key) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(key, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.nen_ratchet_key(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_ratchet_key = nen_ratchet_key;
 
 /**
  * @param {Uint8Array} secret_key
@@ -465,6 +681,38 @@ function nen_to_base64(bytes) {
 exports.nen_to_base64 = nen_to_base64;
 
 /**
+ * Compute the V3 transcript hash over the handshake inputs.
+ * `pk_x` may be empty in `pqc-only` mode; `sid` is the UTF-8 session id bytes.
+ * @param {Uint8Array} client_pk_kem
+ * @param {Uint8Array} client_pk_x
+ * @param {Uint8Array} server_nonce
+ * @param {Uint8Array} sid
+ * @returns {Uint8Array}
+ */
+function nen_transcript_hash(client_pk_kem, client_pk_x, server_nonce, sid) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(client_pk_kem, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(client_pk_x, wasm.__wbindgen_export3);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(server_nonce, wasm.__wbindgen_export3);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passArray8ToWasm0(sid, wasm.__wbindgen_export3);
+        const len3 = WASM_VECTOR_LEN;
+        wasm.nen_transcript_hash(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var v5 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v5;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_transcript_hash = nen_transcript_hash;
+
+/**
  * @param {Uint8Array} public_key
  * @param {Uint8Array} message
  * @param {Uint8Array} signature_bytes
@@ -481,6 +729,47 @@ function nen_verify_signature(public_key, message, signature_bytes) {
     return ret !== 0;
 }
 exports.nen_verify_signature = nen_verify_signature;
+
+/**
+ * X25519 Diffie-Hellman: combine our secret with the peer's public key to get
+ * the 32-byte classical shared secret.
+ * @param {Uint8Array} secret_key
+ * @param {Uint8Array} peer_public
+ * @returns {Uint8Array}
+ */
+function nen_x25519_dh(secret_key, peer_public) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(secret_key, wasm.__wbindgen_export3);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(peer_public, wasm.__wbindgen_export3);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.nen_x25519_dh(retptr, ptr0, len0, ptr1, len1);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v3 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export2(r0, r1 * 1, 1);
+        return v3;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.nen_x25519_dh = nen_x25519_dh;
+
+/**
+ * Generate an ephemeral X25519 keypair.
+ * @returns {NenX25519Keypair}
+ */
+function nen_x25519_keypair() {
+    const ret = wasm.nen_x25519_keypair();
+    return NenX25519Keypair.__wrap(ret);
+}
+exports.nen_x25519_keypair = nen_x25519_keypair;
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
@@ -605,6 +894,9 @@ const NenKeypairFinalization = (typeof FinalizationRegistry === 'undefined')
 const NenSigningKeypairFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_nensigningkeypair_free(ptr, 1));
+const NenX25519KeypairFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_nenx25519keypair_free(ptr, 1));
 
 function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1);

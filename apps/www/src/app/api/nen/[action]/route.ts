@@ -1,4 +1,4 @@
-import { handleHandshake, handleTerminate, handleStatus, handleRotate } from '@withnen/server';
+import { handleHandshake, handleTerminate, handleStatus, handleRotate, handleRekey } from '@withnen/server';
 
 export async function POST(req: Request, { params }: { params: Promise<{ action: string }> | { action: string } }) {
   // Await the params for Next.js 15+ compatibility
@@ -11,6 +11,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ action:
       return handleTerminate(req);
     case 'rotate':
       return handleRotate(req);
+    case 'rekey':
+      return handleRekey(req);
     default:
       return new Response('Not Found', { status: 404 });
   }
