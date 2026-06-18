@@ -26,6 +26,12 @@ export function SiteHeader() {
           <Link href="/faq" className="hidden md:inline transition-colors hover:text-primary text-muted-foreground">
             FAQ
           </Link>
+          <Link href="/blog" className="hidden lg:inline transition-colors hover:text-primary text-muted-foreground">
+            Blog
+          </Link>
+          <Link href="/roadmap" className="hidden lg:inline transition-colors hover:text-primary text-muted-foreground">
+            Roadmap
+          </Link>
           <Link href="/pricing" className="hidden sm:inline transition-colors hover:text-primary text-muted-foreground">
             Pricing
           </Link>
@@ -73,12 +79,15 @@ export function SiteFooter() {
             <Link href="/ai" className="hover:text-primary">Secure AI</Link>
             <Link href="/faq" className="hover:text-primary">FAQ</Link>
             <Link href="/pricing" className="hover:text-primary">Pricing</Link>
+            <Link href="/roadmap" className="hover:text-primary">Roadmap</Link>
           </div>
           <div className="flex flex-col gap-2">
             <span className="font-semibold text-foreground">Developers</span>
             <Link href="/docs" className="hover:text-primary">Documentation</Link>
             <Link href="/docs/quickstart" className="hover:text-primary">Quickstart</Link>
+            <Link href="/docs/changelog" className="hover:text-primary">Changelog</Link>
             <Link href="/docs/error-codes" className="hover:text-primary">Error codes</Link>
+            <Link href="/blog" className="hover:text-primary">Blog</Link>
             <a href="https://github.com/navneet1395/nen" target="_blank" rel="noopener noreferrer" className="hover:text-primary">GitHub</a>
             <a href="https://www.npmjs.com/org/withnen" target="_blank" rel="noopener noreferrer" className="hover:text-primary">npm</a>
           </div>

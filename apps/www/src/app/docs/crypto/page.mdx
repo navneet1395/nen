@@ -12,9 +12,14 @@ Nen is built upon the following cryptographic primitives, carefully selected for
 - **Parameter Set**: Dilithium3 (Level 3 security)
 - **Usage**: Used optionally by clients to sign their ML-KEM public key, proving identity to the server and preventing active Man-in-the-Middle (MitM) attacks.
 
-## Session keys
+## Session keys (HKDF key schedule)
 
-Nen does not run a separate KDF over the shared secret. The 32-byte secret produced by ML-KEM encapsulation is used directly as the **ChaCha20-Poly1305 key**. The server independently generates a **separate random 32-byte HMAC key** at handshake and returns it to the client alongside the ciphertext, so the encryption and authentication keys are distinct.
+As of **NEN-PROTOCOL-V3**, Nen runs an **HKDF-SHA256 key schedule** over the shared secret. The handshake establishes a shared secret `ss` — hybrid by default, combining X25519 and ML-KEM-768 — and **each side independently derives two distinct keys locally**:
+
+- `k_enc = HKDF(ss, "nen/v3 enc")` — the 32-byte **ChaCha20-Poly1305** key
+- `k_mac = HKDF(ss, "nen/v3 mac")` — the 32-byte **HMAC-SHA256** key
+
+Because both keys are derived with HKDF on the client and the server, **no key material ever crosses the wire** — the handshake response carries only the KEM ciphertext and the server's X25519 public key. (V1/V2 used the raw shared secret as the encryption key and transmitted a server-generated HMAC key in the handshake response; V3 removes that.) A per-request **rekey ratchet** (`HKDF(k, "nen/v3 ratchet")`) can advance the keys forward for forward secrecy. See [Protocol Spec](/docs/protocol) and the repo's `KEY_SCHEDULE.md`.
 
 ## Symmetric Encryption: ChaCha20Poly1305
 - **Standard**: RFC 8439

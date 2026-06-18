@@ -1,26 +1,28 @@
 import { SequenceDiagram } from "@/components/sequence-diagram";
 
 export const metadata = {
-  title: "Protocol Spec — NEN-PROTOCOL-V2 | Nen Docs",
-  description: "The exact wire format: ML-KEM handshake, per-request X-Nen-Nonce header, base64 { ct } payloads, HMAC-SHA256 canonical string, 30s replay window, bidirectional encryption for every HTTP method, SSE stream framing, and session lifecycle. NEN-PROTOCOL-V2.",
+  title: "Protocol Spec — NEN-PROTOCOL-V3 | Nen Docs",
+  description: "The exact wire format: hybrid X25519 + ML-KEM-768 handshake with an HKDF-SHA256 key schedule (no key material on the wire), per-request X-Nen-Nonce header, base64 { ct } payloads, HMAC-SHA256 canonical string, 30s replay window, bidirectional encryption for every HTTP method, session resumption, rekey ratchet, transcript-bound identity. NEN-PROTOCOL-V3.",
 };
 
-# Protocol — NEN-PROTOCOL-V2
+# Protocol — NEN-PROTOCOL-V3
 
 The wire protocol spoken between `@withnen/client` and `@withnen/server`, as implemented. It runs at the application layer, **on top of TLS** — Nen assumes TLS is present and does not replace it.
 
-> **V2 (v0.3.0):** the per-request nonce moved into the `X-Nen-Nonce` header, so every method is authenticated (including bodyless `GET`/`HEAD`/`DELETE`) and the response is always encrypted. Wire-breaking from V1.
+> **V3 (v0.4.0):** the handshake now runs an **HKDF-SHA256 key schedule** — both the ChaCha20 key (`k_enc = HKDF(ss, "nen/v3 enc")`) and the HMAC key (`k_mac = HKDF(ss, "nen/v3 mac")`) are derived **locally on each side** from the shared secret, so **no key material ever crosses the wire** (V2 returned the HMAC key in the handshake response — V3 removes it). The exchange is **hybrid by default**: X25519 + ML-KEM-768 combined, so the session is safe unless *both* are broken. Adds transcript-bound server identity (ML-DSA), session resumption, and a per-request rekey ratchet. Wire-breaking from V2.
 
 ## Cryptographic parameters
 
 | Role                        | Algorithm         | Standard   |
 | :-------------------------- | :---------------- | :--------- |
 | Key encapsulation (KEM)     | ML-KEM-768        | FIPS 203   |
+| Classical key agreement     | X25519 (hybrid)   | RFC 7748   |
+| Key derivation (schedule)   | HKDF-SHA256       | RFC 5869   |
 | Payload encryption (AEAD)   | ChaCha20-Poly1305 | RFC 8439   |
 | Per-request authentication  | HMAC-SHA256       | FIPS 198-1 |
-| Optional identity signature | ML-DSA-65         | FIPS 204   |
+| Transcript / identity signature | ML-DSA-65     | FIPS 204   |
 
-Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HMAC key 32, nonce 12, AEAD tag 16. All binary travels as **base64** (encoded inside the Wasm boundary), never as JSON number arrays.
+Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, X25519 public key 32, derived `k_enc`/`k_mac` 32 each, nonce 12, AEAD tag 16. The derived keys are **never transmitted** — each side computes them with HKDF. All binary travels as **base64** (encoded inside the Wasm boundary), never as JSON number arrays.
 
 ## Endpoints
 
@@ -33,9 +35,9 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
 
 ## Handshake (once per session)
 
-1. Client generates an ML-KEM-768 keypair and POSTs `{ "pk": base64(pk) }` (optionally `sigPk` + `sigOfPk` for ML-DSA identity).
-2. Server encapsulates → `(sharedSecret, ciphertext)`, generates a 32-byte HMAC key, stores `{ sharedSecret, hmacKey }` under a new `sid`, and returns `{ "sid", "ct": base64(ciphertext), "hmac": base64(hmacKey) }`.
-3. Client decapsulates to recover the same `sharedSecret`, then **zeroizes its secret key**.
+1. Client generates an ML-KEM-768 keypair **and** an X25519 keypair (hybrid is the default) and POSTs `{ "pk_kem": base64(pk), "pk_x": base64(pk), "securityMode": "hybrid" }`.
+2. Server encapsulates the ML-KEM key → `(ss_kem, ciphertext)`, runs X25519 DH → `ss_x`, and **combines** them into one shared secret `ss`. It then derives `k_enc = HKDF(ss, "nen/v3 enc")` and `k_mac = HKDF(ss, "nen/v3 mac")`, stores `{ encKey, macKey }` under a new `sid`, and returns `{ "sid", "ct": base64(ciphertext), "pk_x_server": base64(pk) }` — **no key material**. (With identity enabled it also returns `server_sig`, `server_nonce`, `server_id_pk` binding the transcript; see [Threat model](/docs/threat-model).)
+3. Client recovers the same `ss` (decapsulate + X25519 DH + combine), derives the **same** `k_enc` / `k_mac` locally, then **zeroizes its secret keys**.
 
 <SequenceDiagram
   participants={[
@@ -43,26 +45,26 @@ Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HM
     { id: "server", name: "Nen Server", type: "server" },
   ]}
   steps={[
-    { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM-768 keypair" },
+    { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM-768 + X25519 keypairs" },
     { 
       id: "2", from: "client", to: "server", animated: true, 
       label: "2. POST /api/nen/handshake",
-      body: '{\n  "pk": base64(pk)\n}' 
+      body: '{\n  "pk_kem": base64(pk),\n  "pk_x": base64(pk),\n  "securityMode": "hybrid"\n}' 
     },
     { 
       id: "3", from: "server", to: "server", 
-      label: "3. Encapsulate pk → (sharedSecret, ciphertext)",
-      body: "Generate 32-byte HMAC key\nStore { sharedSecret, hmacKey } under sid" 
+      label: "3. Encapsulate + X25519 DH → combine → ss",
+      body: "k_enc = HKDF(ss, \"nen/v3 enc\")\nk_mac = HKDF(ss, \"nen/v3 mac\")\nStore { encKey, macKey } under sid" 
     },
     { 
       id: "4", from: "server", to: "client", animated: true, color: "success",
-      label: "4. Return Session Keys",
-      body: '{\n  "sid": "...",\n  "ct": base64(ciphertext),\n  "hmac": base64(hmacKey)\n}' 
+      label: "4. Return ciphertext + server X25519 key (no key material)",
+      body: '{\n  "sid": "...",\n  "ct": base64(ciphertext),\n  "pk_x_server": base64(pk)\n}' 
     },
     { 
       id: "5", from: "client", to: "client", 
-      label: "5. Decapsulate ct to recover sharedSecret",
-      body: "Zeroize secret key" 
+      label: "5. Recover ss, derive same k_enc / k_mac locally",
+      body: "Zeroize secret keys" 
     }
   ]}
 />

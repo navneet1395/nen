@@ -56,12 +56,15 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Cryptography Specifications", href: "/docs/crypto", type: "page", content: "FIPS 203, FIPS 204, session keys, ChaCha20Poly1305 and HMAC details." },
   { title: "Key Encapsulation: ML-KEM (Kyber)", href: "/docs/crypto#key-encapsulation-ml-kem-kyber", type: "heading", page: "Cryptography Specs", content: "Parameter sets ML-KEM-512, ML-KEM-768, ML-KEM-1024." },
   { title: "Digital Signatures: ML-DSA (Dilithium)", href: "/docs/crypto#digital-signatures-ml-dsa-dilithium", type: "heading", page: "Cryptography Specs", content: "ML-DSA-65 and ML-DSA-87 identity authentication." },
-  { title: "Session keys", href: "/docs/crypto#session-keys", type: "heading", page: "Cryptography Specs", content: "ML-KEM shared secret is the ChaCha20 key; a separate random HMAC key is issued at handshake. No HKDF." },
+  { title: "Session keys (HKDF key schedule)", href: "/docs/crypto#session-keys-hkdf-key-schedule", type: "heading", page: "Cryptography Specs", content: "NEN-PROTOCOL-V3 HKDF-SHA256 key schedule: k_enc and k_mac derived locally on each side from the hybrid shared secret. No key material on the wire. Rekey ratchet." },
   { title: "Symmetric Encryption: ChaCha20Poly1305", href: "/docs/crypto#symmetric-encryption-chacha20poly1305", type: "heading", page: "Cryptography Specs", content: "High-performance authenticated encryption with associated data." },
   { title: "Request Authentication: HMAC-SHA256", href: "/docs/crypto#request-authentication-hmac-sha256", type: "heading", page: "Cryptography Specs", content: "Message authentication code preventing request tampering." },
 
   // Page: Protocol
-  { title: "Protocol — NEN-PROTOCOL-V1", href: "/docs/protocol", type: "page", content: "The exact wire format: handshake, base64 payloads, HMAC canonical string, replay window, stream framing, identity model." },
+  { title: "Protocol — NEN-PROTOCOL-V3", href: "/docs/protocol", type: "page", content: "The exact wire format: hybrid X25519 + ML-KEM-768 handshake, HKDF key schedule with no key material on the wire, base64 payloads, HMAC canonical string, replay window, resumption, rekey ratchet, transcript-bound identity." },
+
+  // Page: Changelog
+  { title: "Changelog", href: "/docs/changelog", type: "page", content: "Release history: NEN-PROTOCOL-V3 (v0.4.0) hybrid HKDF key schedule, V2 bidirectional per-request nonce, package versions, wire-breaking changes." },
 
   // Page: Threat model
   { title: "Threat model", href: "/docs/threat-model", type: "page", content: "What Nen protects and does not protect. Trust boundary between endpoints. TLS plus Nen, not versus." },
@@ -116,6 +119,7 @@ export function DocsSidebar() {
       items: [
         { title: "API Reference", href: "/docs/api", icon: <FileText className="w-4 h-4" /> },
         { title: "Error Codes", href: "/docs/error-codes", icon: <Bug className="w-4 h-4" /> },
+        { title: "Changelog", href: "/docs/changelog", icon: <ScrollText className="w-4 h-4" /> },
       ],
     },
   ], []);

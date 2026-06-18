@@ -1,0 +1,84 @@
+export const metadata = {
+  title: "Changelog | Nen Docs",
+  description: "Release history for Nen and the @withnen packages: NEN-PROTOCOL-V3 (v0.4.0) hybrid HKDF key schedule, V2 bidirectional per-request nonce, and the wire-breaking changes between them.",
+};
+
+# Changelog
+
+Release history for the Nen protocol and the `@withnen/*` packages. Versions follow
+semver per package; the **protocol** version is the contract that matters for
+interop. Wire-breaking changes are called out explicitly — client and server must be
+upgraded together across them.
+
+---
+
+## NEN-PROTOCOL-V3 — hybrid HKDF key schedule
+
+| Package | Version |
+| :-- | :-- |
+| `@withnen/core-crypto` | `0.4.0` |
+| `@withnen/client` | `0.4.0` |
+| `@withnen/server` | `0.4.0` |
+| `@withnen/ai` | `0.3.0` |
+
+**Wire-breaking from V2 — upgrade client and server together.**
+
+The headline of V3 is that **no key material crosses the wire**. Where V2 returned a
+server-generated HMAC key in the handshake response, V3 runs an HKDF-SHA256 key
+schedule so both sides derive the session keys locally.
+
+- **HKDF key schedule.** Each side derives `k_enc = HKDF(ss, "nen/v3 enc")` and
+  `k_mac = HKDF(ss, "nen/v3 mac")` from the shared secret. The handshake response is
+  `{ sid, ct[, pk_x_server] }` — no `hmac` field. The session store now holds the two
+  derived keys, not a raw secret plus a transmitted MAC key.
+- **Hybrid key exchange (default).** The shared secret combines **X25519 + ML-KEM-768**,
+  so a session stays secure unless *both* the classical and the post-quantum leg are
+  broken. `securityMode: "pqc-only"` drops the X25519 leg.
+- **Transcript-bound server identity (ML-DSA-65).** The server can sign a transcript
+  hash binding the handshake; the client verifies it and maps mismatches to
+  [`ISO-3006`](/docs/error-codes) / `ISO-3007`.
+- **Session resumption.** A sealed, opaque resumption ticket lets a client re-establish
+  a session without a fresh KEM, with fresh nonces mixed in so resumed keys differ
+  every time.
+- **Rekey ratchet.** `HKDF(k, "nen/v3 ratchet")` advances session keys forward for
+  forward secrecy; exposed via `client.rekey()` and `/api/nen/rekey`.
+- **Assurance.** Known-answer tests (KATs) for the key schedule and a `cargo-fuzz`
+  target over the wire parser.
+- **Compliance attestation.** An ML-DSA-signed runtime evidence export (the paid tier's
+  headline feature).
+
+See the [Protocol Spec](/docs/protocol) and [Cryptography Specs](/docs/crypto) for the
+full detail, and `KEY_SCHEDULE.md` in the repo.
+
+---
+
+## NEN-PROTOCOL-V2 — bidirectional, method-agnostic
+
+| Package | Version |
+| :-- | :-- |
+| `@withnen/core-crypto` | `0.1.0` |
+| `@withnen/client` | `0.3.1` |
+| `@withnen/server` | `0.3.1` |
+| `@withnen/ai` | `0.2.1` |
+| `create-nen-app` | `0.1.0` |
+
+**Wire-breaking from V1.**
+
+- **Per-request nonce moved into the `X-Nen-Nonce` header.** The request body became
+  `{ ct }` and the response `{ ct, n }`, so encryption is symmetric and
+  method-agnostic: every method is authenticated, a request body is encrypted when
+  present, and the response is **always** encrypted — including bodyless
+  `GET` / `HEAD` / `DELETE`.
+- **Per-request HMAC is mandatory** (`strict: true` by default). The signature covers
+  the canonical string `METHOD\nPATH\nTIMESTAMP\nNONCE`; a missing nonce is
+  [`ISO-3005`](/docs/error-codes).
+- First public npm release under the **`@withnen`** scope; `@withnen/core-crypto`
+  published so external installs resolve.
+
+---
+
+## NEN-PROTOCOL-V1 — initial release
+
+The original handshake + encrypted-payload protocol: ML-KEM-768 KEM, ChaCha20-Poly1305
+AEAD, the `withNen` / `nenFetch` developer surface, and the `ISO-xxxx`
+[error-code contract](/docs/error-codes).
