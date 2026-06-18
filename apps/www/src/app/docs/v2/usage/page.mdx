@@ -1,0 +1,185 @@
+export const metadata = {
+  title: "Usage Guide | Nen Docs",
+  description: "Mount session routes, encrypt requests with NenClient, protect endpoints with withNen middleware, handle errors with NenError ISO codes, and stream securely with withNenStream.",
+};
+
+# Usage
+
+Integrating Nen is four steps: mount the session routes, encrypt requests from the client, wrap the endpoints you want decrypted, and handle errors. All snippets below match the shipped `@withnen/client` and `@withnen/server` APIs.
+
+## 1. Mount the session routes
+
+The client needs four session endpoints under `/api/nen`: `handshake`, `rotate`, `terminate`, and `status`. A single dynamic Route Handler covers all of them.
+
+Create `src/app/api/nen/[action]/route.ts`:
+
+```typescript
+import {
+  handleHandshake,
+  handleTerminate,
+  handleStatus,
+  handleRotate,
+  setSessionStore,
+  InMemorySessionStore,
+  // RedisSessionStore,   // any node/serverless runtime
+  // UpstashSessionStore, // Edge runtimes (Workers, Vercel Edge) — REST, no TCP
+} from '@withnen/server';
+
+// ── Session store — pick one based on your runtime ──────────────────────────
+//
+// InMemorySessionStore   → dev / single-instance only. Sessions live in
+//                          process memory; a second instance or a cold start
+//                          will not find the session → ISO-2002.
+//
+// RedisSessionStore      → any Node.js / serverless runtime with TCP.
+//                          Pass your ioredis / node-redis client.
+//
+// UpstashSessionStore    → Edge runtimes (Vercel Edge, Cloudflare Workers).
+//                          Uses the Upstash REST API over fetch — no TCP,
+//                          no extra dependency. Set two env vars and done.
+//
+setSessionStore(new InMemorySessionStore()); // ← change this before going to prod
+
+// setSessionStore(new RedisSessionStore(redisClient));
+
+// setSessionStore(new UpstashSessionStore(
+//   process.env.UPSTASH_REDIS_REST_URL!,
+//   process.env.UPSTASH_REDIS_REST_TOKEN!,
+// ));
+
+export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  switch (action) {
+    case 'handshake': return handleHandshake(req);
+    case 'rotate':    return handleRotate(req);
+    case 'terminate': return handleTerminate(req);
+    default:          return new Response('Not Found', { status: 404 });
+  }
+}
+
+export async function GET(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  if (action === 'status') return handleStatus(req);
+  return new Response('Not Found', { status: 404 });
+}
+```
+
+## 2. Encrypt requests from the client
+
+Construct an `NenClient` with your server **origin** (use `''` for same-origin), run the handshake once, then call `nenFetch`. The request body is encrypted and the JSON response is decrypted for you.
+
+```typescript
+import { NenClient } from '@withnen/client';
+
+const client = new NenClient('', {
+  identityMode: 'pqc', // optional: adds a one-time ML-DSA identity signature
+});
+
+await client.handshake(); // ML-KEM key exchange — run once per session
+
+// nenFetch mirrors fetch(). For a JSON response it returns the decrypted object.
+const data = await client.nenFetch('/api/secure-data', {
+  method: 'POST',
+  body: JSON.stringify({ secret: 'Only the endpoint that needs this can read it' }),
+});
+
+console.log(data); // { message: 'Securely processed', received: { ... } }
+```
+
+Prefer a zero-ceremony helper? `createNenFetch` handshakes lazily on first use:
+
+```typescript
+import { createNenFetch } from '@withnen/client';
+
+const nenFetch = createNenFetch(''); // same-origin
+const data = await nenFetch('/api/secure-data', {
+  method: 'POST',
+  body: JSON.stringify({ amount: 1840 }),
+});
+```
+
+## 3. Protect server endpoints
+
+Wrap any route with `withNen`. The middleware verifies the per-request HMAC, enforces the replay window, decrypts the body, and encrypts whatever you return.
+
+```typescript
+import { withNen } from '@withnen/server';
+
+export const POST = withNen(async (req, body) => {
+  // `body` is already decrypted and the request is already authenticated.
+  return { message: 'Securely processed', received: body };
+});
+```
+
+HMAC is **mandatory** by default — a request without a valid signature is rejected with [`ISO-3001`](/docs/error-codes#iso-3001). Only set `withNen(handler, { strict: false })` for explicitly opted-in legacy clients that cannot sign requests.
+
+## 4. Session rotation
+
+Call `rotate` to replace an existing session without disrupting the user — old session destroyed, new keys negotiated, new `sid` returned. Do this on a timer or after a sensitive action.
+
+```typescript
+// client
+await client.rotate(); // tears down old session, handshakes a new one
+// All subsequent nenFetch calls automatically use the new session
+```
+
+On the server the `handleRotate` in your route handler takes care of the rest — no extra code needed.
+
+## 5. Stream securely (SSE)
+
+For LLM tokens or any server-sent stream, return an async iterable from `withNenStream` and read it with `nenStream` — each chunk is encrypted independently.
+
+```typescript
+// server
+import { withNenStream } from '@withnen/server';
+
+export const POST = withNenStream(async (req, body) => {
+  async function* tokens() {
+    for (const word of ['secure', 'streaming', 'works']) yield word + ' ';
+  }
+  return tokens();
+});
+```
+
+```typescript
+// client
+for await (const chunk of client.nenStream('/api/chat', {
+  method: 'POST',
+  body: JSON.stringify({ prompt }),
+})) {
+  process.stdout.write(chunk); // decrypted token-by-token
+}
+```
+
+## 6. Error handling
+
+Every Nen failure throws a `NenError` with a stable `ISO-xxxx` code. Catch it by code to give users meaningful feedback — and log the detail for yourself without leaking it to the wire.
+
+```typescript
+import { NenError } from '@withnen/client'; // or '@withnen/server'
+
+try {
+  const data = await nenFetch('/api/secure-data', {
+    method: 'POST',
+    body: JSON.stringify({ amount: 1840 }),
+  });
+} catch (err) {
+  if (err instanceof NenError) {
+    switch (err.code) {
+      case 'ISO-2002': // session expired
+        await client.handshake(); // re-establish and retry
+        break;
+      case 'ISO-3001': // HMAC missing — should not happen with the SDK
+      case 'ISO-3002': // HMAC mismatch — request tampered
+        console.error('Auth failure', err.code, err.message);
+        break;
+      default:
+        console.error('Nen error', err.code, err.message);
+    }
+  }
+}
+```
+
+The server-side error response body is always `{ "error": { "code", "message" } }`. The diagnosis hint is logged server-side only — it is never sent to the client. See the [Error codes reference](/docs/error-codes) for every `ISO-xxxx` code with its cause and fix.
+
+Next: see the [Protocol spec](/docs/protocol) for the exact wire format, the [API reference](/docs/api) for every export, or the [Error codes](/docs/error-codes) reference.

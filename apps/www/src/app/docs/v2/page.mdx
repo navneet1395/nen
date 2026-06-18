@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Introduction | Nen Docs",
+  description: "Nen is application-layer, end-to-end payload encryption for modern web APIs. TLS encrypts the channel; Nen encrypts the payload that survives TLS termination — logs, DBs, CDN nodes, proxies, and third-party hops.",
+};
+
+# Introduction to Nen
+
+**Nen** is application-layer, end-to-end payload encryption for modern web APIs. It runs *on top of* TLS — not instead of it.
+
+TLS encrypts the channel and stops the moment it terminates at your load balancer, CDN edge, or serverless runtime. From there the JSON body lives as plaintext across your logs, databases, proxies, and any third-party hop. That surface is what Nen encrypts, using post-quantum key exchange so payloads stay safe even against harvest-now-decrypt-later attacks.
+
+**TLS + Nen.** Not a replacement — an extension past where TLS ends.
+
+## Why Nen?
+
+Nen gives you payload E2EE in about ten lines:
+
+- **FIPS 203 & 204 Compliant**: Uses NIST-standardized **ML-KEM-768** for key encapsulation and optional **ML-DSA-65** for identity signatures.
+- **WebAssembly Powered**: Core cryptography is written in Rust and compiled to WebAssembly for near-native execution across environments.
+- **Hybrid Security Model**: Combines ML-KEM with ChaCha20-Poly1305 and a **mandatory per-request HMAC-SHA256** for defense in depth — the auth-downgrade bypass is closed by default.
+- **Compact Wire Format**: All binary travels as **base64** (`{ ct, n }`), under ~1.4× of raw — never JSON number arrays.
+- **Encrypted Streaming**: `nenStream` encrypts SSE chunk-by-chunk with an XOR-counter nonce, decrypting LLM tokens as they arrive.
+- **Edge-Ready Sessions**: A pluggable session store — in-memory, **Redis**, or **Upstash** (REST, no TCP) — for stateless horizontal scaling, including Edge runtimes.
+- **Diagnosable by Design**: Every failure carries a stable [`ISO-xxxx` code](/docs/error-codes) — paste the code, get the exact cause and fix.
+
+## Architecture at a Glance
+
+1. **Handshake**: The client generates an ML-KEM keypair (and an optional ML-DSA identity signature), sending the public key to the server.
+2. **Encapsulation**: The server encapsulates a shared secret against the client's public key, generates a separate random HMAC key, and returns the ciphertext plus that HMAC key.
+3. **Establishment**: The client decapsulates to recover the same shared secret. The shared secret is the ChaCha20-Poly1305 key; the HMAC key authenticates each request.
+4. **Communication**: Every subsequent request encrypts its payload with ChaCha20-Poly1305 and is signed with a mandatory per-request HMAC.
+
+Ready to dive in? Head over to the [Installation](/docs/installation) guide.

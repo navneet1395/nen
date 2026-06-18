@@ -79,6 +79,10 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Error codes (ISO-xxxx)", href: "/docs/error-codes", type: "page", content: "Every Nen failure carries a stable ISO-xxxx code with HTTP status, cause, and fix. Deep-linkable per code." }
 ];
 
+// Pages that are a single stable contract across protocol versions — they keep
+// their canonical /docs/* URL and are never prefixed with a version segment.
+const VERSION_INDEPENDENT = new Set(["/docs/error-codes", "/docs/changelog"]);
+
 export function DocsSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -88,6 +92,28 @@ export function DocsSidebar() {
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // ── Docs versioning ────────────────────────────────────────────────────────
+  const isV2 = pathname.startsWith("/docs/v2");
+  const currentVersion = isV2 ? "v2" : "latest";
+  // The equivalent "latest" path for whatever page we're on.
+  const latestPath = isV2 ? pathname.replace("/docs/v2", "/docs") || "/docs" : pathname;
+
+  // Rewrite a canonical /docs href into the current version's namespace.
+  function withVersion(href: string): string {
+    if (!isV2 || VERSION_INDEPENDENT.has(href)) return href;
+    if (href === "/docs") return "/docs/v2";
+    if (href.startsWith("/docs/")) return href.replace("/docs/", "/docs/v2/");
+    return href;
+  }
+
+  function switchVersion(v: string) {
+    if (v === "latest") return router.push(latestPath);
+    // → v2: version-independent pages have no v2 twin, so land on the v2 home.
+    if (VERSION_INDEPENDENT.has(latestPath)) return router.push("/docs/v2");
+    const suffix = latestPath === "/docs" ? "" : latestPath.slice("/docs".length);
+    return router.push(`/docs/v2${suffix}`);
+  }
 
   const groups: SidebarGroup[] = useMemo(() => [
     {
@@ -194,6 +220,22 @@ export function DocsSidebar() {
 
   return (
     <div className="sticky top-24 flex flex-col gap-6">
+      {/* Version switcher */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="docs-version" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Version
+        </label>
+        <select
+          id="docs-version"
+          value={currentVersion}
+          onChange={(e) => switchVersion(e.target.value)}
+          className="flex-1 rounded-lg border border-border/60 bg-background/40 px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+        >
+          <option value="latest">v3 (latest)</option>
+          <option value="v2">v2</option>
+        </select>
+      </div>
+
       {/* Search Input Box */}
       <div ref={searchContainerRef} className="relative group z-30">
         <div className="relative">
@@ -278,11 +320,12 @@ export function DocsSidebar() {
             </h4>
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const isActive = pathname === item.href;
+                const href = withVersion(item.href);
+                const isActive = pathname === href;
                 return (
                   <li key={item.href}>
                     <Link
-                      href={item.href}
+                      href={href}
                       className={`flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-all duration-200 relative group/link ${
                         isActive
                           ? "font-medium text-foreground bg-primary/10 shadow-sm border border-primary/20"

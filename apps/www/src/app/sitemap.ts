@@ -36,6 +36,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/docs/api`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/docs/error-codes`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/docs/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.75 },
+
+    // Docs — v2 (older version, lower priority)
+    ...[
+      "", "/quickstart", "/installation", "/usage", "/architecture",
+      "/crypto", "/protocol", "/threat-model", "/audit-readiness", "/api",
+    ].map((suffix) => ({
+      url: `${SITE_URL}/docs/v2${suffix}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
   ];
 
   return routes;

@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Quickstart | Nen Docs",
+  description: "Zero to an encrypted API call in ten lines. Install @withnen/client and @withnen/server, mount the session route, protect an endpoint, call nenFetch. TLS + Nen.",
+};
+
+# Quickstart
+
+From zero to an encrypted API call in about ten lines. TLS stays exactly as it is — Nen adds the layer that survives TLS termination.
+
+## 1. Scaffold
+
+```bash
+npx create-nen-app
+```
+
+This detects your Next.js App Router project, installs `@withnen/client` and `@withnen/server`, patches `next.config.ts` for WebAssembly, and generates the session routes.
+
+Already have a project? Install manually:
+
+```bash
+npm install @withnen/client @withnen/server
+```
+
+## 2. Mount the session routes
+
+`src/app/api/nen/[action]/route.ts`:
+
+```typescript
+import { handleHandshake, handleRotate, handleTerminate, handleStatus } from '@withnen/server';
+
+export async function POST(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  if (action === 'handshake') return handleHandshake(req);
+  if (action === 'rotate')    return handleRotate(req);
+  if (action === 'terminate') return handleTerminate(req);
+  return new Response('Not Found', { status: 404 });
+}
+
+export async function GET(req: Request, { params }: { params: Promise<{ action: string }> }) {
+  const { action } = await params;
+  return action === 'status' ? handleStatus(req) : new Response('Not Found', { status: 404 });
+}
+```
+
+## 3. Protect an endpoint
+
+`src/app/api/secure-data/route.ts`:
+
+```typescript
+import { withNen } from '@withnen/server';
+
+export const POST = withNen(async (req, body) => {
+  // body is already decrypted and authenticated
+  return { ok: true, received: body };
+});
+```
+
+## 4. Call it encrypted
+
+```typescript
+import { createNenFetch } from '@withnen/client';
+
+const nenFetch = createNenFetch(''); // same-origin
+
+const data = await nenFetch('/api/secure-data', {
+  method: 'POST',
+  body: JSON.stringify({ ssn: '412-55-9087' }),
+});
+// the body left your tab as ciphertext; data is the decrypted response
+```
+
+That&apos;s it. Your CDN, logs, and proxies now see only base64 ciphertext for that payload.
+
+## Where to go next
+
+- [Usage](/docs/usage) — streaming, rotation, identity mode, and the full client/server API.
+- [Protocol spec](/docs/protocol) — the exact wire format an auditor reads.
+- [Threat model](/docs/threat-model) — what Nen does and does not protect.
+- [Error codes](/docs/error-codes) — every `ISO-xxxx` failure, with cause and fix.

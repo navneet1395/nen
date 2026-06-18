@@ -1,0 +1,41 @@
+# Audit readiness
+
+What an auditor or buyer can verify today, and what is on the roadmap. The free SDK gives the protection; these artifacts give the proof.
+
+## Cryptographic foundations
+
+- Standards-based primitives only — ML-KEM-768 (FIPS 203), ChaCha20-Poly1305 (RFC 8439), HMAC-SHA256 (FIPS 198-1), ML-DSA-65 (FIPS 204).
+- Implementations come from the audited **RustCrypto** crates — Nen does not hand-roll primitives.
+- No custom transport crypto: Nen runs above TLS.
+
+## Test coverage
+
+- **16** Rust unit tests in `core-crypto` (KEM round-trip, AEAD tamper detection, HMAC, base64, signatures).
+- **17** server tests — handshake, session lifecycle, the HMAC-mandatory downgrade-bypass regression ([`ISO-3001`](/docs/error-codes#iso-3001)), forged signature (`ISO-3002`), stale timestamp (`ISO-3003`), invalid session (`ISO-2002`), nonce replay (`ISO-5001`), AEAD tamper at the HTTP layer (`ISO-4001`), and invalid ML-DSA identity (`ISO-3004`).
+- **7** client tests — coded error paths, `NenError` shape, and the guarantee that the wire body never leaks the internal diagnostic hint.
+
+## Negative-path matrix
+
+| Attack | Expected result | Status |
+| :-- | :-- | :-- |
+| Valid session, no signature | reject `ISO-3001` | ✅ |
+| Forged HMAC | reject `ISO-3002` | ✅ |
+| Stale (>30s) timestamp | reject `ISO-3003` | ✅ |
+| Replayed nonce | reject `ISO-5001` | ✅ |
+| Tampered ciphertext (AEAD) | reject `ISO-4001`, never garbled | ✅ |
+| Invalid ML-DSA identity | reject `ISO-3004` | ✅ |
+
+## Published artifacts for self-verification
+
+- **Protocol spec** — exact wire format, canonical string, nonce scheme, sizes ([read it](/docs/protocol)).
+- **Threat model** — protects / does-not-protect, assumptions, residual risks ([read it](/docs/threat-model)).
+- **Error codes** — every failure path as a stable code ([read it](/docs/error-codes)).
+
+## On the roadmap
+
+- Published test vectors (KEM, AEAD, HMAC canonical strings) for independent verification.
+- Reproducible Wasm build instructions + checksum for the shipped `core-crypto`.
+- Fuzzing harnesses for the wire, handshake, and stream parsers.
+- Independent cryptographic review and a third-party penetration test, with findings published.
+
+The living checklist is `AUDIT_READINESS.md` in the repository.

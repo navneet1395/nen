@@ -1,0 +1,176 @@
+import { SequenceDiagram } from "@/components/sequence-diagram";
+
+export const metadata = {
+  title: "Protocol Spec — NEN-PROTOCOL-V2 | Nen Docs",
+  description: "The exact wire format: ML-KEM handshake, per-request X-Nen-Nonce header, base64 { ct } payloads, HMAC-SHA256 canonical string, 30s replay window, bidirectional encryption for every HTTP method, SSE stream framing, and session lifecycle. NEN-PROTOCOL-V2.",
+};
+
+# Protocol — NEN-PROTOCOL-V2
+
+The wire protocol spoken between `@withnen/client` and `@withnen/server`, as implemented. It runs at the application layer, **on top of TLS** — Nen assumes TLS is present and does not replace it.
+
+> **V2 (v0.3.0):** the per-request nonce moved into the `X-Nen-Nonce` header, so every method is authenticated (including bodyless `GET`/`HEAD`/`DELETE`) and the response is always encrypted. Wire-breaking from V1.
+
+## Cryptographic parameters
+
+| Role                        | Algorithm         | Standard   |
+| :-------------------------- | :---------------- | :--------- |
+| Key encapsulation (KEM)     | ML-KEM-768        | FIPS 203   |
+| Payload encryption (AEAD)   | ChaCha20-Poly1305 | RFC 8439   |
+| Per-request authentication  | HMAC-SHA256       | FIPS 198-1 |
+| Optional identity signature | ML-DSA-65         | FIPS 204   |
+
+Sizes (bytes): ML-KEM-768 public key 1184, ciphertext 1088, shared secret 32, HMAC key 32, nonce 12, AEAD tag 16. All binary travels as **base64** (encoded inside the Wasm boundary), never as JSON number arrays.
+
+## Endpoints
+
+| Method | Path                     | Purpose                                      |
+| :----- | :----------------------- | :------------------------------------------- |
+| POST   | `/api/nen/handshake` | Establish a session                          |
+| POST   | `/api/nen/rotate`    | Destroy old session, establish a new one     |
+| POST   | `/api/nen/terminate` | Destroy a session (logout / forward secrecy) |
+| GET    | `/api/nen/status`    | Liveness check for a session id              |
+
+## Handshake (once per session)
+
+1. Client generates an ML-KEM-768 keypair and POSTs `{ "pk": base64(pk) }` (optionally `sigPk` + `sigOfPk` for ML-DSA identity).
+2. Server encapsulates → `(sharedSecret, ciphertext)`, generates a 32-byte HMAC key, stores `{ sharedSecret, hmacKey }` under a new `sid`, and returns `{ "sid", "ct": base64(ciphertext), "hmac": base64(hmacKey) }`.
+3. Client decapsulates to recover the same `sharedSecret`, then **zeroizes its secret key**.
+
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client", type: "client" },
+    { id: "server", name: "Nen Server", type: "server" },
+  ]}
+  steps={[
+    { id: "1", from: "client", to: "client", label: "1. Generate ML-KEM-768 keypair" },
+    { 
+      id: "2", from: "client", to: "server", animated: true, 
+      label: "2. POST /api/nen/handshake",
+      body: '{\n  "pk": base64(pk)\n}' 
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "3. Encapsulate pk → (sharedSecret, ciphertext)",
+      body: "Generate 32-byte HMAC key\nStore { sharedSecret, hmacKey } under sid" 
+    },
+    { 
+      id: "4", from: "server", to: "client", animated: true, color: "success",
+      label: "4. Return Session Keys",
+      body: '{\n  "sid": "...",\n  "ct": base64(ciphertext),\n  "hmac": base64(hmacKey)\n}' 
+    },
+    { 
+      id: "5", from: "client", to: "client", 
+      label: "5. Decapsulate ct to recover sharedSecret",
+      body: "Zeroize secret key" 
+    }
+  ]}
+/>
+
+## Encrypted request / response
+
+Encryption is **symmetric and method-agnostic**: every method is authenticated, a
+request body is encrypted when present, and the response is **always** encrypted —
+bodyless `GET` / `HEAD` / `DELETE` included.
+
+| Method | Authenticated | Request body | Response body |
+| :-- | :-: | :-: | :-: |
+| `GET` | ✅ | — | encrypted |
+| `HEAD` | ✅ | — | none (metadata headers only) |
+| `DELETE` | ✅ | optional | encrypted |
+| `POST` / `PUT` / `PATCH` | ✅ | encrypted | encrypted |
+
+Headers (on **every** request):
+
+```
+X-Nen-Session:    <sid>
+X-Nen-Timestamp:  <unix_ms>
+X-Nen-Nonce:      base64(n)          // per-request nonce — always present
+X-Nen-Signature:  base64( HMAC-SHA256(hmacKey, canonical) )
+```
+
+Body (only when the method carries one): `{ "ct": base64(AEAD.encrypt(sharedSecret, n, plaintext)) }`
+
+The per-request nonce travels in the `X-Nen-Nonce` header (not the body), so it
+exists for bodyless methods too. When a body is present it is sealed under that
+same nonce, so the body is just `{ ct }`.
+
+The canonical string that is HMAC'd is exactly:
+
+```
+METHOD \n PATH \n TIMESTAMP \n NONCE
+```
+
+`PATH` is the URL pathname only and `NONCE` is the `X-Nen-Nonce` value. A path-vs-full-URL mismatch is the most common cause of [`ISO-3002`](/docs/error-codes#iso-3002).
+
+Server verification order (all methods): session lookup → **nonce present** (missing → [`ISO-3005`](/docs/error-codes#iso-3005)) → **mandatory HMAC** (missing → [`ISO-3001`](/docs/error-codes#iso-3001), bad → `ISO-3002`, timestamp >30s → `ISO-3003`) → nonce replay (`ISO-5001`) → AEAD decrypt of the body if present (`ISO-4001`). The response is then encrypted back as `{ ct, n }` with a fresh server nonce.
+
+> **GET query strings** are request-line metadata (logged by proxies, CDNs, access logs) and cannot be confidential while the request stays a real GET. The pathname is integrity-protected and the response is encrypted, but put **secret selectors** in a `POST` body, not a query string.
+
+<SequenceDiagram
+  participants={[
+    { id: "client", name: "Client", type: "client" },
+    { id: "server", name: "Nen Server", type: "server" },
+  ]}
+  steps={[
+    { 
+      id: "1", from: "client", to: "client", 
+      label: "1. AEAD encrypt(sharedSecret, nonce, plaintext)",
+      body: "2. Compute HMAC(hmacKey, METHOD\nPATH\nTIMESTAMP\nNONCE)" 
+    },
+    { 
+      id: "2", from: "client", to: "server", animated: true, color: "primary",
+      label: "3. Encrypted Request",
+      body: "Headers: Session, Timestamp, Nonce, Signature\nBody: { ct }  (omitted on GET/HEAD)" 
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "4. Verify HMAC & Timestamp",
+      body: "5. Check nonce replay\n6. AEAD Decrypt → Plaintext" 
+    }
+  ]}
+/>
+
+
+## Encrypted streaming (SSE)
+
+The response sets `X-Nen-Stream-Nonce: base64(baseNonce)` and emits SSE frames `data: base64(ciphertext)\n\n`. Each chunk's nonce is `baseNonce` with its last 4 bytes XOR-ed by the chunk index; the stream ends with an encrypted `__FIN__` sentinel.
+
+<SequenceDiagram
+  participants={[
+    { id: "server", name: "Nen Server", type: "server" },
+    { id: "client", name: "Client", type: "client" },
+  ]}
+  steps={[
+    { 
+      id: "1", from: "server", to: "server", 
+      label: "1. Generate baseNonce",
+      body: "Set X-Nen-Stream-Nonce header" 
+    },
+    { 
+      id: "2", from: "server", to: "client", animated: true, 
+      label: "2. SSE Response Headers"
+    },
+    { 
+      id: "3", from: "server", to: "server", 
+      label: "3. For each chunk (i)",
+      body: "nonce = baseNonce ^ i\nct = AEAD.encrypt(chunk)\nFormat: data: base64(ct)\n\n" 
+    },
+    { 
+      id: "4", from: "server", to: "client", animated: true, color: "primary",
+      label: "4. SSE Chunk Frame"
+    },
+    { 
+      id: "5", from: "server", to: "client", 
+      label: "5. __FIN__",
+      body: "Encrypted Sentinel"
+    }
+  ]}
+/>
+
+## Identity model
+
+- **v1 (default):** server identity rides the existing TLS certificate; the handshake runs inside the authenticated TLS channel. We trust the web PKI for _identity_ even though we do not rely on it for _long-term confidentiality_ — different properties.
+- **v2 (opt-in):** with `identityMode: 'pqc'`, the client signs the ephemeral ML-KEM key with a long-lived ML-DSA key, giving a TLS-independent trust root. One-time, at handshake — never per request. Failure → [`ISO-3004`](/docs/error-codes#iso-3004).
+
+The full spec lives in `PROTOCOL.md` in the repository.
