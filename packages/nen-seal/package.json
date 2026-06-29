@@ -1,0 +1,38 @@
+{
+  "name": "@withnen/seal",
+  "version": "0.1.0",
+  "description": "Session-less public-key envelope encryption for Nen. Seal a payload to an ML-KEM-768 recipient — for encrypted webhooks, form/upload sealing, field-level encryption, and media content keys.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "NODE_OPTIONS=--localstorage-file=.jest-localstorage jest --passWithNoTests",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@withnen/core-crypto": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
+    "tsup": "^8.0.2",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "author": "Nen <hello@withnen.com>",
+  "homepage": "https://withnen.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navneet1395/nen.git",
+    "directory": "packages/nen-seal"
+  },
+  "bugs": {
+    "url": "https://github.com/navneet1395/nen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
