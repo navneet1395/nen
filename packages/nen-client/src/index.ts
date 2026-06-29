@@ -4,6 +4,10 @@ import { NenError } from './errors';
 export { NenError, NEN_ERRORS, describeNenCode } from './errors';
 export type { NenErrorSpec, NenErrorName } from './errors';
 
+// Session-less envelope encryption (seal/open, field-level, webhooks, sealed
+// uploads). Re-exported so browser apps get the whole toolkit from one import.
+export * from '@withnen/seal';
+
 export interface NenClientOptions {
   identityMode?: 'none' | 'pqc';
   /**

@@ -39,3 +39,7 @@ export {
   describeNenCode,
 } from './errors';
 export type { NenErrorSpec, NenErrorName } from './errors';
+
+// Session-less envelope encryption (seal/open, field-level, webhooks, sealed
+// uploads). Re-exported so server apps get the whole toolkit from one import.
+export * from '@withnen/seal';

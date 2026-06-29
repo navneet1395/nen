@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Compass, BookOpen, Cpu, ShieldAlert, FileText, CornerDownRight, Rocket, ScrollText, ShieldCheck, ClipboardCheck, Bug } from "lucide-react";
+import { Search, Compass, BookOpen, Cpu, ShieldAlert, FileText, CornerDownRight, Rocket, ScrollText, ShieldCheck, ClipboardCheck, Bug, Lock } from "lucide-react";
 
 interface SidebarItem {
   title: string;
@@ -46,6 +46,9 @@ const DOCS_INDEX: SearchIndexItem[] = [
   { title: "Using the Client Engine", href: "/docs/usage#2-using-the-client-engine", type: "heading", page: "Usage Guide", content: "Creating an NenClient instance and sending requests." },
   { title: "Protecting Server Endpoints", href: "/docs/usage#3-protecting-server-endpoints", type: "heading", page: "Usage Guide", content: "Verifying secure payloads using middleware signature checks." },
 
+  // Page: Envelope encryption (seal)
+  { title: "Envelope Encryption (@withnen/seal)", href: "/docs/seal", type: "page", content: "Session-less public-key envelope encryption. Seal a payload to an ML-KEM-768 recipient key. Field-level encryption (sealFields), encrypted webhooks (sealWebhook), sealed forms and uploads and images (sealBlob, openObjectURL). Re-exported from client and server." },
+
   // Page: Architecture Detail
   { title: "Under the Hood", href: "/docs/architecture", type: "page", content: "Deep dive into Nen architecture." },
   { title: "The WebAssembly Core (core-crypto)", href: "/docs/architecture#the-webassembly-core-core-crypto", type: "heading", page: "Under the Hood", content: "Rust-compiled Wasm core running ML-KEM and ML-DSA natively." },
@@ -81,7 +84,7 @@ const DOCS_INDEX: SearchIndexItem[] = [
 
 // Pages that are a single stable contract across protocol versions — they keep
 // their canonical /docs/* URL and are never prefixed with a version segment.
-const VERSION_INDEPENDENT = new Set(["/docs/error-codes", "/docs/changelog"]);
+const VERSION_INDEPENDENT = new Set(["/docs/error-codes", "/docs/changelog", "/docs/seal"]);
 
 export function DocsSidebar() {
   const pathname = usePathname();
@@ -123,6 +126,7 @@ export function DocsSidebar() {
         { title: "Quickstart", href: "/docs/quickstart", icon: <Rocket className="w-4 h-4" /> },
         { title: "Installation", href: "/docs/installation", icon: <Compass className="w-4 h-4" /> },
         { title: "Usage", href: "/docs/usage", icon: <Cpu className="w-4 h-4" /> },
+        { title: "Envelope Encryption", href: "/docs/seal", icon: <Lock className="w-4 h-4" /> },
       ],
     },
     {

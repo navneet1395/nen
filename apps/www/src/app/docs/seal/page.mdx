@@ -1,0 +1,126 @@
+import { SealDemo } from "@/components/seal-demo";
+
+export const metadata = {
+  title: "Envelope Encryption (@withnen/seal) | Nen Docs",
+  description:
+    "Session-less, post-quantum public-key encryption: seal a payload to an ML-KEM-768 recipient key. Field-level encryption, encrypted webhooks, and browser-sealed forms & uploads — all from one primitive.",
+};
+
+# Envelope encryption — `@withnen/seal`
+
+`@withnen/client` and `@withnen/server` protect a live **session** — a handshake,
+then encrypted request/response traffic. But a lot of sensitive data has no
+session: a webhook fired between two services, a form field on its way to your
+database, an image uploaded to object storage. `@withnen/seal` covers that case.
+
+You **seal** a payload to a recipient's ML-KEM-768 public key; only the holder of
+the secret key can **open** it. There's no shared session and nothing secret on
+the wire — the same post-quantum guarantee as the rest of Nen, applied to data at
+rest and in flight. As always: this keeps data ciphertext *between* the
+endpoints; the endpoints hold plaintext by design. It is **not** DRM.
+
+## See it run
+
+Pick an image (or use the sample). It's sealed to a freshly generated public key
+**in your browser** with real ML-KEM-768 + ChaCha20-Poly1305, then opened back
+with the secret key. What sits in the middle — what your CDN and storage would
+hold — is ciphertext.
+
+<SealDemo />
+
+## Seal & open
+
+```ts
+import { generateSealKeypair, sealJSON, openJSON } from "@withnen/seal";
+
+const recipient = generateSealKeypair();             // { publicKey, secretKey }
+
+const env = sealJSON(recipient.publicKey, { amount: 4200 });
+// env is base64-only: { v, kem, n, ct } — store it or send it in the clear.
+
+const data = openJSON(recipient.secretKey, env);     // { amount: 4200 }
+```
+
+Bind an envelope to a purpose with `context` — it can't be opened under a
+different one:
+
+```ts
+seal(pk, bytes, { context: "invoice:2026-06" });
+```
+
+## Field-level encryption
+
+Encrypt the sensitive fields of an object **before** it reaches your logs, queue,
+or database. The rest of the record stays plain and queryable.
+
+```ts
+import { sealFields, openFields } from "@withnen/seal";
+
+const safe = sealFields(user, ["ssn", "profile.phone"], recipient.publicKey);
+// safe.id / safe.email stay readable; ssn & phone are sealed envelopes.
+
+const full = openFields(safe, recipient.secretKey);  // original object back
+```
+
+## Encrypted webhooks
+
+Seal **and** sign a webhook body. The receiver verifies the sender (ML-DSA) and
+the event before it ever touches a handler.
+
+```ts
+import { sealWebhook, openWebhook } from "@withnen/seal";
+
+// Sender
+const { headers, body } = sealWebhook(receiverPk, "payment.succeeded", payload, signer);
+await fetch(url, { method: "POST", headers, body });
+
+// Receiver — pins the sender, checks the event
+const { event, payload } = openWebhook(receiverSk, rawBody, {
+  signerPublicKey: senderPk,
+  expectedEvent: "payment.succeeded",
+});
+```
+
+## Sealed forms & uploads
+
+Encrypt a file or image in the browser before it's uploaded — it's ciphertext the
+moment it leaves the page, and stays that way in storage and on the CDN.
+
+```ts
+import { sealBlob, openBlob, openObjectURL } from "@withnen/seal";
+
+// Browser — seal before upload
+const sealed = await sealBlob(serverPublicKey, file);
+await fetch("/upload", { method: "POST", body: JSON.stringify(sealed) });
+
+// Anywhere with the secret key — rebuild it
+const blob = openBlob(serverSecretKey, sealed);
+const url  = openObjectURL(serverSecretKey, sealed);   // for <img>/<video src>
+```
+
+Large files are split into independent AEAD frames (`sealFramed` / `openFramed`),
+so a single key-encapsulation covers the whole object.
+
+## What it protects — and what it doesn't
+
+| Adversary / location | Protected? |
+| :- | :- |
+| CDN, edge cache, object storage, logs, proxies, third-party hops | ✅ ciphertext only |
+| Quantum *harvest-now-decrypt-later* | ✅ ML-KEM-768 |
+| Casual theft: right-click-save, hotlink, leaked URL, scraping | ✅ no plaintext at rest |
+| An authorized viewer screen-recording what they're shown | ❌ no system stops this |
+| A compromised endpoint | ❌ endpoints hold plaintext by design |
+
+Pair it with DRM if you need playback/license control; reach for `@withnen/seal`
+when you need the **content itself** to stay confidential everywhere it travels
+and rests. See the [Threat Model](/docs/threat-model) for the full boundary.
+
+## Install
+
+```bash
+npm install @withnen/seal
+```
+
+It's also re-exported from `@withnen/client` and `@withnen/server`, so anything
+already importing those gets `seal`, `sealFields`, `sealWebhook`, and `sealBlob`
+for free.
