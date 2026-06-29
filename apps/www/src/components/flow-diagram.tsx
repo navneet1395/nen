@@ -53,7 +53,7 @@ function Rail({
   const styles =
     variant === "nen"
       ? "border-primary/40 bg-primary/10 text-primary"
-      : "border-zinc-400/40 bg-muted/40 text-muted-foreground";
+      : "border-border/40 bg-muted/40 text-muted-foreground";
   const Icon = variant === "nen" ? ShieldCheck : Lock;
   return (
     <div

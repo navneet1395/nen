@@ -32,8 +32,6 @@ export function InteractiveDemo() {
   const [symmetricAlgo] = useState("ChaCha20-Poly1305");
   const demoRef = useRef<HTMLDivElement>(null);
 
-
-
   const resetDemo = () => {
     setStep(0);
     setIsPlaying(false);
@@ -146,9 +144,9 @@ export function InteractiveDemo() {
   return (
     <Card
       ref={demoRef}
-      className="w-full  mx-auto shadow-2xl border-border bg-background/50 backdrop-blur-md overflow-hidden flex flex-col relative"
+      className="w-full mx-auto shadow-2xl border-border bg-muted/20 backdrop-blur-xl overflow-hidden flex flex-col relative glow-blue-sm"
     >
-      <CardHeader className="border-b bg-muted/10 pb-4">
+      <CardHeader className="border-b border-border bg-muted/30 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <WebNenGuardian pixel={4} state={isPlaying ? 'alert' : 'idle'} aura={false} />
@@ -157,23 +155,23 @@ export function InteractiveDemo() {
                 <Zap className="h-5 w-5 text-primary" />
                 Cryptographic Dashboard
               </CardTitle>
-              <CardDescription className="mt-1.5">
+              <CardDescription className="mt-1.5 text-muted-foreground/80">
                 Interactive Post-Quantum Key Exchange & Payload Encryption
               </CardDescription>
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+            <div className="w-3 h-3 rounded-full bg-red-500/60"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/60"></div>
+            <div className="w-3 h-3 rounded-full bg-emerald-500/60"></div>
           </div>
         </div>
       </CardHeader>
 
       {/* Interactive Controls Panel */}
-      <div className="p-5 border-b bg-muted/5 grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-sm">
+      <div className="p-5 border-b border-border bg-muted/10 grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-sm">
         <div className="flex flex-col gap-1.5 md:col-span-2">
-          <label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+          <label className="font-semibold text-xs text-muted-foreground/80 uppercase tracking-wider">
             Plaintext Payload to Encrypt
           </label>
           <input
@@ -181,20 +179,20 @@ export function InteractiveDemo() {
             value={customPayload}
             disabled={isPlaying}
             onChange={(e) => setCustomPayload(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-xs font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-inner"
+            className="w-full bg-[var(--code-bg)] border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-600 dark:text-emerald-600 dark:text-emerald-400/80 focus:outline-none focus:ring-1 focus:ring-primary/30 shadow-inner"
             placeholder='{"data": "secure message"}'
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+          <label className="font-semibold text-xs text-muted-foreground/80 uppercase tracking-wider">
             ML-KEM Level
           </label>
           <select
             value={kemLevel}
             disabled={isPlaying}
             onChange={(e) => setKemLevel(e.target.value)}
-            className="w-full bg-background border rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground/70 focus:outline-none focus:ring-1 focus:ring-primary/30"
           >
             <option value="512">ML-KEM-512 (Fast)</option>
             <option value="768">ML-KEM-768 (Standard)</option>
@@ -214,7 +212,7 @@ export function InteractiveDemo() {
             onClick={runHandshake}
             disabled={isPlaying}
             size="sm"
-            className={`flex-1 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md ${!isPlaying && step === 0 ? "animate-pulse ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+            className={`flex-1 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 ${!isPlaying && step === 0 ? "animate-pulse ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : ""}`}
             style={{ touchAction: 'manipulation' }}
           >
             <Play className="w-3.5 h-3.5" /> Start
@@ -224,7 +222,7 @@ export function InteractiveDemo() {
             onClick={resetDemo}
             disabled={isPlaying}
             size="sm"
-            className="px-2 text-xs"
+            className="px-2 text-xs border-border hover:bg-muted/50 text-muted-foreground"
             style={{ touchAction: 'manipulation' }}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -233,17 +231,17 @@ export function InteractiveDemo() {
       </div>
 
       <CardContent className="p-0 flex flex-col">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 p-6 items-stretch bg-gradient-to-b from-transparent to-muted/5 relative">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 p-6 items-stretch bg-gradient-to-b from-transparent to-white/[0.01] relative">
           {/* Client Side Panel */}
           <div
             className={
-              "flex flex-col border rounded-xl bg-background/80 shadow-sm transition-all duration-500 overflow-hidden " +
+              "flex flex-col border rounded-xl bg-muted/20 shadow-sm transition-all duration-500 overflow-hidden " +
               (step >= 1
-                ? "ring-2 ring-primary/50 border-primary/20"
-                : "border-border/50")
+                ? "ring-2 ring-primary/30 border-primary/20"
+                : "border-border")
             }
           >
-            <div className="bg-muted/30 p-3 border-b flex items-center gap-2 font-medium text-sm">
+            <div className="bg-muted/30 p-3 border-b border-border flex items-center gap-2 font-medium text-sm text-foreground/80">
               <MonitorSmartphone className="w-4 h-4 text-primary" />
               Client Edge
             </div>
@@ -251,7 +249,7 @@ export function InteractiveDemo() {
               {step >= 1 ? (
                 <div className="space-y-2.5 text-xs font-mono">
                   <div>
-                    <div className="flex justify-between items-center text-muted-foreground mb-1">
+                    <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                       <span>Kyber Public Key</span>
                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                         {kemLevel === "512"
@@ -262,17 +260,17 @@ export function InteractiveDemo() {
                         bytes
                       </span>
                     </div>
-                    <div className="break-all text-emerald-400 bg-zinc-950 p-2 rounded border border-zinc-800 shadow-inner">
+                    <div className="break-all text-emerald-600 dark:text-emerald-600 dark:text-emerald-400/80 bg-[var(--code-bg)] p-2 rounded border border-border shadow-inner">
                       PK_{kemLevel}_A7F2B9...[TRUNCATED]
                     </div>
                   </div>
 
                   {step >= 4 && (
                     <div>
-                      <div className="flex justify-between items-center text-muted-foreground mb-1">
+                      <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                         <span>Derived Session Key</span>
                       </div>
-                      <div className="break-all text-blue-400 bg-zinc-950 p-2 rounded border border-zinc-800 shadow-inner font-bold">
+                      <div className="break-all text-primary bg-[var(--code-bg)] p-2 rounded border border-border shadow-inner font-bold">
                         {getMockSharedSecret()}
                       </div>
                     </div>
@@ -280,17 +278,17 @@ export function InteractiveDemo() {
 
                   {step === 5 && (
                     <div className="animate-pulse">
-                      <div className="flex justify-between items-center text-muted-foreground mb-1">
+                      <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                         <span>Encrypting & Sending...</span>
                       </div>
-                      <div className="break-all text-orange-400 bg-zinc-950 p-2 rounded border border-zinc-800 shadow-inner">
+                      <div className="break-all text-orange-600 dark:text-orange-400/80 bg-[var(--code-bg)] p-2 rounded border border-border shadow-inner">
                         {getEncryptedPayload()}
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 py-4">
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground/60 opacity-50 py-4">
                   <Unlock className="w-8 h-8 mb-2" />
                   <span className="text-sm">Awaiting Key Generation</span>
                 </div>
@@ -300,11 +298,11 @@ export function InteractiveDemo() {
 
           {/* Network Visualization */}
           <div className="flex flex-col items-center justify-center py-4 md:py-0 w-full md:w-32 relative min-h-[60px]">
-            <div className="hidden md:block h-0.5 w-full bg-border absolute top-1/2 -translate-y-1/2 z-0"></div>
+            <div className="hidden md:block h-0.5 w-full bg-muted/50 absolute top-1/2 -translate-y-1/2 z-0"></div>
 
             {step === 2 && (
               <div className="absolute top-1/2 -translate-y-1/2 z-10 flex w-full justify-center">
-                <div className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-primary/30 animate-pulse">
+                <div className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-primary/20 animate-pulse">
                   &rarr; HANDSHAKE
                 </div>
               </div>
@@ -312,7 +310,7 @@ export function InteractiveDemo() {
 
             {step === 3 && (
               <div className="absolute top-1/2 -translate-y-1/2 z-10 flex w-full justify-center">
-                <div className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-primary/30 animate-pulse">
+                <div className="bg-primary text-primary-foreground px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-primary/20 animate-pulse">
                   &larr; CIPHERTEXT
                 </div>
               </div>
@@ -320,27 +318,23 @@ export function InteractiveDemo() {
 
             {step === 5 && (
               <div className="absolute top-1/2 -translate-y-1/2 z-10 flex w-full justify-center">
-                <div className="bg-orange-600 text-white px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-orange-950 animate-pulse">
+                <div className="bg-orange-500/80 text-white px-2.5 py-1 rounded-md text-[10px] font-mono font-bold shadow-md shadow-orange-500/20 animate-pulse">
                   &rarr; ENCRYPTED DATA
                 </div>
               </div>
             )}
-
-            {/* <div className={"z-10 rounded-full p-2 transition-colors duration-500 bg-background border " + (step >= 4 ? 'border-green-500 text-green-500' : 'border-muted-foreground text-muted-foreground')}>
-                <ShieldCheck className="w-6 h-6" />
-             </div> */}
           </div>
 
           {/* Server Side Panel */}
           <div
             className={
-              "flex flex-col border rounded-xl bg-background/80 shadow-sm transition-all duration-500 overflow-hidden " +
+              "flex flex-col border rounded-xl bg-muted/20 shadow-sm transition-all duration-500 overflow-hidden " +
               (step >= 3
-                ? "ring-2 ring-primary/50 border-primary/20"
-                : "border-border/50")
+                ? "ring-2 ring-primary/30 border-primary/20"
+                : "border-border")
             }
           >
-            <div className="bg-muted/30 p-3 border-b flex items-center gap-2 font-medium text-sm">
+            <div className="bg-muted/30 p-3 border-b border-border flex items-center gap-2 font-medium text-sm text-foreground/80">
               <Server className="w-4 h-4 text-primary" />
               Nen Middleware
             </div>
@@ -348,36 +342,36 @@ export function InteractiveDemo() {
               {step >= 3 ? (
                 <div className="space-y-2.5 text-xs font-mono">
                   <div>
-                    <div className="flex justify-between items-center text-muted-foreground mb-1">
+                    <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                       <span>Server Symmetrical Key</span>
                     </div>
-                    <div className="break-all text-blue-400 bg-zinc-950 p-2 rounded border border-zinc-800 shadow-inner font-bold">
+                    <div className="break-all text-primary bg-[var(--code-bg)] p-2 rounded border border-border shadow-inner font-bold">
                       {step >= 4 ? getMockSharedSecret() : "DERIVING..."}
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center text-muted-foreground mb-1">
+                    <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                       <span>Server Ciphertext</span>
                     </div>
-                    <div className="break-all text-emerald-400 bg-zinc-950 p-2 rounded border border-zinc-800 shadow-inner">
+                    <div className="break-all text-emerald-600 dark:text-emerald-600 dark:text-emerald-400/80 bg-[var(--code-bg)] p-2 rounded border border-border shadow-inner">
                       {getMockCiphertext()}
                     </div>
                   </div>
 
                   {step === 5 && (
                     <div className="animate-fade-in">
-                      <div className="flex justify-between items-center text-muted-foreground mb-1">
+                      <div className="flex justify-between items-center text-muted-foreground/60 mb-1">
                         <span>Decrypted Plaintext</span>
                       </div>
-                      <div className="break-all text-green-400 bg-zinc-950/80 p-2 rounded border border-green-900/30 shadow-inner font-semibold">
+                      <div className="break-all text-emerald-600 dark:text-emerald-600 dark:text-emerald-400/90 bg-[var(--code-bg)]/80 p-2 rounded border border-emerald-500/20 dark:border-emerald-400/20 shadow-inner font-semibold">
                         {customPayload}
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 py-4">
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground/60 opacity-50 py-4">
                   <Lock className="w-8 h-8 mb-2" />
                   <span className="text-sm">Awaiting Handshake</span>
                 </div>
@@ -387,8 +381,8 @@ export function InteractiveDemo() {
         </div>
 
         {/* Faux Terminal Logs */}
-        <div className="bg-muted/30 p-4 font-mono text-xs border-t min-h-[140px] flex flex-col justify-end">
-          <div className="flex items-center gap-2 mb-2 text-muted-foreground pb-2 border-b border-border/50">
+        <div className="bg-muted/20 p-4 font-mono text-xs border-t border-border min-h-[140px] flex flex-col justify-end">
+          <div className="flex items-center gap-2 mb-2 text-muted-foreground/60 pb-2 border-b border-border">
             <TerminalSquare className="w-4 h-4" />
             <span>nen-engine.log</span>
           </div>
@@ -398,14 +392,14 @@ export function InteractiveDemo() {
                 key={i}
                 className={
                   log.includes("[SYSTEM]")
-                    ? "text-primary/95 font-semibold"
+                    ? "text-primary/90 font-semibold"
                     : log.includes("[SERVER]")
-                      ? "text-emerald-600 dark:text-emerald-400"
+                      ? "text-emerald-600 dark:text-emerald-600 dark:text-emerald-400/80"
                       : log.includes("[CLIENT]")
-                        ? "text-blue-600 dark:text-blue-400"
+                        ? "text-blue-600 dark:text-blue-400/80"
                         : log.includes("[NETWORK]")
-                          ? "text-orange-600 dark:text-orange-400"
-                          : "text-zinc-700 dark:text-zinc-300"
+                          ? "text-orange-600 dark:text-orange-400/80"
+                          : "text-muted-foreground/60"
                 }
               >
                 {log}

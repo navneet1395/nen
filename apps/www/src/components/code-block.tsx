@@ -28,11 +28,11 @@ export function CodeBlock({
   };
 
   return (
-    <div className="group relative not-prose my-6 ">
+    <div className="group relative not-prose my-6">
       <pre
         ref={ref}
         className={
-          "overflow-x-auto rounded-xl border border-zinc-800 bg-background/80 p-4 pr-12 font-mono text-[13px] leading-relaxed text-foreground shadow-lg " +
+          "overflow-x-auto rounded-xl border border-border bg-[var(--code-bg)] p-4 pr-12 font-mono text-[13px] leading-relaxed text-foreground/70 shadow-lg " +
           (className ?? "")
         }
         {...props}
@@ -43,10 +43,10 @@ export function CodeBlock({
         type="button"
         onClick={copy}
         aria-label="Copy code"
-        className="absolute right-2.5 top-2.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-700/70 bg-zinc-800/80 text-zinc-300 opacity-0 transition-all hover:border-primary/50 hover:text-primary group-hover:opacity-100 focus:opacity-100"
+        className="absolute right-2.5 top-2.5 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground/80 opacity-0 transition-all hover:border-primary/30 hover:text-primary group-hover:opacity-100 focus:opacity-100"
       >
         {copied ? (
-          <Check className="h-4 w-4 text-emerald-400" />
+          <Check className="h-4 w-4 text-primary" />
         ) : (
           <Copy className="h-4 w-4" />
         )}

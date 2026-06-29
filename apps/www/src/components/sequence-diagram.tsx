@@ -40,7 +40,7 @@ export function SequenceDiagram({
   steps: Step[];
 }) {
   return (
-    <div className="relative w-full overflow-x-auto overflow-y-hidden pb-6 my-8 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800/60 p-4 sm:p-8">
+    <div className="relative w-full overflow-x-auto overflow-y-hidden pb-6 my-8 rounded-xl bg-muted/20 border border-border p-4 sm:p-8">
       <div className="relative font-sans mx-auto" style={{ minWidth: `${participants.length * 220}px` }}>
         {/* Header row (Participants) */}
         <div className="flex relative z-20 w-full mb-8">
@@ -48,8 +48,8 @@ export function SequenceDiagram({
             const Icon = p.type ? IconMap[p.type] : null;
             return (
               <div key={p.id} className="flex-1 flex flex-col items-center">
-                <div className="px-4 py-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-sm font-semibold flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
-                  {Icon && <Icon className="w-4 h-4 text-zinc-500" />}
+                <div className="px-4 py-2 bg-primary/50 rounded-xl border border-border shadow-sm text-sm font-semibold flex items-center gap-2 text-foreground">
+                  {Icon && <Icon className="w-4 h-4 text-muted-foreground/80" />}
                   {p.name}
                 </div>
               </div>
@@ -61,7 +61,7 @@ export function SequenceDiagram({
         <div className="absolute top-10 bottom-0 left-0 right-0 flex z-0 pointer-events-none">
           {participants.map((p) => (
             <div key={p.id} className="flex-1 flex justify-center">
-              <div className="w-px h-full bg-transparent border-l-2 border-dashed border-zinc-200 dark:border-zinc-800/80" />
+              <div className="w-px h-full bg-transparent border-l-2 border-dashed border-border" />
             </div>
           ))}
         </div>
@@ -105,9 +105,9 @@ function StepRow({
   // Colors
   const colorMap = {
     primary: "border-primary bg-primary text-primary",
-    success: "border-emerald-500 bg-emerald-500 text-emerald-500",
+    success: "border-emerald-600 dark:border-emerald-400 bg-emerald-600 dark:bg-emerald-400 text-emerald-600 dark:text-emerald-400",
     muted:
-      "border-zinc-400 bg-zinc-400 text-zinc-400 dark:border-zinc-600 dark:bg-zinc-600 dark:text-zinc-500",
+      "border-black/20 dark:border-white/30 bg-black/20 dark:bg-white/30 text-black/40 dark:text-white/30",
   };
   const colorClass = colorMap[step.color || "primary"];
   const lineClass = colorClass.split(" ")[0]; // just the border color
@@ -153,11 +153,11 @@ function StepRow({
           />
 
           <div className="pl-10 flex flex-col items-start pt-0">
-            <div className="text-[11px] font-semibold bg-white dark:bg-zinc-950 px-2 py-0.5 border border-zinc-200 dark:border-zinc-800 rounded-md z-10 mb-2 shadow-sm text-zinc-900 dark:text-zinc-100">
+            <div className="text-[11px] font-semibold bg-primary/50 px-2 py-0.5 border border-border rounded-md z-10 mb-2 shadow-sm text-foreground">
               {step.label}
             </div>
             {step.body && (
-              <div className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800/80 rounded-md p-2.5 text-[11px] font-mono z-10 text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap break-all shadow-sm relative group-hover:border-primary/30 transition-colors w-max max-w-full">
+              <div className="bg-muted/30 backdrop-blur-sm border border-border rounded-md p-2.5 text-[11px] font-mono z-10 text-muted-foreground/80 whitespace-pre-wrap break-all shadow-sm relative group-hover:border-primary/30 transition-colors w-max max-w-full">
                 {step.body}
               </div>
             )}
@@ -184,7 +184,7 @@ function StepRow({
         className="absolute top-2 bottom-2 flex flex-col items-center z-10"
         style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
       >
-        <div className="text-[11px] font-semibold bg-white dark:bg-zinc-950 px-2.5 py-0.5 border border-zinc-200 dark:border-zinc-800 rounded-full z-10 mb-2 shadow-sm text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+        <div className="text-[11px] font-semibold bg-primary/50 px-2.5 py-0.5 border border-border rounded-full z-10 mb-2 shadow-sm text-foreground whitespace-nowrap">
           {step.label}
         </div>
 
@@ -225,7 +225,7 @@ function StepRow({
         </div>
 
         {step.body && (
-          <div className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800/80 rounded-md p-2.5 text-[11px] font-mono z-10 text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap break-all shadow-sm relative mt-1 group-hover:border-primary/30 transition-colors text-left w-max max-w-[90%] mx-auto">
+          <div className="bg-muted/30 backdrop-blur-sm border border-border rounded-md p-2.5 text-[11px] font-mono z-10 text-muted-foreground/80 whitespace-pre-wrap break-all shadow-sm relative mt-1 group-hover:border-primary/30 transition-colors text-left w-max max-w-[90%] mx-auto">
             {step.body}
           </div>
         )}

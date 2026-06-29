@@ -9,38 +9,43 @@ export default function DocsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen relative">
+    <div className="flex flex-col min-h-screen relative bg-background">
       {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background shadow-sm shadow-black/5">
-        <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-95 transition-opacity"
-          >
-            <Image
-              src="/Logo.svg"
-              alt="Nen Logo"
-              width={24}
-              height={24}
-              className="h-6 w-auto"
-            />
-            <span className="text-foreground">Nen</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm font-medium">
+      <header className="sticky top-0 z-50 w-full">
+        <div className="mx-4 mt-4 rounded-2xl glass-strong border border-border">
+          <div className="container mx-auto max-w-6xl px-4 flex h-14 items-center justify-between">
             <Link
-              href="/docs"
-              className="text-foreground transition-colors hover:text-primary"
+              href="/"
+              className="flex items-center gap-2 font-bold text-xl tracking-tight hover:opacity-95 transition-opacity group"
             >
-              Documentation
+              <div className="relative">
+                <Image
+                  src="/Logo.svg"
+                  alt="Nen Logo"
+                  width={24}
+                  height={24}
+                  className="h-6 w-auto relative z-10"
+                />
+                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+              </div>
+              <span className="gradient-text">Nen</span>
             </Link>
-            <Link
-              href="https://github.com/navneet1395/nen"
-              className="text-muted-foreground transition-colors hover:text-primary"
-            >
-              GitHub
-            </Link>
-            <ThemeToggle />
-          </nav>
+            <nav className="flex items-center gap-6 text-sm font-medium">
+              <Link
+                href="/docs"
+                className="text-foreground/70 transition-colors hover:text-primary"
+              >
+                Documentation
+              </Link>
+              <Link
+                href="https://github.com/navneet1395/nen"
+                className="text-muted-foreground/80 transition-colors hover:text-primary"
+              >
+                GitHub
+              </Link>
+              <ThemeToggle />
+            </nav>
+          </div>
         </div>
       </header>
 
@@ -51,7 +56,7 @@ export default function DocsLayout({
         </aside>
 
         {/* Content */}
-        <main className="flex-1 prose dark:prose-invert prose-zinc max-w-none prose-pre:bg-zinc-950 prose-pre:border prose-pre:border-zinc-800/80 prose-code:text-primary dark:prose-code:text-blue-300 prose-headings:scroll-mt-20">
+        <main className="flex-1 prose prose-zinc dark:prose-invert max-w-none prose-pre:bg-[var(--code-bg)] prose-pre:border prose-pre:border-border prose-code:text-primary prose-headings:scroll-mt-20 prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground/80">
           <div className="p-2 md:p-4">{children}</div>
         </main>
       </div>

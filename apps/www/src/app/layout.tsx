@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { NenFeedbackWidget } from "@/components/nen-feedback-widget";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 const SITE_URL = "https://withnen.com";
 
@@ -72,14 +76,8 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
-  // Icons are provided by the file-system convention (app/favicon.ico,
-  // app/icon.png, app/icon.svg, app/apple-icon.png) so browsers and bookmarks
-  // get a real raster Nen mark instead of the SVG-only fallback.
 };
 
-// Structured data (JSON-LD) for search engines and AI answer engines (GEO).
-// Describes Nen as an organization, the site, and the software product so
-// crawlers and LLMs can resolve the entity, not just index prose.
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@graph": [
@@ -127,19 +125,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${spaceGrotesk.variable} font-sans antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <NenFeedbackWidget />
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <NenFeedbackWidget />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

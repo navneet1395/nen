@@ -20,6 +20,7 @@ import {
   ServerCog,
   FileWarning,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { SequenceDiagram } from "@/components/sequence-diagram";
 import { HeroAnalogies, MobileAnalogiesTicker } from "@/components/hero-analogies";
@@ -42,33 +43,37 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/30 text-foreground">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <SiteHeader />
 
-      <main className="flex-1 flex flex-col w-full overflow-x-hidden items-center max-w-6xl mx-auto">
+      <main className="flex-1 flex flex-col w-full overflow-x-hidden items-center">
         {/* ───────────────────────── Hero ───────────────────────── */}
-        <section className="w-full py-20 md:py-28 flex flex-col items-center text-center px-4 relative overflow-hidden">
-          
-          <div className="relative w-full max-w-6xl flex flex-col items-center justify-center mx-auto">
+        <section className="w-full py-20 md:py-32 flex flex-col items-center text-center px-4 relative overflow-hidden">
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-primary/4 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/[0.03] rounded-full blur-[120px] pointer-events-none" />
+
+          <div className="relative w-full max-w-6xl flex flex-col items-center justify-center mx-auto z-10">
             <HeroAnalogies />
-            
-            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-8 shadow-sm relative ">
-              <Zap className="w-3.5 h-3.5 mr-1" /> Post-quantum key exchange
+
+            <div className="inline-flex items-center rounded-full border border-primary/20 px-4 py-1.5 text-xs font-semibold bg-primary/5 text-primary mb-10 shadow-[0_0_20px_-4px_rgba(178,213,229,0.15)] backdrop-blur-sm">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Post-quantum key exchange
               (ML-KEM-768, FIPS 203)
             </div>
 
-            {/* Desktop H1 (static) */}
-            <h1 className="hidden md:block text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mb-6 leading-tight relative ">
+            {/* Desktop H1 */}
+            <h1 className="hidden md:block text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl mb-8 leading-[1.1] relative">
               Your API data is naked the{" "}
-              <span className="text-primary">moment TLS ends</span>
+              <span className="gradient-text-hero glow-text">moment TLS ends</span>
             </h1>
 
-            {/* Mobile H1 (animated ticker) */}
+            {/* Mobile H1 */}
             <div className="block md:hidden w-full relative z-10">
               <MobileAnalogiesTicker />
             </div>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed relative z-10">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-12 leading-relaxed relative z-10">
               HTTPS protects your data in transit — and does it perfectly. But the
               instant TLS terminates, the JSON body lies in plaintext across your
               logs, databases, CDN, proxies, and every third-party hop.{" "}
@@ -80,18 +85,18 @@ export default function Home() {
           </div>
 
           {/* The gut-punch: before/after on the same request */}
-          <div className="w-full mb-10 z-10 relative">
+          <div className="w-full mb-12 z-10 relative px-4">
             <PayloadDemo />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-8 relative z-10">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-10 relative z-10">
             <Link
               href="/docs/quickstart"
               className={buttonVariants({
                 variant: "default",
                 size: "lg",
                 className:
-                  "h-12 px-8 font-semibold text-base shadow-lg shadow-primary/20",
+                  "h-12 px-8 font-semibold text-base glow-blue hover:glow-blue-sm transition-all duration-300",
               })}
             >
               Start Building <ArrowRight className="ml-2 h-5 w-5" />
@@ -101,31 +106,33 @@ export default function Home() {
               className={buttonVariants({
                 variant: "outline",
                 size: "lg",
-                className: "h-12 px-8 font-semibold text-base",
+                className:
+                  "h-12 px-8 font-semibold text-base border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-300",
               })}
             >
               &ldquo;Why not just use Cloudflare?&rdquo;
             </Link>
           </div>
 
-          <div className="flex items-center justify-center h-12 px-6 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-300 font-mono text-sm shadow-xl relative z-10">
-            <span className="text-zinc-600 mr-2">$</span>
-            <span className="text-blue-400 mr-1.5">npx</span>
+          <div className="flex items-center justify-center h-12 px-6 rounded-xl border border-border bg-muted/30 backdrop-blur-md text-muted-foreground font-mono text-sm shadow-xl relative z-10 glow-blue-sm">
+            <span className="text-muted-foreground/60 mr-2">$</span>
+            <span className="text-primary mr-1.5">npx</span>
             <span>create-nen-app</span>
           </div>
         </section>
 
         {/* ─────────────────── The problem (tension) ─────────────────── */}
-        <section className="w-full  relative ">
+        <section className="w-full relative py-20">
           <div className="max-w-5xl mx-auto px-6">
-            <div className="text-center mb-14">
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-muted text-muted-foreground mb-4">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-xs font-semibold bg-muted/30 text-muted-foreground mb-5 backdrop-blur-sm">
                 The gap nobody guards
               </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                TLS did its job. Then it handed off your plaintext.
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                TLS did its job. Then it handed off{" "}
+                <span className="gradient-text">your plaintext.</span>
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 TLS encrypts the channel and stops at termination — the load
                 balancer, the CDN edge, the serverless runtime. From there your
                 payload travels in the clear. This isn&apos;t a flaw in TLS;
@@ -135,34 +142,34 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              <Card className="bg-background border-border/50 shadow-sm">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <FileWarning className="w-9 h-9 text-primary mb-3" />
-                  <CardTitle>Logs &amp; observability</CardTitle>
+                  <CardTitle className="text-foreground/90">Logs &amp; observability</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground text-sm">
+                <CardContent className="text-muted-foreground/80 text-sm leading-relaxed">
                   Request and response bodies captured in your logging pipeline
                   stay ciphertext — never plaintext PII, PHI, or prompts sitting
                   in a log index.
                 </CardContent>
               </Card>
-              <Card className="bg-background border-border/50 shadow-sm">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <Database className="w-9 h-9 text-primary mb-3" />
-                  <CardTitle>Databases &amp; queues</CardTitle>
+                  <CardTitle className="text-foreground/90">Databases &amp; queues</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground text-sm">
+                <CardContent className="text-muted-foreground/80 text-sm leading-relaxed">
                   Payloads you choose not to decrypt come to rest as ciphertext
                   — and because the key exchange is ML-KEM, they stay safe
                   against harvest-now-decrypt-later.
                 </CardContent>
               </Card>
-              <Card className="bg-background border-border/50 shadow-sm">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <ServerCog className="w-9 h-9 text-primary mb-3" />
-                  <CardTitle>Proxies &amp; third-party hops</CardTitle>
+                  <CardTitle className="text-foreground/90">Proxies &amp; third-party hops</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground text-sm">
+                <CardContent className="text-muted-foreground/80 text-sm leading-relaxed">
                   Intermediaries — your CDN, edge, load balancer, internal
                   proxies, and forwarders — see only base64 ciphertext, not the
                   data inside.
@@ -170,12 +177,13 @@ export default function Home() {
               </Card>
             </div>
 
-            <div className="text-center mt-10">
+            <div className="text-center mt-12">
               <Link
                 href="/why-not-cloudflare"
                 className={buttonVariants({
                   variant: "outline",
-                  className: "font-semibold",
+                  className:
+                    "font-semibold border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-300",
                 })}
               >
                 TLS + Nen, explained <ArrowRight className="ml-2 h-4 w-4" />
@@ -186,22 +194,24 @@ export default function Home() {
 
         {/* ─────────────── The fix (relief + ease) ─────────────── */}
         <section className="w-full py-24 relative">
-          <div className=" mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                You already wrote 90% of this
+          <div className="mx-auto px-6 max-w-5xl">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                You already wrote <span className="gradient-text">90% of this</span>
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Swap <code>fetch</code> for <code>nenFetch</code> on the client.
-                Wrap your route with <code>withNen</code> on the server. The
+              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Swap <code className="text-primary/80 bg-muted/50 px-1.5 py-0.5 rounded text-sm">fetch</code> for{" "}
+                <code className="text-primary/80 bg-muted/50 px-1.5 py-0.5 rounded text-sm">nenFetch</code> on the client.
+                Wrap your route with{" "}
+                <code className="text-primary/80 bg-muted/50 px-1.5 py-0.5 rounded text-sm">withNen</code> on the server. The
                 handshake, key rotation, HMAC, and replay protection happen
                 underneath. About ten lines, start to finish.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 items-start">
-              <div>
-                <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
+              <div className="glass rounded-xl p-6">
+                <div className="text-xs text-primary/60 mb-3 uppercase tracking-wider font-semibold">
                   Client
                 </div>
                 <CodeBlock>{`import { nenFetch } from "@withnen/client";
@@ -212,8 +222,8 @@ const res = await nenFetch("/api/claims", {
 });
 // payload encrypted before it leaves the tab`}</CodeBlock>
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
+              <div className="glass rounded-xl p-6">
+                <div className="text-xs text-primary/60 mb-3 uppercase tracking-wider font-semibold">
                   Server
                 </div>
                 <CodeBlock>{`import { withNen } from "@withnen/server";
@@ -227,7 +237,7 @@ export const POST = withNen(async (req, body) => {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-10 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mt-12 text-sm text-muted-foreground/80">
               {[
                 "Drop-in fetch replacement",
                 "Mandatory per-request HMAC",
@@ -243,24 +253,24 @@ export const POST = withNen(async (req, body) => {
         </section>
 
         {/* ─────────────── Honest trust boundary (trust) ─────────────── */}
-        <section className="w-full  relative ">
-          <div className=" mx-auto px-6">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-4">
-                <Lock className="w-3.5 h-3.5 mr-1" /> Where the trust boundary
+        <section className="w-full relative py-20">
+          <div className="mx-auto px-6 max-w-5xl">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center rounded-full border border-primary/20 px-4 py-1.5 text-xs font-semibold bg-primary/5 text-primary mb-5 backdrop-blur-sm">
+                <Lock className="w-3.5 h-3.5 mr-1.5" /> Where the trust boundary
                 actually sits
               </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                No overclaims. Ever.
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                No overclaims. <span className="gradient-text">Ever.</span>
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 A security engineer will find any exaggeration in thirty seconds
                 — so we draw the line ourselves.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-background p-6 md:p-8 mb-6">
-              <p className="text-lg leading-relaxed">
+            <div className="rounded-2xl glass-strong p-6 md:p-8 mb-8">
+              <p className="text-lg leading-relaxed text-foreground/80">
                 <strong className="text-foreground">
                   Everything between the two Nen endpoints sees only
                   ciphertext.
@@ -318,14 +328,14 @@ export const POST = withNen(async (req, body) => {
               />
             </div>
 
-            <p className="text-sm text-muted-foreground mt-6">
+            <p className="text-sm text-muted-foreground/80 mt-8">
               What we will <strong className="text-foreground">never</strong>{" "}
               claim: &ldquo;even a compromised server sees only
               ciphertext.&rdquo; The terminating server decrypts — that is the
               point of the middleware. See the{" "}
               <Link
                 href="/docs/threat-model"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline underline-offset-4"
               >
                 full threat model
               </Link>{" "}
@@ -336,16 +346,16 @@ export const POST = withNen(async (req, body) => {
 
         {/* ─────────────── Under the hood: the dashboard (reflective) ─────────────── */}
         <section id="demo" className="w-full py-24 relative">
-          <div className="  px-6">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-muted text-muted-foreground mb-4">
+          <div className="px-6 max-w-5xl mx-auto">
+            <div className="text-center mb-14">
+              <div className="inline-flex items-center rounded-full border border-border px-4 py-1.5 text-xs font-semibold bg-muted/30 text-muted-foreground mb-5 backdrop-blur-sm">
                 Under the hood
               </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                What that one line actually does
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                What that one line <span className="gradient-text">actually does</span>
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Behind <code>nenFetch</code> is a full post-quantum handshake:
+              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Behind <code className="text-primary/80 bg-muted/50 px-1.5 py-0.5 rounded text-sm">nenFetch</code> is a full post-quantum handshake:
                 an ML-KEM key encapsulation, an optional ML-DSA identity
                 signature, and a derived ChaCha20-Poly1305 session. Run it step
                 by step — change the payload, change the security level, and
@@ -360,14 +370,15 @@ export const POST = withNen(async (req, body) => {
         <BenchmarksDashboard />
 
         {/* ─────────────── AI wedge teaser ─────────────── */}
-        <section className="w-full  relative">
-          <div className=" px-6 grid md:grid-cols-2 gap-12 items-center">
+        <section className="w-full relative py-20">
+          <div className="px-6 max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-4">
-                <Zap className="w-3.5 h-3.5 mr-1" /> The wedge — Secure AI
+              <div className="inline-flex items-center rounded-full border border-primary/20 px-4 py-1.5 text-xs font-semibold bg-primary/5 text-primary mb-5 backdrop-blur-sm">
+                <Zap className="w-3.5 h-3.5 mr-1.5" /> The wedge — Secure AI
               </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                Encrypt LLM prompts across your own stack
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                Encrypt LLM prompts{" "}
+                <span className="gradient-text">across your own stack</span>
               </h2>
               <p className="text-muted-foreground mb-4 leading-relaxed">
                 AI apps stream prompts, PHI, legal context, and financial
@@ -376,7 +387,7 @@ export const POST = withNen(async (req, body) => {
                 user&apos;s browser to the one backend service you trust to call
                 the model.
               </p>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground/80 mb-8">
                 Honest scope: this hides prompts from <em>your</em> edge, logs,
                 and proxies. It does{" "}
                 <strong className="text-foreground">not</strong> hide them from
@@ -386,13 +397,14 @@ export const POST = withNen(async (req, body) => {
                 href="/ai"
                 className={buttonVariants({
                   variant: "outline",
-                  className: "font-semibold",
+                  className:
+                    "font-semibold border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-300",
                 })}
               >
                 See the Secure AI page <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </div>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 font-mono text-sm text-zinc-300 shadow-xl">
+            <div className="glass rounded-xl p-6 font-mono text-sm text-muted-foreground shadow-2xl">
               <pre className="whitespace-pre-wrap leading-relaxed">{`const ai = createSecureOpenAI({ /* ... */ });
 
 const stream = ai.chat.completions.stream({
@@ -407,13 +419,13 @@ const stream = ai.chat.completions.stream({
         </section>
 
         {/* ─────────────── Who buys this ─────────────── */}
-        <section className="w-full py-24 relative border-t border-border/40">
-          <div className=" mx-auto px-6">
+        <section className="w-full py-24 relative">
+          <div className="max-w-5xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight mb-4">
-                Who reaches for this
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
+                Who reaches for <span className="gradient-text">this</span>
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Security and platform engineers at fintech, healthtech, and AI
                 companies who just got a PQC-readiness or data-handling audit
                 questionnaire — and need documentation and proof as much as
@@ -421,37 +433,37 @@ const stream = ai.chat.completions.stream({
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <Card className="bg-background border-border/50 shadow-sm">
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <Landmark className="w-10 h-10 text-primary mb-4" />
-                  <CardTitle>FinTech &amp; Banking</CardTitle>
+                  <CardTitle className="text-foreground/90">FinTech &amp; Banking</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground">
+                <CardContent className="text-muted-foreground/80 leading-relaxed">
                   Keep transaction payloads as ciphertext past TLS termination —
                   through logs, proxies, and at-rest stores — so harvested
                   ciphertext stays safe against future quantum decryption.
                 </CardContent>
               </Card>
 
-              <Card className="bg-background border-border/50 shadow-sm">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <Stethoscope className="w-10 h-10 text-primary mb-4" />
-                  <CardTitle>Healthcare</CardTitle>
+                  <CardTitle className="text-foreground/90">Healthcare</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground">
+                <CardContent className="text-muted-foreground/80 leading-relaxed">
                   ePHI stays encrypted from the device to the one service that
                   must read it, shrinking the plaintext-exposed surface your
                   auditor asks about.
                 </CardContent>
               </Card>
 
-              <Card className="bg-background border-border/50 shadow-sm">
+              <Card className="glass shadow-none">
                 <CardHeader>
                   <Building2 className="w-10 h-10 text-primary mb-4" />
-                  <CardTitle>AI Platforms</CardTitle>
+                  <CardTitle className="text-foreground/90">AI Platforms</CardTitle>
                 </CardHeader>
-                <CardContent className="text-muted-foreground">
+                <CardContent className="text-muted-foreground/80 leading-relaxed">
                   Encrypt prompts and streamed responses across your own
                   infrastructure with secure SSE streaming — a niche most PQC
                   projects never reach.
@@ -462,12 +474,12 @@ const stream = ai.chat.completions.stream({
         </section>
 
         {/* ─────────────── Feature grid ─────────────── */}
-        <section className="w-full py-24 relative border-t border-border/40">
-          <div className="container  px-4">
-            <h2 className="text-3xl text-center font-bold tracking-tight mb-4">
-              Features
+        <section className="w-full py-24 relative">
+          <div className="max-w-5xl mx-auto px-6">
+            <h2 className="text-3xl md:text-4xl text-center font-bold tracking-tight mb-4">
+              <span className="gradient-text">Features</span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
               <Feature
                 icon={<Shield className="w-6 h-6 text-primary" />}
                 title="Post-quantum key exchange"
@@ -503,23 +515,27 @@ const stream = ai.chat.completions.stream({
         </section>
 
         {/* ─────────────── Closing CTA ─────────────── */}
-        <section className="w-full py-24 border-t">
+        <section className="w-full py-24 relative">
           <div className="max-w-3xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-              Keep TLS. Add the part it can&apos;t reach.
+            {/* Decorative orbs */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-primary/[0.05] rounded-full blur-[100px] pointer-events-none" />
+
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 relative z-10">
+              Keep TLS. Add the part{" "}
+              <span className="gradient-text-hero glow-text">it can&apos;t reach.</span>
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+            <p className="text-muted-foreground max-w-xl mx-auto mb-10 relative z-10 leading-relaxed">
               The free SDK gives you the protection. The docs give you the proof
               your auditor wants. Both ship today.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
               <Link
                 href="/docs/quickstart"
                 className={buttonVariants({
                   variant: "default",
                   size: "lg",
                   className:
-                    "h-12 px-8 font-semibold text-base shadow-lg shadow-primary/20",
+                    "h-12 px-8 font-semibold text-base glow-blue hover:glow-blue-sm transition-all duration-300",
                 })}
               >
                 Start Building <ArrowRight className="ml-2 h-5 w-5" />
@@ -529,7 +545,8 @@ const stream = ai.chat.completions.stream({
                 className={buttonVariants({
                   variant: "outline",
                   size: "lg",
-                  className: "h-12 px-8 font-semibold text-base",
+                  className:
+                    "h-12 px-8 font-semibold text-base border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all duration-300",
                 })}
               >
                 Read the threat model
@@ -554,12 +571,12 @@ function Feature({
   body: string;
 }) {
   return (
-    <div className="flex flex-col p-6 bg-card rounded-xl border shadow-sm">
-      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+    <div className="flex flex-col p-6 glass rounded-xl">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 border border-primary/10">
         {icon}
       </div>
-      <h3 className="text-xl font-bold mb-3">{title}</h3>
-      <p className="text-muted-foreground text-sm leading-relaxed">{body}</p>
+      <h3 className="text-lg font-semibold mb-3 text-foreground/90">{title}</h3>
+      <p className="text-muted-foreground/80 text-sm leading-relaxed">{body}</p>
     </div>
   );
 }

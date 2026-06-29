@@ -20,7 +20,7 @@ const SLOTS = [
 
 export function HeroAnalogies() {
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -47,7 +47,7 @@ function FloatingBubble({ slot, index }: { slot: typeof SLOTS[0], index: number 
   useEffect(() => {
     const initialTimeout = setTimeout(() => {
       setShow(true);
-      
+
       const interval = setInterval(() => {
         setShow(false); // Fade out
         setTimeout(() => {
@@ -59,11 +59,11 @@ function FloatingBubble({ slot, index }: { slot: typeof SLOTS[0], index: number 
           });
           setShow(true);
         }, 1500);
-      }, 7000); 
-      
+      }, 7000);
+
       return () => clearInterval(interval);
     }, slot.delay);
-    
+
     return () => clearTimeout(initialTimeout);
   }, [slot.delay]);
 
@@ -74,10 +74,10 @@ function FloatingBubble({ slot, index }: { slot: typeof SLOTS[0], index: number 
       }`}
     >
       {/* Bubble shape: rounded heavily but with one sharp corner like a thought tail */}
-      <div className="relative rounded-[2rem] rounded-br-sm border border-white/10 bg-background/60 backdrop-blur-sm px-5 py-4 shadow-2xl shadow-black/10">
+      <div className="relative rounded-[2rem] rounded-br-sm border border-primary/15 bg-muted/30 backdrop-blur-xl px-5 py-4 shadow-2xl shadow-black/20">
         <div className="flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-primary/70 mt-0.5 flex-shrink-0" />
-          <p className="text-sm font-medium text-foreground/80 leading-snug">
+          <Sparkles className="w-5 h-5 text-primary/60 mt-0.5 flex-shrink-0" />
+          <p className="text-sm font-medium text-muted-foreground leading-snug">
             {ANALOGIES[textIndex]}
           </p>
         </div>
@@ -102,7 +102,7 @@ export function MobileAnalogiesTicker() {
   }, []);
 
   return (
-    <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-6 leading-tight relative z-20 min-h-[140px] flex items-center justify-center text-center">
+    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 leading-tight relative z-20 min-h-[140px] flex items-center justify-center text-center">
       <span
         className={`transition-all duration-500 px-2 ${
           fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
@@ -111,10 +111,10 @@ export function MobileAnalogiesTicker() {
         {index === 0 ? (
           <>
             Your API data is naked the{" "}
-            <span className="text-primary">moment TLS ends</span>
+            <span className="gradient-text-hero glow-text">moment TLS ends</span>
           </>
         ) : (
-          <span className="text-foreground/90 italic">"{ANALOGIES[index]}"</span>
+          <span className="text-foreground/70 italic">"{ANALOGIES[index]}"</span>
         )}
       </span>
     </h1>

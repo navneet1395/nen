@@ -75,14 +75,19 @@ export default function PricingPage() {
       <SiteHeader />
 
       <main className="flex-1 w-full">
-        <section className="w-full py-20 md:py-24 bg-gradient-to-b from-background to-muted/30 px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 leading-tight">
-            Free to protect. Pay for the proof.
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            The open-source SDK gives you the encryption with no limits. The paid tiers give you the
-            visibility and the exportable compliance evidence a regulated buyer needs.
-          </p>
+        <section className="w-full py-20 md:py-24 px-4 text-center relative overflow-hidden">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+          <div className="relative z-10">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-5 leading-tight">
+              Free to protect.{" "}
+              <span className="gradient-text">Pay for the proof.</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              The open-source SDK gives you the encryption with no limits. The paid tiers give you the
+              visibility and the exportable compliance evidence a regulated buyer needs.
+            </p>
+          </div>
         </section>
 
         <section className="w-full pb-24 px-4">
@@ -92,8 +97,8 @@ export default function PricingPage() {
                 key={tier.name}
                 className={`relative flex flex-col rounded-2xl border p-8 ${
                   tier.featured
-                    ? "border-primary shadow-xl shadow-primary/10 bg-background scale-[1.02]"
-                    : "border-border/60 bg-background/60"
+                    ? "border-primary/30 glow-blue bg-muted/30 scale-[1.02]"
+                    : "border-border bg-muted/20"
                 }`}
               >
                 {tier.featured && (
@@ -101,14 +106,14 @@ export default function PricingPage() {
                     Most popular
                   </span>
                 )}
-                <h2 className="text-lg font-bold mb-1">{tier.name}</h2>
+                <h2 className="text-lg font-bold mb-1 text-foreground">{tier.name}</h2>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-4xl font-extrabold tracking-tight">{tier.price}</span>
+                  <span className="text-4xl font-extrabold tracking-tight text-foreground">{tier.price}</span>
                   {tier.cadence && (
-                    <span className="text-muted-foreground text-sm">{tier.cadence}</span>
+                    <span className="text-muted-foreground/80 text-sm">{tier.cadence}</span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-6 min-h-[40px]">{tier.tagline}</p>
+                <p className="text-sm text-muted-foreground/80 mb-6 min-h-[40px]">{tier.tagline}</p>
 
                 <Link
                   href={tier.href}
@@ -124,7 +129,7 @@ export default function PricingPage() {
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm">
                       <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">{f}</span>
+                      <span className="text-muted-foreground/80">{f}</span>
                     </li>
                   ))}
                 </ul>
@@ -132,7 +137,7 @@ export default function PricingPage() {
             ))}
           </div>
 
-          <p className="text-center text-sm text-muted-foreground mt-12 max-w-xl mx-auto">
+          <p className="text-center text-sm text-muted-foreground/60 mt-12 max-w-xl mx-auto">
             Not sure you need Nen at all? We say so plainly on the{" "}
             <Link href="/why-not-cloudflare" className="text-primary hover:underline">
               &ldquo;why not Cloudflare&rdquo;

@@ -23,9 +23,11 @@ export default function WhyNotCloudflare() {
       <SiteHeader />
 
       <main className="flex-1 w-full">
-        <section className="w-full py-20 md:py-28 bg-gradient-to-b from-background to-muted/30 px-4">
-          <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+        <section className="w-full py-20 md:py-28 px-4 relative overflow-hidden">
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+          <div className="max-w-5xl mx-auto text-center relative z-10">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 leading-tight">
               &ldquo;Why not just use Cloudflare or HTTPS?&rdquo;
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-2">
@@ -37,13 +39,13 @@ export default function WhyNotCloudflare() {
 
         <article className="max-w-5xl mx-auto px-4 pb-24">
           {/* The one-liner */}
-          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 md:p-8 my-10">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8 my-10">
             <p className="text-2xl font-bold leading-snug">
               TLS protects the <span className="text-primary">channel</span>.
               Nen protects the <span className="text-primary">payload</span>
               .
             </p>
-            <p className="text-muted-foreground mt-4 leading-relaxed">
+            <p className="text-muted-foreground/80 mt-4 leading-relaxed">
               Your data is encrypted in transit (TLS), but <em>naked</em> the
               instant TLS terminates — in your CDN, your load balancer, your
               logs, your proxies, and any third-party hop. Nen keeps the
@@ -56,20 +58,20 @@ export default function WhyNotCloudflare() {
           <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
             Cloudflare and AWS already give you post-quantum TLS — for free
           </h2>
-          <p className="text-muted-foreground leading-relaxed mb-4">
+          <p className="text-muted-foreground/80 leading-relaxed mb-4">
             We are not going to pretend otherwise. Post-quantum key agreement at
             the TLS layer is a finalized NIST standard, shipped by
             trillion-dollar companies with zero developer effort. By late 2025
             roughly 43% of human-generated traffic to Cloudflare was already
             PQ-protected.{" "}
-            <strong className="text-foreground">
+            <strong className="text-foreground/80">
               If your only concern is the public transit leg, you may not need
               Nen.
             </strong>
           </p>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-muted-foreground/80 leading-relaxed">
             Nen is a{" "}
-            <strong className="text-foreground">different threat model</strong>,
+            <strong className="text-foreground/80">different threat model</strong>,
             not a competing one. We are additive on purpose: we defend the
             surface TLS structurally cannot reach — everything that happens{" "}
             <em>after</em> the channel is decrypted.
@@ -79,7 +81,7 @@ export default function WhyNotCloudflare() {
           <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
             What survives TLS termination
           </h2>
-          <p className="text-muted-foreground leading-relaxed mb-6">
+          <p className="text-muted-foreground/80 leading-relaxed mb-6">
             The moment TLS terminates — at the load balancer, the CDN edge, the
             serverless runtime — the payload becomes plaintext and stays that
             way as it flows through:
@@ -92,10 +94,10 @@ export default function WhyNotCloudflare() {
               "Every third-party API the request is forwarded to",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">
-                <X className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                <X className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
                 <span>
-                  <span className="text-foreground font-medium">{item}</span>
-                  <span className="text-muted-foreground">
+                  <span className="text-foreground/80 font-medium">{item}</span>
+                  <span className="text-muted-foreground/80">
                     {" "}
                     — not covered by post-quantum TLS.
                   </span>
@@ -125,18 +127,18 @@ export default function WhyNotCloudflare() {
           <h2 className="text-2xl font-bold tracking-tight mt-12 mb-6">
             Side by side
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-border/60">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60 bg-muted/40 text-left">
-                  <th className="p-4 font-semibold">Concern</th>
-                  <th className="p-4 font-semibold">
+                <tr className="border-b border-border bg-muted/30 text-left">
+                  <th className="p-4 font-semibold text-foreground/80">Concern</th>
+                  <th className="p-4 font-semibold text-foreground/80">
                     PQ-TLS (Cloudflare / AWS)
                   </th>
-                  <th className="p-4 font-semibold">Nen</th>
+                  <th className="p-4 font-semibold text-foreground/80">Nen</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
+              <tbody className="divide-y divide-white/[0.04]">
                 <ComparisonRow
                   concern="Public transit leg, browser → edge"
                   tls="yes"
@@ -188,40 +190,40 @@ export default function WhyNotCloudflare() {
           <h2 className="text-2xl font-bold tracking-tight mt-12 mb-4">
             On harvest-now-decrypt-later, precisely
           </h2>
-          <p className="text-muted-foreground leading-relaxed mb-4">
+          <p className="text-muted-foreground/80 leading-relaxed mb-4">
             PQ-TLS already defends the transit leg against HNDL — for free. So
             Nen&apos;s HNDL value is{" "}
-            <strong className="text-foreground">specifically</strong> for:
+            <strong className="text-foreground/80">specifically</strong> for:
           </p>
           <ul className="space-y-3 mb-4">
             <li className="flex items-start gap-3">
               <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground/80">
                 payloads that come to{" "}
-                <span className="text-foreground">rest still encrypted</span>{" "}
+                <span className="text-foreground/80">rest still encrypted</span>{" "}
                 (logs, queues, DBs you choose not to decrypt), and
               </span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <span className="text-muted-foreground">
-                legs <span className="text-foreground">not</span> behind PQ-TLS
+              <span className="text-muted-foreground/80">
+                legs <span className="text-foreground/80">not</span> behind PQ-TLS
                 (internal hops, third-party calls, older infra).
               </span>
             </li>
           </ul>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-muted-foreground/80 leading-relaxed">
             We do not claim HNDL protection that PQ-TLS already provides on the
             public transit leg. Overlapping that claim is how we&apos;d lose
             credibility with the exact buyer we want.
           </p>
 
           {/* CTA */}
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-8 mt-14 text-center">
-            <h2 className="text-2xl font-bold tracking-tight mb-3">
+          <div className="rounded-2xl border border-border glass-strong p-8 mt-14 text-center">
+            <h2 className="text-2xl font-bold tracking-tight mb-3 text-foreground">
               Read the proof, not just the pitch
             </h2>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            <p className="text-muted-foreground/80 mb-6 max-w-xl mx-auto">
               The threat model and protocol spec are public. The compliance
               buyer reads these before trusting anyone.
             </p>
@@ -266,7 +268,7 @@ function Cell({
       <span className="inline-flex items-center gap-1.5 text-primary font-medium">
         <Check className="w-4 h-4" /> Yes
         {note && (
-          <span className="text-muted-foreground font-normal text-xs">
+          <span className="text-muted-foreground/60 font-normal text-xs">
             ({note})
           </span>
         )}
@@ -275,10 +277,10 @@ function Cell({
   }
   if (kind === "redundant") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground/60">
         Redundant
         {note && (
-          <span className="text-muted-foreground font-normal text-xs">
+          <span className="text-muted-foreground/60 font-normal text-xs">
             — {note}
           </span>
         )}
@@ -286,10 +288,10 @@ function Cell({
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-destructive font-medium">
+    <span className="inline-flex items-center gap-1.5 text-red-400 font-medium">
       <X className="w-4 h-4" /> No
       {note && (
-        <span className="text-muted-foreground font-normal text-xs">
+        <span className="text-muted-foreground/60 font-normal text-xs">
           ({note})
         </span>
       )}
@@ -310,7 +312,7 @@ function ComparisonRow({
 }) {
   return (
     <tr className="hover:bg-muted/20">
-      <td className="p-4 font-medium text-foreground">{concern}</td>
+      <td className="p-4 font-medium text-foreground/70">{concern}</td>
       <td className="p-4">
         <Cell kind={tls} />
       </td>
