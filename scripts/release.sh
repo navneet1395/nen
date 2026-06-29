@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Publishable packages, in dependency order (core-crypto FIRST).
-PKG_DIRS=( "pkg/bundler" "packages/nen-client" "packages/nen-server" "packages/ai" )
+PKG_DIRS=( "pkg/bundler" "packages/nen-seal" "packages/nen-client" "packages/nen-server" "packages/ai" )
 
 c() { printf "\n\033[1;36m▶ %s\033[0m\n" "$1"; }   # cyan step header
 ok() { printf "\033[1;32m✓ %s\033[0m\n" "$1"; }
@@ -74,6 +74,7 @@ c "npm install (link workspaces)"
 npm install || die "npm install failed"
 
 c "Building TS packages"
+npm run build --workspace @withnen/seal
 npm run build --workspace @withnen/server
 npm run build --workspace @withnen/client
 npm run build --workspace @withnen/ai
@@ -81,6 +82,7 @@ ok "Packages built"
 
 # ── 3. Tests ─────────────────────────────────────────────────────────────────
 c "Running tests"
+npm test --workspace @withnen/seal
 npm test --workspace @withnen/server
 npm test --workspace @withnen/client
 npm test --workspace @withnen/ai

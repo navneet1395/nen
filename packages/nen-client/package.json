@@ -1,6 +1,6 @@
 {
   "name": "@withnen/client",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "MIT licensed client SDK for end-to-end encrypted API payloads. ML-KEM-768 key exchange + ChaCha20-Poly1305 encryption.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
